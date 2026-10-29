@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.0] - 2026-10-29
+
+Complete design milestones M4–M6 on the user-approved WSL workstation.
+
+- Complete workstation renderer/AA/PNG/thread comparisons, retained raw timing
+  and image evidence, and scoped WSL performance targets.
+- Cache projected/cylinder geometry and render deterministic 32×32 tiles with
+  automatic OpenMP workers; preserve reference pixels across thread counts.
+- Add libdeflate PNG encoding, codec/filter/compression controls and measured
+  native-storage/WSL Windows-output defaults; retain libpng and serial fallbacks.
+- Add surface-visible element/instance labels, Cartesian axes, an element
+  legend and an angstrom scale bar with reserved camera layout space.
+- Expand allocation/work/atomic-write checks, annotation tests, sanitizer
+  coverage, installed/package execution and clean source/fallback build checks.
+- Keep Cairo painter/PNG and alternate AA controls as documented experiments;
+  reject incorrect depth ordering and lossy alpha/RGB codec paths as defaults.
+
 ## [0.1.0] - 2026-10-29
 
 Initial reference-renderer release, completing design milestones M0–M3.

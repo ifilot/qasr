@@ -1,16 +1,18 @@
 # vasp-render
 
-Version **0.1.0**, licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
+Version **0.2.0**, licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
 [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
-Headless C11 VASP geometry-to-PNG reference renderer. This release provides validated input,
+Headless C11 VASP geometry-to-PNG renderer. This release builds on the
+v0.1.0 reference checkpoint with validated input,
 periodic ball-and-stick geometry, and an orthographic software depth-buffer
 renderer with shaded spheres/capped cylinders and a PNG output path.
 
 ## Build and test
 
 Requirements: Linux, a C11 compiler (GCC or Clang), CMake 3.16+, libpng/zlib
-development packages, and Python 3 for tests. JSON parsing uses vendored
+and libdeflate development packages, pkg-config, the compiler's OpenMP runtime,
+and Python 3 for tests. JSON parsing uses vendored
 MIT-licensed cJSON 1.7.19. No network access is needed to build or test once
 system dependencies are installed.
 
@@ -21,6 +23,9 @@ ctest --test-dir build --output-on-failure
 ```
 
 Build without test/Python requirements with `-DBUILD_TESTING=OFF`.
+For a libpng-only, single-thread build, use
+`-DENABLE_LIBDEFLATE=OFF -DENABLE_OPENMP=OFF`. `--build-info` reports compiled
+capabilities. Cairo is an optional experiment and is disabled by default.
 
 For an optimized build and installation:
 
@@ -32,8 +37,8 @@ cmake --install build-release --prefix /path/to/install
 ```
 
 Installed presets live in `/path/to/install/share/vasp-render/presets`;
-pass their path with `--config`. The executable uses shared system libpng/zlib
-and C/math runtimes. Installation includes the project license and upstream
+pass their path with `--config`. The executable uses shared system libpng/zlib,
+libdeflate, OpenMP and C/math runtimes in the default build. Installation includes the project license and upstream
 notices under `share/doc/vasp_render` (or the platform's CMake doc directory).
 
 To run memory and undefined-behavior checks:
@@ -84,7 +89,7 @@ build/vasp-render CONTCAR -o detail.png --cell off --view 1,-1,0.7
 build/vasp-render OUTCAR -o final.png --background '#ffffff00' --benchmark-stages
 ```
 
-Default output is 512×512 with fixed 2× supersampling and ambient/diffuse
+Default output is 512×512 with 2× supersampling and ambient/diffuse
 lighting. Orthographic auto-fit includes all spheres, bond widths, and the cell
 when enabled. Turning the cell off fits the geometry without slab vacuum.
 Camera `--view` points from scene center toward the camera; `--up` sets vertical.
@@ -134,11 +139,36 @@ These replace M0's provisional preset and include the materials in your slabs.
 JSON overrides remain available. Boundary-crossing bonds stop at the repeated
 cell; outside neighbor atoms are not added. The neighbor search accounts for
 arbitrary skew within explicit work/resource limits, including nonzero-image
-self bonds. Labels, axes, legend, scale bar and multiple threads are deferred;
-requesting them for rendering produces an explicit unsupported-capability error.
-`--threads auto` and `--threads 1` both use one thread in v0.1.0.
+self bonds. `--labels element|index`, `--axes on`, `--legend on` and
+`--scale-bar on` add annotations. Labels use depth-tested front-surface anchors;
+indices are zero-based rendered atom-instance IDs. The legend and footer have
+reserved space outside the fitted geometry. [M6 notes](docs/m6-validation.md)
+describe units, layouts, limits and validation.
+`--threads auto` uses up to eight available OpenMP workers at 512×512 or larger
+(by pixel count), and one worker below that threshold. OpenMP environment limits
+are respected. `--threads 1` forces the serial path; explicit counts support
+repeatable scaling tests. Every tile preserves primitive order and sample depth.
 
 Transparent backgrounds and premultiplied AA edge filtering are supported.
+For workstation experiments, `--aa native|2x|4x|adaptive` (JSON `image.aa`) selects the
+sample grid. Native uses one sample per pixel; 4× provides a higher-quality
+reference at sixteen samples per pixel. Adaptive uses one sample in sphere
+interiors with proven surface-depth separation, and four samples near silhouettes,
+illustrated color-band boundaries and ambiguous overlap. The default remains 2×.
+
+The default PNG encoder is libdeflate with no filtering. Compression `auto`
+selects level 0 on native Linux storage and level 1 on the measured WSL 9p
+Windows-mounted filesystem. Level 0 prioritizes latency and writes about 1 MiB
+at 512×512; `--png-compression 1` gives smaller compressed files on any storage.
+`--png-encoder libpng` selects the reference codec. Tuning flags are
+`--png-compression auto|0..9` and `--png-filter adaptive|none|sub|up`; JSON keys
+are `image.png_encoder`, `image.png_compression`, and `image.png_filter`.
+
+An optional painter prototype can be built with
+`-DENABLE_CAIRO_EXPERIMENTS=ON` (system Cairo development files required) and
+selected with `--backend cairo` (JSON `image.backend`). Its native mode provides Cairo edge coverage.
+It fails the interpenetrating-surface depth gate and is retained for experiments.
+The default `--backend zbuffer` keeps per-sample surface depth.
 Element alpha blends the nearest surface over the background; layered
 transparent geometry is not implemented. Fully transparent primitives are skipped.
 
@@ -173,7 +203,9 @@ are not yet established.
 The regression suite also includes the 20 user-provided slab CONTCAR examples
 in `tests/fixtures/slabs`, preserving their original manifest and hashes.
 
-The suite has 40 test groups across two CTest entries. Geometry is compared
+The base suite has 63 test groups across six CTest entries; enabling Cairo
+adds three painter experiments and a colored crossing-cylinder depth gate
+across two more CTest entries. Geometry is compared
 with a brute-force periodic-image oracle; raster output is compared with an
 independent per-ray reference for crossing cylinders, caps, near-parallel axes,
 and cell occlusion. Fixed-environment decoded-RGBA hashes are recorded in
@@ -182,26 +214,28 @@ resource limits, atomic replacement/cleanup, and PNG rendering of all 20 slabs.
 
 ## Workstation handoff and release packages
 
-This is the pre-optimization release. Rendering, AA, encoding and threading
-experiments (M4/M5), plus deployment/performance validation in M6, are reserved
-for a workstation. M6 also includes overlays and further production hardening.
-[Performance notes](docs/performance.md) distinguish the earlier laptop/WSL
-observations from future workstation measurements. No performance winner or
-deployment latency guarantee is claimed for v0.1.0.
+v0.1.0 is the pre-optimization release checkpoint. v0.2.0 has
+completed M4–M6 on the accepted WSL workstation: renderer/AA/encoder/thread
+selection, annotations, deployment validation and scoped performance acceptance.
+[Performance notes](docs/performance.md) retain the
+fresh shaded/illustrated baselines, rejected candidates and measured adaptive
+results separately from historical laptop observations. The accurate Z-buffer
+is selected with cached tile parallelism and filesystem-aware PNG settings;
+uniform 2× remains the default and adaptive AA is available for profiling.
 
-On the intended workstation, the existing benchmark driver can be run with:
+For Linux-storage measurements on WSL, run:
 
 ```sh
-cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
-cmake --build build-release
-python3 tools/benchmark.py build-release/vasp-render
+cmake -S . -B /tmp/qasr-release -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+cmake --build /tmp/qasr-release
+python3 tools/benchmark.py /tmp/qasr-release/vasp-render --work-dir /tmp/qasr-bench
 ```
 
 Prepare local release archives after building:
 
 ```sh
 python3 tools/package_source.py
-cpack --config build-release/CPackConfig.cmake -B artifacts/releases
+cpack --config /tmp/qasr-release/CPackConfig.cmake -B artifacts/releases
 ```
 
 The source archive has a SHA-256 file and a per-file manifest. Its explicit
@@ -210,5 +244,6 @@ artifacts, builds, Git metadata and local agent/credential configuration.
 The Linux binary archive includes the executable, presets, documentation and
 license notices; matching system runtime libraries must be installed.
 
-See [v0.1.0 release notes and validation](docs/release-v0.1.0.md) for scope,
-checks, limitations and the workstation handoff.
+See [v0.2.0 release notes and validation](docs/release-v0.2.0.md) for current
+scope, checks and limitations. The [v0.1.0 notes](docs/release-v0.1.0.md)
+retain the reference checkpoint history.

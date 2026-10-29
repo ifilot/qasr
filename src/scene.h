@@ -13,6 +13,7 @@ typedef struct {
     double radius, distance;
     uint8_t color[4];
     PrimitiveKind kind;
+    unsigned element; /* Sphere element identity, zero for bond/cell primitives. */
     size_t source_a, source_b;
     int image[3], origin[3]; /* Bond displacement and start translation in base-cell units. */
 } Primitive;
@@ -25,6 +26,11 @@ typedef struct {
     Vec3 right, up, view;
     double center_x, center_y, scale;
     size_t width, height;
+    size_t viewport_x, viewport_y, viewport_width, viewport_height;
+    size_t legend_columns, legend_rows, legend_column_width, legend_width, legend_height;
+    size_t footer_height;
+    double scale_bar_A, scale_bar_pixels;
+    char scale_bar_label[32];
 } Camera;
 
 /** @brief Build wrapped instances, complete periodic bonds and the repeated cell.

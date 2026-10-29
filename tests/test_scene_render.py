@@ -52,6 +52,25 @@ def brute_bonds(basis, fractional, elements, cutoff, span):
 
 
 class SceneTests(unittest.TestCase):
+    def test_tile_thread_determinism(self):
+        capabilities=json.loads(subprocess.check_output([str(EXE),"--build-info"],text=True))
+        if not capabilities["openmp"]:
+            self.skipTest("OpenMP build required")
+        text=poscar([[10,0,0],[0,10,0],[0,0,10]],["H","H","O","O"],
+                    [[4,5,4],[6,5,6],[5,4,6],[5,6,4]],"Cartesian")
+        cfg={"image":{"width":97,"height":65,"background":"#ffffff00"},
+             "camera":{"view":[0,0,1],"up":[0,1,0]},"geometry":{"bond_radius_A":0.35},
+             "elements":{"H":{"radius_A":0.15},"O":{"radius_A":0.15}},
+             "overlays":{"cell":True},"bond_cutoffs_A":{"H-H":3,"O-O":3,"H-O":0.01}}
+        for style in ["shaded","illustrated"]:
+            cfg["image"]["style"]=style
+            for aa in ["native","2x","4x","adaptive"]:
+                with self.subTest(style=style,aa=aa):
+                    expected=self.render(text,cfg,"--threads","1","--aa",aa)[2]
+                    for workers in ["2","4","8"]:
+                        for _ in range(2):
+                            self.assertEqual(self.render(text,cfg,"--threads",workers,"--aa",aa)[2],expected)
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="qasr-render-")
         self.path = Path(self.tmp.name)
@@ -218,10 +237,72 @@ class SceneTests(unittest.TestCase):
                      "elements":{"H":{"radius_A":0.15},"O":{"radius_A":1.2 if cell else 0.15}},
                      "bond_cutoffs_A":{"H-H":3,"H-O":0.01,"O-O":3}}
                 text=poscar(basis,elements,positions,"Cartesian")
-                scene=self.scene(text,config=cfg)
-                actual=self.render(text,cfg)[2]
-                expected=reference_pixels(scene)
-                self.assertLessEqual(max(abs(a-b) for a,b in zip(actual,expected)),1)
+                for aa,factor in [("native",1),("2x",2),("4x",4)]:
+                    with self.subTest(aa=aa):
+                        cfg["image"]["aa"]=aa
+                        scene=self.scene(text,config=cfg)
+                        actual=self.render(text,cfg)[2]
+                        expected=reference_pixels(scene,factor)
+                        self.assertLessEqual(max(abs(a-b) for a,b in zip(actual,expected)),1)
+
+    def test_aa_validation_and_alpha(self):
+        text=poscar([[10,0,0],[0,10,0],[0,0,10]],["O"],[[0.5]*3])
+        cfg={"image":{"width":40,"height":32,"aa":"4x","background":"#ffffff00"},
+             "overlays":{"cell":False}}
+        settings=json.loads(self.invoke(text,"--inspect","--aa","native",config=cfg).stdout)["settings"]
+        self.assertEqual(settings["image"]["aa"],"native")
+        for aa in ["2x","4x"]:
+            cfg["image"]["aa"]=aa
+            pixels=self.render(text,cfg)[2]
+            self.assertTrue(any(0<a<255 for a in pixels[3::4]))
+            for i in range(0,len(pixels),4):
+                if 0<pixels[i+3]<255:
+                    self.assertEqual(pixels[i+1:i+3],b"\0\0")
+        self.invoke(text,"--inspect","--aa","3x",code=2)
+        cfg["image"]["aa"]=4
+        self.invoke(text,"--inspect",config=cfg,code=2)
+        # 4x must account for all sixteen depth/color samples before allocating.
+        self.invoke(text,"-o",self.path/"large.png","--width","4096",
+                    "--height","4096","--aa","4x",code=6)
+
+    def test_adaptive_flat_interiors_and_occlusion(self):
+        basis=[[10,0,0],[0,10,0],[0,0,10]]
+        # Odd dimensions and non-aligned centers catch native-tile row flips.
+        cfg={"image":{"width":95,"height":73,"style":"illustrated","background":"#ffffff00"},
+             "camera":{"view":[0,0,1],"up":[0,1,0]},"overlays":{"cell":False}}
+        text=poscar(basis,["O"],[[4.8,5.2,5]],"Cartesian")
+        uniform=self.render(text,cfg)[2]
+        actual=self.render(text,cfg,"--aa","adaptive")[2]
+        self.assertEqual(actual,uniform)
+        proc=self.invoke(text,"-o",self.path/"adaptive.png","--aa","adaptive",
+                         "--benchmark-stages",config=cfg)
+        native=int(proc.stderr.split("adaptive_native_tiles=")[1].split()[0])
+        self.assertGreater(native,0)
+        # Crossing surfaces and thin primitives cannot qualify as isolated
+        # interiors, even when the center ray misses a small foreground sphere.
+        for positions in [
+            [[4.7,5,5],[5.3,5,5]],
+            [[4,5,4],[6,5,6],[5,4,6],[5,6,4]],
+        ]:
+            elements=["H","H"] if len(positions)==2 else ["H","H","O","O"]
+            cfg["geometry"]={"bond_radius_A":0.035}
+            cfg["bond_cutoffs_A"]={"H-H":3,"O-O":3,"H-O":0.01}
+            cfg["elements"]={"H":{"radius_A":0.15},"O":{"radius_A":0.15}}
+            text=poscar(basis,elements,positions,"Cartesian")
+            self.assertEqual(self.render(text,cfg,"--aa","adaptive")[2],
+                             self.render(text,cfg,"--aa","2x")[2])
+        rng=random.Random(20261029)
+        symbols=["H","C","N","O"]
+        cfg["elements"]={symbol:{"radius_A":0.5+0.15*i} for i,symbol in enumerate(symbols)}
+        cfg["bond_cutoffs_A"]={a+"-"+b:0.01 for a,b in itertools.combinations_with_replacement(symbols,2)}
+        # Random overlapping foreground/background surfaces validate the depth
+        # bounds against uniform per-sample depth, including partial alpha.
+        cfg["elements"]["O"]["color"]="#e8806980"
+        for _ in range(6):
+            positions=[[rng.uniform(2,8) for _ in range(3)] for _ in range(12)]
+            text=poscar(basis,[symbols[i%4] for i in range(12)],positions,"Cartesian")
+            self.assertEqual(self.render(text,cfg,"--aa","adaptive")[2],
+                             self.render(text,cfg,"--aa","2x")[2])
 
     def test_fixed_environment_golden_pixels(self):
         manifest=ROOT/"tests/golden_pixels.json"

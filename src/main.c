@@ -23,8 +23,18 @@ static bool inspect(const Config *c, const Structure *s)
         printf("{\"index\":%zu,\"element\":\"%s\",\"position_A\":", i, element_symbol(s->atoms[i].element));
         print_vector(s->atoms[i].position); putchar('}');
     }
-    printf("],\"settings\":{\"image\":{\"width\":%zu,\"height\":%zu,\"background\":\"%s\",\"style\":\"%s\",\"depth_fade\":%.17g,\"outline_width\":%.17g},",
-           c->width, c->height, c->background,c->style==STYLE_ILLUSTRATED ? "illustrated" : "shaded",c->depth_fade,c->outline_width);
+    printf("],\"settings\":{\"image\":{\"width\":%zu,\"height\":%zu,\"background\":\"%s\",\"style\":\"%s\",\"aa\":\"%s\",\"backend\":\"%s\",\"depth_fade\":%.17g,\"outline_width\":%.17g",
+           c->width, c->height, c->background,c->style==STYLE_ILLUSTRATED ? "illustrated" : "shaded",
+           c->adaptive_aa ? "adaptive" : c->aa_scale==1 ? "native" : c->aa_scale==4 ? "4x" : "2x",
+           c->backend==BACKEND_CAIRO ? "cairo" : "zbuffer",c->depth_fade,c->outline_width);
+    printf(",\"png_encoder\":\"%s\",\"png_filter\":\"%s\",\"png_compression\":",
+           c->png.encoder==ENCODER_CAIRO ? "cairo" : c->png.encoder==ENCODER_LIBDEFLATE ? "libdeflate" : "libpng",
+           c->png.encoder==ENCODER_CAIRO ? "internal" : c->png.filter==FILTER_NONE ? "none" :
+           c->png.filter==FILTER_SUB ? "sub" : c->png.filter==FILTER_UP ? "up" : "adaptive");
+    if (c->png.encoder==ENCODER_CAIRO) printf("null");
+    else if (c->png.compression==-1) printf("\"auto\"");
+    else printf("%d",c->png.compression);
+    printf("},");
     printf("\"camera\":{\"projection\":\"orthographic\",\"view\":");
     if (c->view_top) printf("\"top\""); else print_vector(c->view);
     printf(",\"up\":"); print_vector(c->up); printf(",\"margin\":%.17g},", c->margin);
@@ -67,6 +77,10 @@ static void help(void)
          "  --width N --height N --repeat NX,NY,NZ\n"
          "  --view top|X,Y,Z --up X,Y,Z --background '#RRGGBB[AA]'\n"
          "  --style shaded|illustrated  Smooth lighting or layered flat-color atoms\n"
+         "  --aa native|2x|4x|adaptive Sample grid; default 2x, 4x quality reference\n"
+         "  --backend zbuffer|cairo    Cairo requires an experimental build\n"
+         "  --png-encoder libpng|libdeflate|cairo\n"
+         "  --png-compression auto|0..9 --png-filter adaptive|none|sub|up\n"
          "  --outline-width PIXELS      Illustrated atom/bond contours; 0 disables\n"
          "  --cell-width PIXELS         Unit-cell line width (default 2, maximum 32)\n"
          "  --sphere-scale F --bond-radius ANGSTROM\n"
@@ -74,7 +88,7 @@ static void help(void)
          "  --axes on|off --legend on|off --scale-bar on|off\n"
          "  --threads auto|N --benchmark-stages\n"
          "  --help --version\n"
-         "This version uses one thread and fixed 2x supersampling. Optional overlays are unavailable.");
+         "Annotations use the accurate Z-buffer. Use --build-info for compiled capabilities.");
 }
 
 static bool inspect_scene(const Config *c, const Scene *s, const Camera *camera)
@@ -83,16 +97,27 @@ static bool inspect_scene(const Config *c, const Scene *s, const Camera *camera)
            s->atom_count,s->bond_count,s->base_bond_count,camera->scale);
     print_vector(camera->right); printf(",\"up\":");print_vector(camera->up);
     printf(",\"view\":");print_vector(camera->view);
-    printf(",\"center\":[%.17g,%.17g],\"width\":%zu,\"height\":%zu},\"primitives\":[",
+    printf(",\"center\":[%.17g,%.17g],\"width\":%zu,\"height\":%zu",
            camera->center_x,camera->center_y,camera->width,camera->height);
+    if (c->labels || c->axes || c->legend || c->scale_bar) {
+        printf(",\"viewport_px\":{\"origin\":\"lower-left\",\"x\":%zu,\"y\":%zu,\"width\":%zu,\"height\":%zu}",
+               camera->viewport_x,camera->viewport_y,camera->viewport_width,camera->viewport_height);
+        if (c->legend) printf(",\"legend\":{\"columns\":%zu,\"rows\":%zu,\"width\":%zu,\"height\":%zu}",
+            camera->legend_columns,camera->legend_rows,camera->legend_width,camera->legend_height);
+        if (c->scale_bar) printf(",\"scale_bar\":{\"angstrom\":%.17g,\"pixels\":%.17g,\"label\":\"%s\",\"x\":12,\"y\":%zu}",
+            camera->scale_bar_A,camera->scale_bar_pixels,camera->scale_bar_label,camera->height-20);
+    }
+    printf("},\"primitives\":[");
     for (size_t i=0;i<s->count;++i) {
         const Primitive *p=&s->items[i];
         if (i) putchar(',');
         printf("{\"kind\":\"%s\",\"a\":",p->kind==SPHERE ? "sphere" : p->kind==CYLINDER ? "bond" : "cell");
         print_vector(p->a);printf(",\"b\":");print_vector(p->b);
-        printf(",\"radius\":%.17g,\"rgba\":[%u,%u,%u,%u],\"source\":[%zu,%zu],\"image\":[%d,%d,%d],\"origin\":[%d,%d,%d],\"distance\":%.17g}",
+        printf(",\"radius\":%.17g,\"rgba\":[%u,%u,%u,%u],\"source\":[%zu,%zu],\"image\":[%d,%d,%d],\"origin\":[%d,%d,%d],\"distance\":%.17g",
                p->kind==CELL_EDGE ? 0.5*c->cell_width/camera->scale : p->radius,(unsigned)p->color[0],(unsigned)p->color[1],(unsigned)p->color[2],(unsigned)p->color[3],
                p->source_a,p->source_b,p->image[0],p->image[1],p->image[2],p->origin[0],p->origin[1],p->origin[2],p->distance);
+        if (p->kind==SPHERE) printf(",\"element\":\"%s\",\"instance_index\":%zu",element_symbol(p->element),i);
+        printf("}");
     }
     puts("]}"); return fflush(stdout)==0 && !ferror(stdout);
 }
@@ -106,6 +131,25 @@ int main(int argc, char **argv)
 {
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
     if (argc == 2 && !strcmp(argv[1], "--version")) { puts("vasp-render " VR_VERSION); return 0; }
+    if (argc == 2 && !strcmp(argv[1],"--build-info")) {
+        printf("{\"version\":\"%s\",\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
+#ifdef _OPENMP
+               "true",
+#else
+               "false",
+#endif
+#ifdef VR_HAVE_CAIRO
+               "true",
+#else
+               "false",
+#endif
+#ifdef VR_HAVE_LIBDEFLATE
+               "true"
+#else
+               "false"
+#endif
+        );return 0;
+    }
     Error e = {0}; Config c; Structure s = {0}; Scene scene={0}; Image image={0}; Camera camera={0};
     struct timespec begin, configured, parsed, built, rendered, written;
     clock_gettime(CLOCK_MONOTONIC, &begin);
@@ -126,7 +170,13 @@ int main(int argc, char **argv)
     } else {
         if (!render_image(&c,&scene,&camera,s.count*sizeof(Atom),&image,&e)) goto failure;
         clock_gettime(CLOCK_MONOTONIC,&rendered);
-        if (!png_write_atomic(c.output,&image,&e)) goto failure;
+        PngOptions png=png_resolve_options(c.output,c.png);
+        if (c.benchmark) {
+            if (png.encoder==ENCODER_CAIRO) fprintf(stderr,"png_encoder_internal=1\n");
+            else fprintf(stderr,"png_compression_resolved=%d\n",png.compression);
+        }
+        if (!png_write_options_atomic(c.output,&image,&png,
+            scene.capacity*sizeof(Primitive)+s.count*sizeof(Atom),&e)) goto failure;
         clock_gettime(CLOCK_MONOTONIC,&written);
     }
     if (c.benchmark) {

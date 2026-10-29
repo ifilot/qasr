@@ -11,6 +11,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("executable",type=Path)
     parser.add_argument("--output",type=Path,default=Path("artifacts/illustrated-top"))
+    parser.add_argument("--overlays",action="store_true",help="add visible element labels, legend, axes and scale bar")
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
     source=root/"tests/fixtures/slabs"
@@ -22,6 +23,8 @@ def main():
         path=source/item["file"]
         name=item["id"]+".png"
         cmd=[str(args.executable.resolve()),str(path),"--config",str(preset)]
+        if args.overlays:
+            cmd+=["--labels","element","--legend","on","--axes","on","--scale-bar","on"]
         subprocess.run([*cmd,"-o",str(args.output/name)],check=True)
         scene=json.loads(subprocess.check_output([*cmd,"--inspect-scene"],text=True))
         records.append({"id":item["id"],"description":item["description"],"png":name,
@@ -33,7 +36,7 @@ def main():
         "preset":"presets/illustrated.json",
         "preset_sha256":hashlib.sha256(preset.read_bytes()).hexdigest(),
         "orientation":"Along a x b, sign toward c; a is aligned with image right. Exact orthographic top view.",
-        "images":records},indent=2)+"\n")
+        "annotations":args.overlays,"images":records},indent=2)+"\n")
     lines=["# Illustrated top views", "",
            "All 20 supplied CONTCAR samples, rendered at 768×768 with flat colored rims,",
            "pale circular highlights, black atom/bond contours, gray bonds, and a white background. The camera",
@@ -46,6 +49,11 @@ def main():
            "Recreate from the repository root:", "", "```sh",
            "python3 tools/render_examples.py build-release/vasp-render", "```", "",
            "| Structure | Structure |", "| --- | --- |"]
+    if args.overlays:
+        lines[0]="# Annotated illustrated top views"
+        lines[2:2]=["Visible-surface element labels use foreground-first collision filtering.",
+                    "The right legend counts all scene atom instances; the footer shows Cartesian",
+                    "axes and a fitted physical scale bar in angstroms.", ""]
     for offset in range(0,len(records),2):
         entries=[]
         for item in records[offset:offset+2]:

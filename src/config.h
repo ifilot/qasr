@@ -4,13 +4,21 @@
 #include "structure.h"
 
 typedef enum { STYLE_SHADED, STYLE_ILLUSTRATED } RenderStyle;
+typedef enum { BACKEND_ZBUFFER, BACKEND_CAIRO } RenderBackend;
+typedef enum { ENCODER_LIBPNG, ENCODER_LIBDEFLATE, ENCODER_CAIRO } PngEncoder;
+typedef enum { FILTER_ADAPTIVE, FILTER_NONE, FILTER_SUB, FILTER_UP, FILTER_DEFAULT } PngFilter;
+/* Compression -1 and FILTER_DEFAULT request automatic settings. */
+typedef struct { PngEncoder encoder; PngFilter filter; int compression; } PngOptions;
 
 typedef struct {
-    size_t width, height, repeat[3], threads;
+    size_t width, height, repeat[3], threads, aa_scale;
     Vec3 view, up;
     double margin, sphere_scale, bond_radius, depth_fade, outline_width, cell_width;
     char background[10];
     RenderStyle style;
+    RenderBackend backend;
+    PngOptions png;
+    bool adaptive_aa;
     bool view_top, up_explicit;
     bool cell, axes, legend, scale_bar, recover, inspect, inspect_scene, benchmark;
     int labels; /* 0 none, 1 element, 2 index */

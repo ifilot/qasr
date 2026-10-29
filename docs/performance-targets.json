@@ -1,0 +1,26 @@
+{
+  "scope": "Approved i9-10900K WSL workstation; 30 warm-cache process samples; selected defaults; 512px shaded/768px illustrated; close/rename without fsync",
+  "cpu_contains": "i9-10900K",
+  "minimum_samples": 30,
+  "native": {
+    "expected_cases": 20,
+    "compression": 0,
+    "max_rss_kib": 131072,
+    "shaded_median_ms": 75,
+    "shaded_p95_ms": 90,
+    "illustrated_median_ms": 150,
+    "illustrated_p95_ms": 180
+  },
+  "windows": {
+    "expected_cases": 6,
+    "compression": 1,
+    "median_ms": 350,
+    "p95_ms": 400
+  },
+  "annotated": {
+    "expected_cases": 8,
+    "compression": 0,
+    "median_ms": 250,
+    "p95_ms": 350
+  }
+}

@@ -1,6 +1,6 @@
 # Technical Design v0.1 — Headless VASP Geometry-to-PNG Renderer
 
-**Status:** v0.1.0 reference-renderer release on 2026-10-29, covering M0–M3 and the illustrated top-view refinements. Performance selection in M4–M6 is deferred to a workstation. Sections 16, 18–20 and 21 record decisions and validation.
+**Status:** v0.1.0 is the M0–M3 reference checkpoint on 2026-10-29. v0.2.0 completes M4–M5 rendering/AA/encoder/thread experiments and M6 overlays, production validation and scoped workstation acceptance. The user accepts WSL results for performance selection and deployment validation; native Linux/HPC access is not an acceptance requirement. Sections 16, 18–24 record decisions and validation. M7 follows the v0.2.0 release boundary.
 
 **Language:** C11. **Platform:** Linux workstations and HPC nodes. **Interface:** standalone CLI. **Default image:** 512 × 512 PNG.
 
@@ -225,7 +225,7 @@ Test all optional overlays even if their implementation is deferred; a feature b
 - **M3 — Reference renderer:** single-threaded accurate depth-buffer spheres/cylinders, base lighting, PNG output, fixed-env golden tests; measure initial latency.
 - **M4 — Rendering experiments:** Cairo painter prototype; native/adaptive/2× AA, compare correctness and timing.
 - **M5 — Encoder and threading experiments:** optimized PNG encoder candidates and optional tile parallelism; select best end-to-end combination.
-- **M6 — Production hardening:** overlays, robust error cleanup, representative HPC builds, documentation, performance report and targets.
+- **M6 — Production hardening:** overlays, robust error cleanup, representative deployment builds, documentation, performance report and targets. The approved deployment-validation environment is the WSL workstation (see `performance.md`).
 - **M7 — Optional XML:** libxml2 streaming `vasprun.xml` support if prioritized; matching input/geometry fixtures and performance tests.
 
 Each milestone has explicit test evidence and benchmark output; do not postpone correctness gates until the end.
@@ -506,3 +506,79 @@ those experiments with a fresh workstation baseline covering the current
 illustrated and shaded styles; historical laptop observations do not define
 release guarantees or the new optimization targets. See `performance.md` and
 `release-v0.1.0.md` for the handoff and release validation record.
+
+## 22. M4 decision record
+
+The user accepts the current WSL workstation for all performance and deployment
+validation. A fresh 20-case shaded/illustrated baseline, a six-case filesystem
+comparison and raw timing/image artifacts are recorded in `performance.md`.
+The baseline binary and its source archive are retained under
+`artifacts/m4-m6/reference/`. Native/2×/4× sampling controls are implemented;
+the default 2× path exactly preserves the 20 baseline images and the three
+sample grids pass the independent ray oracle. Point sampling is a control,
+not analytic edge coverage. The optional Cairo prototype supplies native edge
+coverage, but fails explicit interpenetrating-sphere and colored crossing-cylinder
+depth gates at retained witness pixels. Accurate Z-buffer rendering is selected.
+The adaptive mask uses conservative surface-depth intervals and preserves four
+depth samples at ambiguous overlaps and edges. It is bit-exact to uniform 2×
+on the measured illustrated cases; shaded interior approximation differs by at
+most two channel levels on those cases and passes higher-quality comparisons.
+It improves the illustrated Co-100 median by 19.1%, with scene-dependent gains
+elsewhere. Uniform 2× remains the default while both AA candidates enter M5.
+
+The experimental build passes all five CTest entries (51 checks) in Release and
+with address, undefined-behavior and leak sanitizers. `performance.md` records
+the algorithms, negative results, raw report paths, cycles/RSS/image evidence
+and M4 decision. Encoder/thread/AA combination selection, overlays, deployment
+validation, final targets and hardening remain M5–M6 work.
+
+## 23. M5 decision record
+
+The renderer caches projected bounds and cylinder intersection coefficients,
+then renders disjoint 32×32 tiles in stable primitive order. OpenMP trials at
+1/2/4/8 workers preserve every tested pixel. PNG profiles use identical RGBA
+buffers across libpng settings, Cairo PNG and a libdeflate-backed encoder.
+Cairo's partial-alpha RGB quantization fails the lossless encoder gate.
+
+The production defaults are the accurate Z-buffer with uniform 2× sampling,
+automatic workers (up to eight for at least 512×512 pixels; one below that area),
+and libdeflate/no filtering. Interleaved trials select compression 0 on native
+Linux storage and compression 1 on the measured WSL 9p Windows-mounted output
+path; `image.png_compression` / `--png-compression auto` resolve accordingly.
+Explicit levels and thread counts remain available. libpng and serial builds
+remain supported through configure-time feature switches. Adaptive AA remains
+available; its benefit is scene dependent after threading.
+
+The selected defaults exactly preserve all 20 original baseline RGBA images and
+the six Windows-path comparison images. Native-storage medians are 15.71–61.22
+ms shaded and 30.99–127.74 ms illustrated. The experimental build's seven CTest
+entries cover 58 checks, including aggregate encoder budgets and atomic write
+failures, and pass in Release and with address/undefined-behavior/leak sanitizers.
+The default Cairo-free build passes its five CTest entries. Raw reports, source
+snapshots, images, binaries, interleaved orders and decisions are documented in
+`performance.md`. M6 overlays, final deployment/package validation, hardening
+and scoped workstation targets remain.
+
+
+## 24. M6 decision and acceptance record
+
+All requested optional annotations are implemented in the selected accurate
+Z-buffer, without external font assets. Element/zero-based instance labels use
+one center and eight off-center front-surface depth probes; stable foreground
+priority filters colliding label plates. This handles periodic bond caps while
+suppressing hidden atoms. The legend counts scene atom instances by element;
+Cartesian axes and a nice 1/2/5 angstrom scale bar use the fitted camera. Legend
+and footer space are reserved before framing, with layout/visibility work and
+allocation limits. All 20 supplied slabs have plain and annotated galleries.
+
+The final default images exactly match all 20 original baseline RGBA references.
+The final native/Windows/annotated runs pass 34 scoped performance checks from
+`performance-targets.json`; raw results and pixel validation are retained in
+`artifacts/m4-m6/m6/`. Default Release, all-feature Release and leak-enabled
+address/undefined-behavior suites pass, covering 63/67 checks. Source/binary
+archives, private-prefix installation, runtime dependencies, clean offline
+source builds/tests and serial/libpng-only fallback output are checked by
+`tools/validate_deployment.py`. See `m6-validation.md` and `performance.md` for
+commands, evidence paths, numeric targets and limits. WSL fully satisfies the
+user-approved deployment-validation scope; M4–M6 are complete. M7 XML, broader
+OUTCAR version/real-MD claims and any new release publication remain separate.

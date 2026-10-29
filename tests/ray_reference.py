@@ -18,7 +18,7 @@ def norm(a):
     return math.sqrt(dot(a,a))
 
 
-def reference_pixels(scene):
+def reference_pixels(scene, supersampling=2):
     camera=scene["camera"]
     scale=camera["scale"]
     width,height=camera["width"],camera["height"]
@@ -35,8 +35,9 @@ def reference_pixels(scene):
     for y in range(height):
         for x in range(width):
             colors=[]
-            for dy in [0.25,0.75]:
-                for dx in [0.25,0.75]:
+            offsets=[(k+0.5)/supersampling for k in range(supersampling)]
+            for dy in offsets:
+                for dx in offsets:
                     origin=[(x+dx-width/2)/scale+camera["center"][0],
                             (height-y-dy-height/2)/scale+camera["center"][1],zfront]
                     closest=math.inf
@@ -79,5 +80,6 @@ def reference_pixels(scene):
                                 shade=1 if p["kind"]=="cell" else 0.25+0.75*max(0,dot(normal,light))
                                 color=[int(math.floor(v*shade+0.5)) for v in p["rgba"][:3]]+[255]
                     colors.append(color)
-            result.extend((sum(color[d] for color in colors)+2)//4 for d in range(4))
+            n=supersampling**2
+            result.extend((sum(color[d] for color in colors)+n//2)//n for d in range(4))
     return bytes(result)

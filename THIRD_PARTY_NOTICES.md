@@ -18,6 +18,16 @@ in this repository. cJSON is compiled into the executable. libpng, zlib and the
 system C/math runtimes are system dependencies, not vendored copies; binary
 packages use the system's shared libraries.
 
+Optional `ENABLE_CAIRO_EXPERIMENTS` builds also link system Cairo (LGPL-2.1
+or MPL-1.1, with its upstream per-file notices). Cairo and its transitive
+shared libraries are not vendored or included in binary archives. The painter
+prototype is original project code and remains subject to the project's GPL.
+
+Optional `ENABLE_LIBDEFLATE` builds link system libdeflate (MIT), not a vendored
+copy. Optional `ENABLE_OPENMP` builds link the compiler's OpenMP runtime (GCC
+uses libgomp under GPL-3.0 with the GCC Runtime Library Exception). These shared
+libraries are system dependencies and are not copied into binary archives.
+
 The supplied slab CONTCAR snapshots are original user-provided fixture data
 included under the project's GPL-3.0-only license. Their original byte content
 and calculation provenance remain preserved in `tests/fixtures/slabs`.

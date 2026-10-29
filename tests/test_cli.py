@@ -46,8 +46,8 @@ class InputTests(unittest.TestCase):
         return path
 
     def test_help_and_version(self):
-        self.assertIn("vasp-render 0.1.0", self.run_cli("--help").stdout)
-        self.assertEqual("vasp-render 0.1.0\n", self.run_cli("--version").stdout)
+        self.assertIn("vasp-render 0.2.0", self.run_cli("--help").stdout)
+        self.assertEqual("vasp-render 0.2.0\n", self.run_cli("--version").stdout)
 
     def test_skewed_direct_and_species_order(self):
         result = self.data(self.poscar)
@@ -245,7 +245,11 @@ class InputTests(unittest.TestCase):
                            "overlays": {"cell": False}})
         for options in [("--width", "128", "--config", cfg), ("--config", cfg, "--width", "128")]:
             settings = self.data(self.poscar, *options)["settings"]
-            self.assertEqual(settings["image"], {"width": 128, "height": 512, "background": "#abcdef80", "style":"shaded", "depth_fade":0, "outline_width":1})
+            capabilities=json.loads(subprocess.check_output([str(EXE),"--build-info"],text=True))
+            self.assertEqual(settings["image"], {"width": 128, "height": 512, "background": "#abcdef80", "style":"shaded", "aa":"2x", "backend":"zbuffer", "depth_fade":0, "outline_width":1,
+                                                "png_encoder":"libdeflate" if capabilities["libdeflate"] else "libpng",
+                                                "png_filter":"none" if capabilities["libdeflate"] else "adaptive",
+                                                "png_compression":"auto" if capabilities["libdeflate"] else 1})
             self.assertFalse(settings["overlays"]["cell"])
             self.assertEqual(settings["elements"]["Si"]["radius_A"], 1.1)
             self.assertEqual(settings["bond_cutoffs_A"], {"O-Si": 2})
@@ -301,10 +305,12 @@ class InputTests(unittest.TestCase):
 
     def test_no_destination_on_failure(self):
         output = self.root / "out.png"
-        self.run_cli(FIXTURES / "POSCAR.skew", "-o", output, "--threads", "2", code=3)
+        capabilities=json.loads(subprocess.check_output([str(EXE),"--build-info"],text=True))
+        if not capabilities["openmp"]:
+            self.run_cli(FIXTURES / "POSCAR.skew", "-o", output, "--threads", "2", code=3)
         self.assertFalse(output.exists())
         output.write_bytes(b"existing")
-        self.run_cli(FIXTURES / "POSCAR.skew", "-o", output, "--labels", "element", code=3)
+        self.run_cli(FIXTURES / "POSCAR.skew", "-o", output, "--axes", "on", "--width","64","--height","64",code=2)
         self.assertEqual(output.read_bytes(), b"existing")
 
     def test_io_and_format_errors(self):

@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "scene.h"
+#include "overlay.h"
 #include "vec.h"
 #include <float.h>
 #include <limits.h>
@@ -115,7 +116,8 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
             fractional[i].x[d] = f - floor(f);
         }
         Primitive p = {0};
-        p.kind = SPHERE; p.radius = element_radius(c,s->atoms[i].element); p.source_a = i;
+        p.kind = SPHERE; p.element=s->atoms[i].element;
+        p.radius = element_radius(c,s->atoms[i].element); p.source_a = i;
         if (!isfinite(p.radius) || p.radius < 1e-9 || p.radius > 1e6) { fail(e,5,"sphere radius must be within [1e-9,1e6] angstroms"); goto done; }
         element_color(c,s->atoms[i].element,p.color);
         for (size_t x = 0; x < c->repeat[0]; ++x) for (size_t y = 0; y < c->repeat[1]; ++y) for (size_t z = 0; z < c->repeat[2]; ++z) {
@@ -191,6 +193,7 @@ bool camera_fit(const Config *c, const Scene *s, Camera *camera, Error *e)
     camera->right = unit(right);
     camera->up = cross(camera->view,camera->right);
     camera->width = c->width; camera->height = c->height;
+    if (!overlay_layout(c,s,camera,e)) return false;
     double lo[2] = {DBL_MAX,DBL_MAX}, hi[2] = {-DBL_MAX,-DBL_MAX};
     for (size_t i = 0; i < s->count; ++i) {
         const Primitive *p = &s->items[i];
@@ -205,8 +208,13 @@ bool camera_fit(const Config *c, const Scene *s, Camera *camera, Error *e)
     camera->center_x = lo[0]+width/2; camera->center_y = lo[1]+height/2;
     /* Reserve the full line width plus an AA guard even with a zero margin. */
     double guard=c->cell ? c->cell_width+1 : 2;
-    double usable_x = fmax((double)c->width*(1-2*c->margin)-guard,0.5);
-    double usable_y = fmax((double)c->height*(1-2*c->margin)-guard,0.5);
+    double usable_x = fmax((double)camera->viewport_width*(1-2*c->margin)-guard,0.5);
+    double usable_y = fmax((double)camera->viewport_height*(1-2*c->margin)-guard,0.5);
     camera->scale = fmin(usable_x/width,usable_y/height);
-    return isfinite(camera->scale) && camera->scale > 0 ? true : fail(e,5,"unrepresentable camera scale");
+    if (!isfinite(camera->scale) || camera->scale<=0) return fail(e,5,"unrepresentable camera scale");
+    if (c->labels || c->axes || c->legend || c->scale_bar) {
+        camera->center_x+=((double)c->width/2-((double)camera->viewport_x+(double)camera->viewport_width/2))/camera->scale;
+        camera->center_y+=((double)c->height/2-((double)camera->viewport_y+(double)camera->viewport_height/2))/camera->scale;
+    }
+    return overlay_scale_bar(c,camera,e);
 }

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-"""Minimal independent decoder for the non-interlaced RGBA8 reference output."""
+"""Minimal independent decoder for non-interlaced RGB8/RGBA8 output."""
 import struct
 import zlib
 
@@ -19,7 +19,8 @@ def decode_png(path):
         assert zlib.crc32(kind + payload) == crc
         if kind == b"IHDR":
             width, height, bits, color, comp, filt, interlace = struct.unpack(">IIBBBBB", payload)
-            assert (bits, color, comp, filt, interlace) == (8, 6, 0, 0, 0)
+            assert (bits, comp, filt, interlace) == (8, 0, 0, 0) and color in (2,6)
+            channels=4 if color==6 else 3
         elif kind == b"IDAT":
             compressed.extend(payload)
         elif kind == b"IEND":
@@ -27,7 +28,7 @@ def decode_png(path):
         offset += n + 12
     assert ended and offset == len(data)
     raw = zlib.decompress(compressed)
-    stride = 4 * width
+    stride = channels * width
     assert len(raw) == height * (stride + 1)
     pixels = bytearray()
     previous = bytearray(stride)
@@ -35,9 +36,9 @@ def decode_png(path):
         mode = raw[y * (stride + 1)]
         row = bytearray(raw[y * (stride + 1) + 1:(y + 1) * (stride + 1)])
         for i in range(stride):
-            left = row[i - 4] if i >= 4 else 0
+            left = row[i - channels] if i >= channels else 0
             up = previous[i]
-            corner = previous[i - 4] if i >= 4 else 0
+            corner = previous[i - channels] if i >= channels else 0
             if mode == 0:
                 correction = 0
             elif mode == 1:
@@ -52,6 +53,10 @@ def decode_png(path):
                 distances = [abs(p - left), abs(p - up), abs(p - corner)]
                 correction = [left, up, corner][distances.index(min(distances))]
             row[i] = (row[i] + correction) & 255
-        pixels.extend(row)
+        if channels==4:
+            pixels.extend(row)
+        else:
+            for x in range(width):
+                pixels.extend(row[3*x:3*x+3]);pixels.append(255)
         previous = row
     return width, height, bytes(pixels)

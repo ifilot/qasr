@@ -115,6 +115,44 @@ static bool style(const char *s, RenderStyle *v)
     return true;
 }
 
+static bool antialias(const char *s, Config *c)
+{
+    c->adaptive_aa=false;
+    if (!strcmp(s,"native")) c->aa_scale=1;
+    else if (!strcmp(s,"2x")) c->aa_scale=2;
+    else if (!strcmp(s,"4x")) c->aa_scale=4;
+    else if (!strcmp(s,"adaptive")) { c->aa_scale=2; c->adaptive_aa=true; }
+    else return false;
+    return true;
+}
+
+static bool backend(const char *s, RenderBackend *value)
+{
+    if (!strcmp(s,"zbuffer")) *value=BACKEND_ZBUFFER;
+    else if (!strcmp(s,"cairo")) *value=BACKEND_CAIRO;
+    else return false;
+    return true;
+}
+
+static bool encoder(const char *s, PngEncoder *value)
+{
+    if (!strcmp(s,"libpng")) *value=ENCODER_LIBPNG;
+    else if (!strcmp(s,"libdeflate")) *value=ENCODER_LIBDEFLATE;
+    else if (!strcmp(s,"cairo")) *value=ENCODER_CAIRO;
+    else return false;
+    return true;
+}
+
+static bool png_filter(const char *s, PngFilter *value)
+{
+    if (!strcmp(s,"adaptive")) *value=FILTER_ADAPTIVE;
+    else if (!strcmp(s,"none")) *value=FILTER_NONE;
+    else if (!strcmp(s,"sub")) *value=FILTER_SUB;
+    else if (!strcmp(s,"up")) *value=FILTER_UP;
+    else return false;
+    return true;
+}
+
 /* cJSON deliberately accepts some non-JSON number spellings. Check the lexical
  * grammar before decoding, and forbid NUL strings (C schema keys use strcmp). */
 static bool json_lexical(const char *s)
@@ -180,6 +218,17 @@ static bool settings_group(const cJSON *group, const char *name, Config *c, Erro
         bool valid = false;
         if (!strcmp(name, "image")) {
             if (!strcmp(k,"style")) valid=cJSON_IsString(j) && style(j->valuestring,&c->style);
+            else if (!strcmp(k,"aa")) valid=cJSON_IsString(j) && antialias(j->valuestring,c);
+            else if (!strcmp(k,"backend")) valid=cJSON_IsString(j) && backend(j->valuestring,&c->backend);
+            else if (!strcmp(k,"png_encoder")) valid=cJSON_IsString(j) && encoder(j->valuestring,&c->png.encoder);
+            else if (!strcmp(k,"png_filter")) valid=cJSON_IsString(j) && png_filter(j->valuestring,&c->png.filter);
+            else if (!strcmp(k,"png_compression")) {
+                valid=cJSON_IsString(j) && !strcmp(j->valuestring,"auto");
+                if (valid) { c->png.compression=-1;continue; }
+                valid=cJSON_IsNumber(j) && isfinite(j->valuedouble) &&
+                    j->valuedouble>=0 && j->valuedouble<=9 && floor(j->valuedouble)==j->valuedouble;
+                if (valid) c->png.compression=(int)j->valuedouble;
+            }
             else if (!strcmp(k,"depth_fade")) {
                 valid=cJSON_IsNumber(j) && isfinite(j->valuedouble) && j->valuedouble>=0 && j->valuedouble<=1;
                 if (valid) c->depth_fade=j->valuedouble;
@@ -308,6 +357,11 @@ static bool read_config(const char *path, Config *c, Error *e)
 
 static bool validate(Config *c, Error *e)
 {
+    if (c->png.filter==FILTER_DEFAULT)
+        c->png.filter=c->png.encoder==ENCODER_LIBDEFLATE ? FILTER_NONE : FILTER_ADAPTIVE;
+    if (c->png.compression==-1 && c->png.encoder!=ENCODER_LIBDEFLATE) c->png.compression=1;
+    if (c->png.encoder==ENCODER_CAIRO && (c->png.compression!=1 || c->png.filter!=FILTER_ADAPTIVE))
+        return fail(e,2,"Cairo PNG uses internal compression/filter settings; omit PNG tuning overrides");
     if (c->width > 67108864u / c->height) return fail(e, 2, "image exceeds 67108864 pixels");
     size_t product = 1;
     for (int i = 0; i < 3; ++i) {
@@ -331,6 +385,11 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
 {
     memset(c, 0, sizeof *c);
     c->width = c->height = 512;
+    c->aa_scale=2;
+    c->png.compression=-1;c->png.filter=FILTER_DEFAULT;
+#ifdef VR_HAVE_LIBDEFLATE
+    c->png.encoder=ENCODER_LIBDEFLATE;
+#endif
     c->repeat[0] = c->repeat[1] = c->repeat[2] = 1;
     c->view = (Vec3){{1, 1, 1}}; c->up = (Vec3){{0, 0, 1}};
     c->margin = 0.06; c->sphere_scale = 1; c->bond_radius = 0.12;
@@ -375,6 +434,16 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
         else if (!strcmp(k, "--height")) ok = integer(v, 16384, &c->height) && c->height;
         else if (!strcmp(k, "--repeat")) ok = repeat_text(v, c->repeat);
         else if (!strcmp(k,"--style")) ok=style(v,&c->style);
+        else if (!strcmp(k,"--aa")) ok=antialias(v,c);
+        else if (!strcmp(k,"--backend")) ok=backend(v,&c->backend);
+        else if (!strcmp(k,"--png-encoder")) ok=encoder(v,&c->png.encoder);
+        else if (!strcmp(k,"--png-filter")) ok=png_filter(v,&c->png.filter);
+        else if (!strcmp(k,"--png-compression")) {
+            size_t level;
+            ok=!strcmp(v,"auto");
+            if (ok) c->png.compression=-1;
+            else { ok=integer(v,9,&level);if (ok) c->png.compression=(int)level; }
+        }
         else if (!strcmp(k,"--outline-width")) ok=number(v,&c->outline_width) && c->outline_width>=0 && c->outline_width<=8;
         else if (!strcmp(k,"--cell-width")) ok=number(v,&c->cell_width) && c->cell_width>0 && c->cell_width<=32;
         else if (!strcmp(k, "--view")) {
