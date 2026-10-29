@@ -82,7 +82,7 @@ class WorkerTests(unittest.TestCase):
         for args in [['--cache-mib','513'],['--cache-mib','1','--cache-mib','1'],['--max-jobs','0']]:
             p=subprocess.run([str(EXE),'--batch',*args],capture_output=True);self.assertEqual(p.returncode,2)
         self.assertEqual(json.loads(subprocess.check_output([str(EXE),'--schema','worker'])),json.loads((ROOT/'schemas/worker.schema.json').read_text()))
-        config=self.root/'prefs/vasp-render';config.mkdir(parents=True);(config/'config.json').write_text('malformed')
+        config=self.root/'prefs/qasr';config.mkdir(parents=True);(config/'config.json').write_text('malformed')
         p=subprocess.run([str(EXE),'--batch'],input=json.dumps(self.request())+'\n',env=dict(os.environ,XDG_CONFIG_HOME=str(config.parent)),text=True,capture_output=True)
         self.assertTrue(json.loads(p.stdout)['ok'])
         broken=subprocess.Popen([str(EXE),'--batch'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)

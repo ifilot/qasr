@@ -102,7 +102,7 @@
   const form = $('#recipe-form');
   function recipe() {
     const input = form.elements.input.value, style = form.elements.style.value;
-    const parts = ['build-release/vasp-render', 'examples/'+input];
+    const parts = ['build-release/qasr', 'examples/'+input];
     if (style === 'illustrated') parts.push('--config', 'examples/illustrated.json');
     else parts.push('--style', 'shaded');
     parts.push('--view', form.elements.view.value, '--width', form.elements.size.value, '--height', form.elements.size.value,

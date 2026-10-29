@@ -9,7 +9,7 @@ Implementation lives in `src/`; build and inspection instructions are in `README
 
 ## 1. Executive summary
 
-Build a headless C executable, provisionally named `vasp-render`, that reads VASP geometry from **POSCAR, CONTCAR, OUTCAR, or optionally `vasprun.xml`** and produces an orthographic, automatically framed, shaded ball-and-stick PNG. XML was deferred through v0.2.0 and is implemented by M7. XDATCAR and other VASP data formats are explicitly out of scope. Typical input structures contain 100–1,000 atoms. The pipeline implements correct handling of skewed cells and periodic bonds, configurable cell repetition, deterministic view settings, and strict validation.
+Build a headless C executable, named `qasr` (QASR: Quick Atomic Structure Renderer), that reads VASP geometry from **POSCAR, CONTCAR, OUTCAR, or optionally `vasprun.xml`** and produces an orthographic, automatically framed, shaded ball-and-stick PNG. XML was deferred through v0.2.0 and is implemented by M7. XDATCAR and other VASP data formats are explicitly out of scope. Typical input structures contain 100–1,000 atoms. The pipeline implements correct handling of skewed cells and periodic bonds, configurable cell repetition, deterministic view settings, and strict validation.
 
 Rendering backend, anti-aliasing method, PNG encoder, and parallelism are **benchmark decisions** rather than fixed technology choices. Compare a Cairo painter's-algorithm implementation with an accurate software depth-buffer implementation. Select the fastest method that passes visual correctness tests.
 
@@ -151,7 +151,7 @@ Write to a unique temporary file in the target directory and rename only after s
 ## 11. CLI contract (proposed)
 
 ```text
-vasp-render INPUT -o OUTPUT.png [options]
+qasr INPUT -o OUTPUT.png [options]
   --format auto|poscar|contcar|outcar|xml
   --frame final|N
   --width 512 --height 512

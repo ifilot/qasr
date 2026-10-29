@@ -477,8 +477,8 @@ static bool load_config(const char *path, Config *c, const char *layer, bool opt
 
 static char *user_path(Error *e)
 {
-    const char *base=getenv("XDG_CONFIG_HOME");const char *suffix="/vasp-render/config.json";
-    if (!base || *base!='/') {base=getenv("HOME");suffix="/.config/vasp-render/config.json";}
+    const char *base=getenv("XDG_CONFIG_HOME");const char *suffix="/qasr/config.json";
+    if (!base || *base!='/') {base=getenv("HOME");suffix="/.config/qasr/config.json";}
     if (!base || *base!='/') return NULL;
     size_t n=strlen(base)+strlen(suffix)+1;
     if (n>4096) {fail_at(e,7,"config_path_too_long","user_config","user config path exceeds 4095 bytes");return NULL;}
@@ -734,6 +734,6 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
 bool config_parse(int argc, char **argv, Config *c, Error *e) {return parse_config(argc,argv,NULL,c,e);}
 bool config_request(const cJSON *job, bool validation, Config *c, Error *e)
 {
-    char *argv[]={"vasp-render","--no-user-config","--json-errors","--validate-config"};
+    char *argv[]={"qasr","--no-user-config","--json-errors","--validate-config"};
     return parse_config(validation ? 4 : 3,argv,job,c,e);
 }

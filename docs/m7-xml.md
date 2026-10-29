@@ -8,9 +8,9 @@ removes libxml2 linkage. `--build-info` reports `xml: true|false`. The v0.2.0 ta
 ```sh
 cmake -S . -B /tmp/qasr-m7-release -DCMAKE_BUILD_TYPE=Release
 cmake --build /tmp/qasr-m7-release -j 10
-/tmp/qasr-m7-release/vasp-render vasprun.xml --inspect
-/tmp/qasr-m7-release/vasp-render input.data --format xml --frame 0 -o first.png
-/tmp/qasr-m7-release/vasp-render vasprun.xml --frame final \
+/tmp/qasr-m7-release/qasr vasprun.xml --inspect
+/tmp/qasr-m7-release/qasr input.data --format xml --frame 0 -o first.png
+/tmp/qasr-m7-release/qasr vasprun.xml --frame final \
   --config presets/illustrated.json --labels element --legend on \
   --axes on --scale-bar on -o final.png
 ```
@@ -98,7 +98,7 @@ or new real-MD coverage for the separate OUTCAR parser.
 
 ```sh
 ctest --test-dir /tmp/qasr-m7-release --output-on-failure
-python3 tools/benchmark_xml.py /tmp/qasr-m7-release/vasp-render \
+python3 tools/benchmark_xml.py /tmp/qasr-m7-release/qasr \
   --samples 30 --output artifacts/m7/benchmark.json
 python3 tools/validate_deployment.py /tmp/qasr-m7-release \
   --output artifacts/m7/deployment/report.json

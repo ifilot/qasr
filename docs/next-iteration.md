@@ -40,8 +40,8 @@ values remain the final override within level 3. Thus the conceptual three-tier
 model has four concrete merge steps: built-ins → user file → job file → CLI.
 Removing the existing job file would lose reproducible project recipes.
 
-Use `$XDG_CONFIG_HOME/vasp-render/config.json` when XDG_CONFIG_HOME is a nonempty
-absolute path; otherwise use `$HOME/.config/vasp-render/config.json` when HOME is
+Use `$XDG_CONFIG_HOME/qasr/config.json` when XDG_CONFIG_HOME is a nonempty
+absolute path; otherwise use `$HOME/.config/qasr/config.json` when HOME is
 an absolute path. Follow the [XDG base-directory specification](https://specifications.freedesktop.org/basedir/latest/).
 If neither is available, use built-ins without inventing a relative search path.
 Do not implicitly search the current working directory or parent directories.

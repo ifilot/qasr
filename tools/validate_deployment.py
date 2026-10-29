@@ -47,7 +47,7 @@ def main():
         return result.stdout
     install=work/'installed tree'
     run('install',['cmake','--install',build,'--prefix',install])
-    installed=install/'bin/vasp-render'
+    installed=install/'bin/qasr'
     capabilities=json.loads(run('installed-build-info',[installed,'--build-info']))
     if not capabilities['openmp'] or not capabilities['libdeflate'] or capabilities['cairo']:
         raise RuntimeError('production feature configuration differs from selected defaults')
@@ -55,7 +55,7 @@ def main():
     source=runtime/'CONTCAR';shutil.copyfile(ROOT/'tests/fixtures/slabs/18_pd_ceria_co_oxidation_ts/CONTCAR',source)
     flags=[source,'--labels','element','--legend','on','--axes','on','--scale-bar','on']
     installed_png=runtime/'installed.png'
-    run('installed-render',[installed,*flags,'--config',install/'share/vasp-render/presets/illustrated.json','-o',installed_png],cwd=runtime)
+    run('installed-render',[installed,*flags,'--config',install/'share/qasr/presets/illustrated.json','-o',installed_png],cwd=runtime)
     if capabilities.get('xml'):
         xml_source=runtime/'vasprun.xml'
         xml_source.write_bytes(gzip.decompress((ROOT/'tests/fixtures/vasprun.md.xml.gz').read_bytes()))
@@ -64,24 +64,24 @@ def main():
             raise RuntimeError('installed XML inspection differs from pinned MD fixture')
     linked=run('installed-libraries',['ldd',installed])
     if 'not found' in linked:raise RuntimeError('unresolved installed shared library')
-    if not (install/'share/doc/vasp_render/LICENSE').is_file():raise RuntimeError('installed GPL notice missing')
+    if not (install/'share/doc/qasr/LICENSE').is_file():raise RuntimeError('installed GPL notice missing')
     archives=out.parent/'archives';archives.mkdir(exist_ok=True)
     run('binary-package',['cpack','--config',build/'CPackConfig.cmake','-B',archives])
-    binary=next(archives.glob('vasp-render-*-Linux-*.tar.gz'))
+    binary=next(archives.glob('qasr-*-Linux-*.tar.gz'))
     binary_hash=digest(binary)
     if binary.with_name(binary.name+'.sha256').read_text().split()[0]!=binary_hash:
         raise RuntimeError('binary package checksum mismatch')
     binary_root=work/'binary-unpacked';extract(binary,binary_root)
-    packaged=next(binary_root.glob('*/bin/vasp-render'));pkg_prefix=packaged.parents[1]
+    packaged=next(binary_root.glob('*/bin/qasr'));pkg_prefix=packaged.parents[1]
     packaged_png=runtime/'packaged.png'
-    run('packaged-render',[packaged,*flags,'--config',pkg_prefix/'share/vasp-render/presets/illustrated.json','-o',packaged_png],cwd=runtime)
+    run('packaged-render',[packaged,*flags,'--config',pkg_prefix/'share/qasr/presets/illustrated.json','-o',packaged_png],cwd=runtime)
     if decode_png(installed_png)!=decode_png(packaged_png):raise RuntimeError('installed/package images differ')
     run('source-package',['python3',ROOT/'tools/package_source.py','--output',archives])
     manifest_path=next(archives.glob('*-source-manifest.json'));manifest=json.loads(manifest_path.read_text())
     archive=archives/manifest['archive']
     if digest(archive)!=manifest['sha256']:raise RuntimeError('source manifest archive checksum mismatch')
     source_root=work/'source-unpacked';extract(archive,source_root)
-    unpacked=next(source_root.glob('vasp-render-*'))
+    unpacked=next(source_root.glob('qasr-*'))
     for relative,expected in manifest['files'].items():
         if digest(unpacked/relative)!=expected:raise RuntimeError('source file hash mismatch: '+relative)
     for required in ['src/overlay.c','src/overlay.h','tests/test_overlays.py','docs/performance-targets.json',
@@ -92,17 +92,17 @@ def main():
     run('source-build',['cmake','--build',clean_build,'-j',args.jobs])
     run('source-tests',['ctest','--test-dir',clean_build,'--output-on-failure'])
     source_png=runtime/'source.png'
-    run('source-render',[clean_build/'vasp-render',*flags,'--config',unpacked/'presets/illustrated.json','-o',source_png],cwd=runtime)
+    run('source-render',[clean_build/'qasr',*flags,'--config',unpacked/'presets/illustrated.json','-o',source_png],cwd=runtime)
     if decode_png(source_png)!=decode_png(installed_png):raise RuntimeError('fresh source build image differs')
     minimal=work/'minimal-build'
     run('minimal-configure',['cmake','-S',unpacked,'-B',minimal,'-DCMAKE_BUILD_TYPE=Release','-DBUILD_TESTING=ON',
                              '-DENABLE_OPENMP=OFF','-DENABLE_LIBDEFLATE=OFF','-DENABLE_CAIRO_EXPERIMENTS=OFF','-DENABLE_XML=OFF'])
     run('minimal-build',['cmake','--build',minimal,'-j',args.jobs])
     run('minimal-tests',['ctest','--test-dir',minimal,'--output-on-failure'])
-    minimal_cap=json.loads(run('minimal-build-info',[minimal/'vasp-render','--build-info']))
+    minimal_cap=json.loads(run('minimal-build-info',[minimal/'qasr','--build-info']))
     if any(minimal_cap.get(key,False) for key in ['openmp','libdeflate','cairo','xml']):raise RuntimeError('minimal features were not disabled')
     minimal_png=runtime/'minimal.png'
-    run('minimal-render',[minimal/'vasp-render',*flags,'--config',unpacked/'presets/illustrated.json','-o',minimal_png],cwd=runtime)
+    run('minimal-render',[minimal/'qasr',*flags,'--config',unpacked/'presets/illustrated.json','-o',minimal_png],cwd=runtime)
     if decode_png(minimal_png)!=decode_png(installed_png):raise RuntimeError('minimal build changes annotation pixels')
     # User thread limits also bound the automatic policy in the production build.
     limited=subprocess.run([str(installed),str(source),'-o',str(runtime/'limited.png'),'--benchmark-stages'],

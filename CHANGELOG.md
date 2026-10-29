@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — QASR naming
+
+- Name the application QASR (Quick Atomic Structure Renderer) and its native
+  executable, CMake target/project and source/binary packages `qasr`.
+- Use `qasr` for diagnostics, XDG user preferences and installed data/doc paths.
+- Update current guides, schemas, examples and the standalone handbook; retain
+  the immutable historical v0.3.0 source archive with its provisional name.
+
 ## Unreleased — M10/M11
 
 - Add original seeded POSCAR/XML datasets and seven workload families, including

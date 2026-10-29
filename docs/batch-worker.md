@@ -9,8 +9,8 @@ this implementation delivers the persistent rendering/batch branch of M10.
 ## Start and call
 
 ```sh
-vasp-render --batch --cache-mib 64 < requests.jsonl > responses.jsonl
-vasp-render --schema worker > worker.schema.json
+qasr --batch --cache-mib 64 < requests.jsonl > responses.jsonl
+qasr --schema worker > worker.schema.json
 ```
 
 `--batch` must be the first argument. Its only options are `--cache-mib 0..512`
@@ -120,9 +120,9 @@ Generate [the synthetic corpus](synthetic-workloads.md), then compare both
 backends using the same executable, corpus, filesystem and thread policy:
 
 ```sh
-python3 tools/run_m10_workloads.py build-release/vasp-render /tmp/m10-data \
+python3 tools/run_m10_workloads.py build-release/qasr /tmp/m10-data \
   --output /tmp/m10-cli --samples 30 --warmups 3
-python3 tools/run_m10_workloads.py build-release/vasp-render /tmp/m10-data \
+python3 tools/run_m10_workloads.py build-release/qasr /tmp/m10-data \
   --backend worker --cache-mib 64 --output /tmp/m10-worker \
   --samples 30 --warmups 3 --reference /tmp/m10-cli/report.json
 ```

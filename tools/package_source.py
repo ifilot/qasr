@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-"""Create the vasp-render source archive from an explicit release allowlist."""
+"""Create the qasr source archive from an explicit release allowlist."""
 import argparse
 import gzip
 import hashlib
@@ -18,7 +18,7 @@ def main():
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
     cmake=(root/"CMakeLists.txt").read_text()
-    version=re.search(r"project\(vasp_render VERSION ([0-9]+\.[0-9]+\.[0-9]+)",cmake).group(1)
+    version=re.search(r"project\(qasr VERSION ([0-9]+\.[0-9]+\.[0-9]+)",cmake).group(1)
     top=[".gitignore",".gitattributes","CMakeLists.txt","README.md","CHANGELOG.md","LICENSE","THIRD_PARTY_NOTICES.md"]
     files=[root/name for name in top]
     for directory in ["src","presets","schemas","docs","tests","tools","vendor",".github"]:
@@ -33,7 +33,7 @@ def main():
                 files.append(path)
     epoch=int(os.environ.get("SOURCE_DATE_EPOCH","0"))
     args.output.mkdir(parents=True,exist_ok=True)
-    destination=args.output/f"vasp-render-{version}.tar.gz"
+    destination=args.output/f"qasr-{version}.tar.gz"
     hashes={}
     with destination.open("wb") as output:
         with gzip.GzipFile(filename="",fileobj=output,mode="wb",mtime=epoch) as compressed:
@@ -41,13 +41,13 @@ def main():
                 for path in sorted(files):
                     relative=path.relative_to(root).as_posix()
                     data=path.read_bytes()
-                    info=tarfile.TarInfo(f"vasp-render-{version}/{relative}")
+                    info=tarfile.TarInfo(f"qasr-{version}/{relative}")
                     info.size=len(data);info.mtime=epoch;info.mode=0o644
                     archive.addfile(info,io.BytesIO(data))
                     hashes[relative]=hashlib.sha256(data).hexdigest()
     digest=hashlib.sha256(destination.read_bytes()).hexdigest()
     destination.with_name(destination.name+".sha256").write_text(f"{digest}  {destination.name}\n")
-    (args.output/f"vasp-render-{version}-source-manifest.json").write_text(json.dumps({
+    (args.output/f"qasr-{version}-source-manifest.json").write_text(json.dumps({
         "version":version,"archive":destination.name,"sha256":digest,"files":hashes},indent=2)+"\n")
     print(f"{destination}: {len(files)} files, SHA-256 {digest}")
 

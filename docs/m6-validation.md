@@ -1,5 +1,10 @@
 # M6 validation and operating scope
 
+Historical measurements below use the provisional executable name `vasp-render`.
+The current application is QASR: Quick Atomic Structure Renderer; use `qasr`
+for new builds. Retained commands and measurements are preserved as recorded.
+
+
 M6 completes element/index labels, axes, an element legend and a physical scale
 bar, alongside production/deployment checks. The user approved this WSL
 workstation for all acceptance testing. M7 XML and broader OUTCAR compatibility

@@ -53,7 +53,7 @@ def main():
            "illustrated preset; connectivity retains the Atom Architect bond rules.", "",
            "Source-labeled transition states and convergence have not been independently verified.", "",
            "Recreate from the repository root:", "", "```sh",
-           "python3 tools/render_examples.py build-release/vasp-render", "```", "",
+           "python3 tools/render_examples.py build-release/qasr", "```", "",
            "| Structure | Structure |", "| --- | --- |"]
     if args.overlays:
         lines[0]="# Annotated illustrated top views"
@@ -68,7 +68,7 @@ def main():
     if args.overlays: recreate += ["--overlays"]
     if args.expand_xy != "0,0": recreate += ["--expand-xy",args.expand_xy]
     if args.image_colors: recreate += ["--image-colors",args.image_colors]
-    lines[lines.index("python3 tools/render_examples.py build-release/vasp-render")]=shlex.join(recreate)
+    lines[lines.index("python3 tools/render_examples.py build-release/qasr")]=shlex.join(recreate)
     for offset in range(0,len(records),2):
         entries=[]
         for item in records[offset:offset+2]:

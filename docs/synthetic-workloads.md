@@ -16,11 +16,11 @@ python3 tools/generate_m10_workloads.py \
   --profile standard --seed 1729 --output artifacts/m10/data
 
 # Check file hashes, species/order, cells, frame counts and Cartesian positions.
-python3 tools/run_m10_workloads.py build-release/vasp-render \
+python3 tools/run_m10_workloads.py build-release/qasr \
   artifacts/m10/data --validate-only
 
 # Establish a baseline using independent CLI calls, before implementing a worker.
-python3 tools/run_m10_workloads.py build-release/vasp-render \
+python3 tools/run_m10_workloads.py build-release/qasr \
   artifacts/m10/data --output artifacts/m10/baseline \
   --samples 30 --warmups 3 --measure-rss
 ```
@@ -101,7 +101,7 @@ solve arbitrary concurrent input modification.
 `plans/*.jsonl` contain **driver envelopes**, not a currently supported renderer
 batch protocol. Each line has `id`, `action`, `requires`, an ordinary M9 `job` and
 `expected` assertions. Paths are relative to the suite root. The runner resolves
-paths and submits each job using the existing `vasp-render --job -` interface.
+paths and submits each job using the existing `qasr --job -` interface.
 The optional `active_input` field requests the private input-replacement scenario.
 A future M10 worker adapter can reuse these envelopes and expected outcomes.
 
@@ -125,11 +125,11 @@ Each measured request checks:
 For a selected experiment and optional thread comparison:
 
 ```sh
-python3 tools/run_m10_workloads.py build-release/vasp-render \
+python3 tools/run_m10_workloads.py build-release/qasr \
   artifacts/m10/data --families views styles \
   --output artifacts/m10/one-thread --samples 30 --warmups 3 --threads 1
 
-python3 tools/run_m10_workloads.py build-release/vasp-render \
+python3 tools/run_m10_workloads.py build-release/qasr \
   artifacts/m10/data --families views styles \
   --output artifacts/m10/auto-threads --samples 30 --warmups 3 --threads auto \
   --reference artifacts/m10/one-thread/report.json

@@ -1,4 +1,4 @@
-vasp-render handbook example kit
+QASR: Quick Atomic Structure Renderer — handbook example kit
 
 Extract this kit into an examples/ directory inside your source checkout.
 Commands in the handbook are run from that checkout root.

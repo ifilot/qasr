@@ -46,8 +46,9 @@ static bool inspect(const Config *c, const Structure *s)
 
 static void help(void)
 {
-    puts("vasp-render " VR_VERSION "\n"
-         "Usage: vasp-render INPUT -o OUTPUT.png [options]\n"
+    puts("QASR: Quick Atomic Structure Renderer\n"
+         "qasr " VR_VERSION "\n"
+         "Usage: qasr INPUT -o OUTPUT.png [options]\n"
          "  --inspect                   Normalized input JSON, without scene building\n"
          "  --inspect-scene             Wrapped instances, clipped bonds and camera JSON\n"
          "  --format auto|poscar|contcar|outcar|xml\n"
@@ -140,7 +141,7 @@ int main(int argc, char **argv)
         return fputs((const char *)schema,stdout)==EOF || fflush(stdout) ? 7 : 0;
     }
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
-    if (argc == 2 && !strcmp(argv[1], "--version")) { puts("vasp-render " VR_VERSION); return 0; }
+    if (argc == 2 && !strcmp(argv[1], "--version")) { puts("qasr " VR_VERSION); return 0; }
     if (argc == 2 && !strcmp(argv[1],"--build-info")) {
         printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
 #ifdef VR_HAVE_XML
@@ -217,6 +218,6 @@ int main(int argc, char **argv)
     image_free(&image);scene_free(&scene);structure_free(&s);config_free(&c); return 0;
 failure:
     image_free(&image);scene_free(&scene);structure_free(&s);
-    if (c.json_errors) print_json_error(&e);else fprintf(stderr, "vasp-render: %s\n", e.message);
+    if (c.json_errors) print_json_error(&e);else fprintf(stderr, "qasr: %s\n", e.message);
     config_free(&c);return e.code ? e.code : 8;
 }

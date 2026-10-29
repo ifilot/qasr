@@ -1,14 +1,14 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Batch rendering and OpenMP — vasp-render</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#batch-guide">Skip to worker guide</a><main id="batch-guide" style="margin:0 auto;max-width:1100px;padding:32px 24px;overflow-wrap:anywhere"><p>Download <a href="downloads/worker-requests.jsonl" download>worker-requests.jsonl</a> and <a href="downloads/CONTCAR.co" download>CONTCAR.co</a> into the same directory. Run the worker there with the request file on stdin. It writes worker-top.png and worker-oblique.png and returns three JSONL responses, including cache statistics.</p><nav aria-label="Handbook navigation"><a href="index.html">← User handbook</a> · <a href="configuration.html">Configuration &amp; atom styles</a> · <a href="downloads/vasp-render-development-source.tar.gz" download>Development sources</a> · <a href="schemas/worker.schema.json">Worker schema</a></nav><p class="eyebrow">DEVELOPMENT GUIDE · AFTER v0.3.0</p><article class="doc-section"><h1 id="m10-sequential-jsonl-worker">M10 — Sequential JSONL worker</h1>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Batch rendering and OpenMP — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#guide">Skip to documentation</a><main id="guide" style="margin:0 auto;max-width:1100px;padding:32px 24px;overflow-wrap:anywhere"><nav aria-label="Handbook navigation"><a href="index.html">← QASR handbook</a> · <a href="configuration.html">Configuration</a> · <a href="batch.html">Batch &amp; OpenMP</a> · <a href="downloads/qasr-source.tar.gz" download>QASR sources</a></nav><p class="eyebrow">QASR: QUICK ATOMIC STRUCTURE RENDERER · CURRENT DEVELOPMENT</p><p>Download <a href="downloads/worker-requests.jsonl" download>worker-requests.jsonl</a> and <a href="downloads/CONTCAR.co" download>CONTCAR.co</a> into one directory. Run <code>qasr --batch &lt; worker-requests.jsonl</code> there. It writes worker-top.png and worker-oblique.png and returns three responses, including cache statistics. <a href="schemas/worker.schema.json">Worker schema</a>.</p><article class="doc-section"><h1 id="m10-sequential-jsonl-worker">M10 — Sequential JSONL worker</h1>
 <p>Available on master after v0.3.0. <code>--build-info</code> reports <code>batch_worker: true</code>.
 The original single-job CLI remains supported and shares its rendering path with
 the worker. No additional runtime package, network listener or HTTP service is
 required. MCP remains an optional integration adapter when a client needs it;
 this implementation delivers the persistent rendering/batch branch of M10.</p>
 <h2 id="start-and-call">Start and call</h2>
-<pre><code class="language-sh">vasp-render --batch --cache-mib 64 &lt; requests.jsonl &gt; responses.jsonl
-vasp-render --schema worker &gt; worker.schema.json
+<pre><code class="language-sh">qasr --batch --cache-mib 64 &lt; requests.jsonl &gt; responses.jsonl
+qasr --schema worker &gt; worker.schema.json
 </code></pre>
 <p><code>--batch</code> must be the first argument. Its only options are <code>--cache-mib 0..512</code>
 (default 64, zero disables retention) and <code>--max-jobs 1..1000000</code> (optional;
@@ -99,9 +99,9 @@ return 2. A client must inspect every response, independently of final exit stat
 <h2 id="benchmark-and-verify">Benchmark and verify</h2>
 <p>Generate <a href="batch.html#synthetic-data-for-m10-and-m11">the synthetic corpus</a>, then compare both
 backends using the same executable, corpus, filesystem and thread policy:</p>
-<pre><code class="language-sh">python3 tools/run_m10_workloads.py build-release/vasp-render /tmp/m10-data \
+<pre><code class="language-sh">python3 tools/run_m10_workloads.py build-release/qasr /tmp/m10-data \
   --output /tmp/m10-cli --samples 30 --warmups 3
-python3 tools/run_m10_workloads.py build-release/vasp-render /tmp/m10-data \
+python3 tools/run_m10_workloads.py build-release/qasr /tmp/m10-data \
   --backend worker --cache-mib 64 --output /tmp/m10-worker \
   --samples 30 --warmups 3 --reference /tmp/m10-cli/report.json
 </code></pre>
@@ -325,11 +325,11 @@ retained real fixtures; they do not establish real-world performance by themselv
   --profile standard --seed 1729 --output artifacts/m10/data
 
 # Check file hashes, species/order, cells, frame counts and Cartesian positions.
-python3 tools/run_m10_workloads.py build-release/vasp-render \
+python3 tools/run_m10_workloads.py build-release/qasr \
   artifacts/m10/data --validate-only
 
 # Establish a baseline using independent CLI calls, before implementing a worker.
-python3 tools/run_m10_workloads.py build-release/vasp-render \
+python3 tools/run_m10_workloads.py build-release/qasr \
   artifacts/m10/data --output artifacts/m10/baseline \
   --samples 30 --warmups 3 --measure-rss
 </code></pre>
@@ -466,7 +466,7 @@ solve arbitrary concurrent input modification.</p>
 <p><code>plans/*.jsonl</code> contain <strong>driver envelopes</strong>, not a currently supported renderer
 batch protocol. Each line has <code>id</code>, <code>action</code>, <code>requires</code>, an ordinary M9 <code>job</code> and
 <code>expected</code> assertions. Paths are relative to the suite root. The runner resolves
-paths and submits each job using the existing <code>vasp-render --job -</code> interface.
+paths and submits each job using the existing <code>qasr --job -</code> interface.
 The optional <code>active_input</code> field requests the private input-replacement scenario.
 A future M10 worker adapter can reuse these envelopes and expected outcomes.</p>
 <p>The runner supports <code>--backend cli</code> (default, independent processes) and
@@ -486,11 +486,11 @@ a retained run supplies exact comparison hashes in a controlled environment.</p>
   reporting latency ratios. A failed or different-corpus reference is rejected.</li>
 </ul>
 <p>For a selected experiment and optional thread comparison:</p>
-<pre><code class="language-sh">python3 tools/run_m10_workloads.py build-release/vasp-render \
+<pre><code class="language-sh">python3 tools/run_m10_workloads.py build-release/qasr \
   artifacts/m10/data --families views styles \
   --output artifacts/m10/one-thread --samples 30 --warmups 3 --threads 1
 
-python3 tools/run_m10_workloads.py build-release/vasp-render \
+python3 tools/run_m10_workloads.py build-release/qasr \
   artifacts/m10/data --families views styles \
   --output artifacts/m10/auto-threads --samples 30 --warmups 3 --threads auto \
   --reference artifacts/m10/one-thread/report.json
@@ -513,4 +513,4 @@ replacement and reference-comparison rejection. The same suite is exercised with
 Release, sanitizer and XML/OpenMP/libdeflate-disabled renderer builds.</p>
 <p>M10 implements the persistent worker and reference comparisons. M11 is recorded in <a href="https://github.com/ifilot/qasr/blob/master/docs/next-iteration.md#m11--review-openmp-opportunities-and-thread-policy">the detailed design</a>:
 profile candidates for OpenMP, sweep thread counts/scheduling and worker/thread
-combinations, and retain improvements only when measurements justify them.</p></article><footer><p><a href="index.html">Return to the handbook</a> · GPL-3.0-only · Works offline.</p></footer></main></body></html>
+combinations, and retain improvements only when measurements justify them.</p></article><footer><p><a href="index.html">QASR handbook</a> · GPL-3.0-only · Works offline.</p></footer></main></body></html>

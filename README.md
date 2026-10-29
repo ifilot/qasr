@@ -1,9 +1,9 @@
-# vasp-render
+# QASR: Quick Atomic Structure Renderer
 
-Version **0.3.0**, licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
+Development version **0.3.0** (master after the release tag), licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
 [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
-Headless C11 VASP geometry-to-PNG renderer. This release builds on the
+Headless C11 VASP geometry-to-PNG renderer. The current implementation builds on the
 v0.1.0 reference checkpoint with validated input,
 periodic ball-and-stick geometry, and an orthographic software depth-buffer
 renderer with shaded spheres/capped cylinders and a PNG output path.
@@ -16,9 +16,14 @@ Open the [online user handbook](https://ifilot.github.io/qasr/) or its
 input/output formats, illustrated recipes, periodic-context examples, the full
 CLI/config reference and downloadable inputs. It works offline; see
 [website maintenance](docs/website/README.md) to serve or regenerate its assets.
-The [next-iteration proposal](docs/next-iteration.md) covers user defaults,
-per-atom selectors and agent interfaces; those proposed additions are not yet
-implemented.
+M9–M11 add user defaults, per-atom selectors, JSON automation, a persistent
+worker and measured OpenMP improvements; see the [detailed design](docs/next-iteration.md).
+
+The executable is **`qasr`**. Historical releases through the v0.3.0 tag used
+the provisional name `vasp-render`; those tags and archived binaries are unchanged.
+User preferences now live under `qasr/config.json` in the XDG configuration
+directory. To retain existing preferences, move the old `vasp-render/config.json`
+there; rendering never moves or rewrites user files automatically.
 
 ## Build and test
 
@@ -46,13 +51,13 @@ For an optimized build and installation:
 cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
 cmake --build build-release
 cmake --install build-release --prefix /path/to/install
-/path/to/install/bin/vasp-render --version
+/path/to/install/bin/qasr --version
 ```
 
-Installed presets live in `/path/to/install/share/vasp-render/presets`;
+Installed presets live in `/path/to/install/share/qasr/presets`;
 pass their path with `--config`. The executable uses shared system libpng/zlib,
 libdeflate, OpenMP and C/math runtimes in the default build. Installation includes the project license and upstream
-notices under `share/doc/vasp_render` (or the platform's CMake doc directory).
+notices under `share/doc/qasr` (or the platform's CMake doc directory).
 
 To run memory and undefined-behavior checks:
 
@@ -70,13 +75,13 @@ does not check leaks.
 ## Inspect geometry
 
 ```sh
-build/vasp-render tests/fixtures/POSCAR.skew --inspect
-build/vasp-render tests/fixtures/OUTCAR.relax --inspect --frame 0
-build/vasp-render OUTCAR --inspect --recover
-build/vasp-render vasprun.xml --inspect --frame final
-build/vasp-render POSCAR --inspect --species Si,O --config preset.json
-build/vasp-render POSCAR --inspect-scene --repeat 2,2,1
-build/vasp-render CONTCAR --expand-xy 1,1 --image-colors greyscale --view top -o context.png
+build/qasr tests/fixtures/POSCAR.skew --inspect
+build/qasr tests/fixtures/OUTCAR.relax --inspect --frame 0
+build/qasr OUTCAR --inspect --recover
+build/qasr vasprun.xml --inspect --frame final
+build/qasr POSCAR --inspect --species Si,O --config preset.json
+build/qasr POSCAR --inspect-scene --repeat 2,2,1
+build/qasr CONTCAR --expand-xy 1,1 --image-colors greyscale --view top -o context.png
 ```
 
 Input is detected by content; `--format poscar|contcar|outcar` overrides it.
@@ -102,10 +107,10 @@ timings exclude process startup and inspection output.
 ## Render PNG
 
 ```sh
-build/vasp-render POSCAR -o structure.png
-build/vasp-render CONTCAR -o repeated.png --repeat 2,2,1
-build/vasp-render CONTCAR -o detail.png --cell off --view 1,-1,0.7
-build/vasp-render OUTCAR -o final.png --background '#ffffff00' --benchmark-stages
+build/qasr POSCAR -o structure.png
+build/qasr CONTCAR -o repeated.png --repeat 2,2,1
+build/qasr CONTCAR -o detail.png --cell off --view 1,-1,0.7
+build/qasr OUTCAR -o final.png --background '#ffffff00' --benchmark-stages
 ```
 
 Default output is 512×512 with 2× supersampling and ambient/diffuse
@@ -124,10 +129,10 @@ the selected width; `--cell off` hides the boundaries.
 ## Illustrated top views
 
 ```sh
-build/vasp-render CONTCAR -o illustrated.png --config presets/illustrated.json
-build/vasp-render CONTCAR -o top.png --style illustrated --view top
-build/vasp-render CONTCAR -o outlined.png --config presets/illustrated.json --outline-width 2
-python3 tools/render_examples.py build-release/vasp-render
+build/qasr CONTCAR -o illustrated.png --config presets/illustrated.json
+build/qasr CONTCAR -o top.png --style illustrated --view top
+build/qasr CONTCAR -o outlined.png --config presets/illustrated.json --outline-width 2
+python3 tools/render_examples.py build-release/qasr
 ```
 
 `--style illustrated` uses flat colored disks, darker rims, pale circular
@@ -257,7 +262,7 @@ For Linux-storage measurements on WSL, run:
 ```sh
 cmake -S . -B /tmp/qasr-release -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
 cmake --build /tmp/qasr-release
-python3 tools/benchmark.py /tmp/qasr-release/vasp-render --work-dir /tmp/qasr-bench
+python3 tools/benchmark.py /tmp/qasr-release/qasr --work-dir /tmp/qasr-bench
 ```
 
 Prepare local release archives after building:

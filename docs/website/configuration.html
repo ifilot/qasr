@@ -1,7 +1,6 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Layered configuration and atom styling — vasp-render</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#guide">Skip to configuration guide</a><main id="guide" style="margin:0 auto;max-width:1100px;padding:32px 24px;overflow-wrap:anywhere"><nav aria-label="Handbook navigation"><a href="batch.html">M10 worker &amp; M11 performance</a> · <a href="index.html">← vasp-render handbook</a> · <a href="index.html#cli-reference">CLI reference</a> · <a href="downloads/vasp-render-development-source.tar.gz" download>Development sources (M9–M11)</a></nav>
-<p class="eyebrow">DEVELOPMENT GUIDE · AFTER v0.3.0</p><article class="doc-section"><h1 id="layered-configuration-and-automation-m9">Layered configuration and automation (M9)</h1>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Layered configuration and atom styling — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#guide">Skip to documentation</a><main id="guide" style="margin:0 auto;max-width:1100px;padding:32px 24px;overflow-wrap:anywhere"><nav aria-label="Handbook navigation"><a href="index.html">← QASR handbook</a> · <a href="configuration.html">Configuration</a> · <a href="batch.html">Batch &amp; OpenMP</a> · <a href="downloads/qasr-source.tar.gz" download>QASR sources</a></nav><p class="eyebrow">QASR: QUICK ATOMIC STRUCTURE RENDERER · CURRENT DEVELOPMENT</p><article class="doc-section"><h1 id="layered-configuration-and-automation-m9">Layered configuration and automation (M9)</h1>
 <p>Available on <code>master</code> after v0.3.0. The immutable v0.3.0 tag contains XML input,
 periodic context and the original handbook; it does not contain M9 flags.
 Check <code>--build-info</code> for <code>user_config</code>, <code>atom_overrides</code>, <code>job_requests</code> and
@@ -21,16 +20,18 @@ are an error. Validate the final combined settings with the executable: JSON
 Schema checks structure, while input identity, build capabilities, vector geometry,
 range ordering, cross-field conflicts and resource budgets need runtime checks.
 Each JSON input is limited to 1 MiB and 32 nesting levels; NUL strings are rejected.</p>
-<p>The user file is <code>$XDG_CONFIG_HOME/vasp-render/config.json</code> for an absolute XDG
-path, otherwise <code>$HOME/.config/vasp-render/config.json</code> for an absolute HOME.
-Missing optional files are normal. No directory search or implicit file creation
+<p>The user file is <code>$XDG_CONFIG_HOME/qasr/config.json</code> for an absolute XDG
+path, otherwise <code>$HOME/.config/qasr/config.json</code> for an absolute HOME.
+Missing optional files are normal. Earlier development builds used the provisional
+<code>vasp-render/config.json</code> path; move an existing preferences file into the new
+<code>qasr/config.json</code> location if you want to retain it. No directory search or implicit file creation
 occurs. <code>--init-config</code> explicitly creates a starter file and any missing parent
 directories; existing files and symlinks are never overwritten. Use
 <code>--no-user-config</code> in CI, benchmarks and reproducible jobs. User preferences may
 set element palettes/radii, but cannot contain nonempty <code>atom_overrides</code>.</p>
-<pre><code class="language-sh">vasp-render --init-config
-vasp-render --dump-config
-vasp-render --no-user-config --config recipe.json --width 1200 --dump-config
+<pre><code class="language-sh">qasr --init-config
+qasr --dump-config
+qasr --no-user-config --config recipe.json --width 1200 --dump-config
 </code></pre>
 <p>The dump contains <code>config</code>, <code>runtime</code>, <code>derived</code>, <code>sources</code>, <code>user_config</code> and a
 flat per-field <code>provenance</code> map (<code>layer</code>, <code>file</code>). Extract only <code>config</code> to reload
@@ -77,16 +78,16 @@ checks, alongside existing scene/image budgets.</p>
 <code>elements.C.radius_A: 1.0</code>. Saucepan's indices are one-based offsets in the full
 list, whereas qasr uses zero-based offsets.</p>
 <h2 id="schemas-validation-and-jobs">Schemas, validation and jobs</h2>
-<pre><code class="language-sh">vasp-render --schema config &gt; config.schema.json
-vasp-render --schema user &gt; user.schema.json
-vasp-render --schema job &gt; job.schema.json
-vasp-render --no-user-config --config recipe.json --validate-config
-vasp-render CONTCAR --no-user-config --config recipe.json --validate-config --json-errors
-vasp-render --job render-job.json
-cat render-job.json | vasp-render --job -
+<pre><code class="language-sh">qasr --schema config &gt; config.schema.json
+qasr --schema user &gt; user.schema.json
+qasr --schema job &gt; job.schema.json
+qasr --no-user-config --config recipe.json --validate-config
+qasr CONTCAR --no-user-config --config recipe.json --validate-config --json-errors
+qasr --job render-job.json
+cat render-job.json | qasr --job -
 </code></pre>
 <p>The three Draft 2020-12 schemas are embedded in the executable, installed under
-<code>share/vasp-render/schemas</code>, and served by the handbook. <code>--schema</code> alone selects
+<code>share/qasr/schemas</code>, and served by the handbook. <code>--schema</code> alone selects
 config. Schema discovery runs alone. Validation never builds/rasterizes a scene
 or writes PNG/report files. Without input it reports <code>input_validated: false</code>
 and <code>selectors_validated: false</code>; supply input for selector checks.</p>
@@ -139,4 +140,4 @@ fsync durability or concurrent-input protection; do not modify inputs during a j
 <p>See <a href="https://github.com/ifilot/qasr/blob/master/docs/m9-validation.md">M9 validation evidence</a> for correctness and performance checks.</p>
 <p>A network server is not required. Optional M10 batch/stdio caching or an MCP
 adapter remains conditional on a repeated-input/integration workflow and measured
-benefit. This iteration adds no service dependency.</p></article><section aria-label="Verified atom styling examples"><h2>Try a verified highlight</h2><p>These are program-generated views of the 63-source-atom cobalt slab, expanded to 567 instances. Orange highlights source atoms 6 and 34; the second view adds a green override to source 6 in cell [1,0,0]. Greyscale context is applied before the explicit cell override. The legend keeps the ordinary cobalt palette.</p><div class="two-col"><figure class="image-card"><a href="assets/source-highlight.png"><img src="assets/source-highlight.png" width="900" height="700" alt="Orange source highlights in the primary cobalt cell with greyscale copies" loading="lazy"></a><figcaption><a href="downloads/source-highlight.json" download>Source highlight recipe</a></figcaption></figure><figure class="image-card"><a href="assets/cell-highlight.png"><img src="assets/cell-highlight.png" width="900" height="700" alt="A green highlighted atom in a neighboring cell alongside orange primary-cell highlights" loading="lazy"></a><figcaption><a href="downloads/cell-highlight.json" download>Copy-specific highlight recipe</a></figcaption></figure></div><p>Place <a href="downloads/CONTCAR.co" download>CONTCAR.co</a> and <a href="downloads/highlight-job.json" download>highlight-job.json</a> in the same directory, then run:</p><pre><code>vasp-render --job /path/to/highlight-job.json</code></pre><p>It writes highlight.png and highlight-report.json next to the job file. Build the separate development source download first; the stable v0.3.0 binary does not have these flags.</p><p>Download schemas: <a href="schemas/config.schema.json">config</a> · <a href="schemas/user.schema.json">user preferences</a> · <a href="schemas/job.schema.json">job request</a>. <a href="configuration-manifest.json">Example and source provenance</a>.</p></section><footer><p><a href="index.html">Return to the handbook</a> · GPL-3.0-only · Runs offline with no external scripts or fonts.</p></footer></main></body></html>
+benefit. This iteration adds no service dependency.</p></article><section aria-label="Verified atom styling examples"><h2>Try a verified highlight</h2><p>These QASR renders show a 63-source-atom cobalt slab expanded to 567 instances. Orange highlights source atoms 6 and 34. The second image adds a green override to source 6 in cell [1,0,0], after greyscale context colors are applied. The legend retains the element palette.</p><div class="two-col"><figure class="image-card"><a href="assets/source-highlight.png"><img src="assets/source-highlight.png" width="900" height="700" alt="Orange source highlights in a primary cobalt cell with greyscale copies" loading="lazy"></a><figcaption><a href="downloads/source-highlight.json" download>Source highlight recipe</a></figcaption></figure><figure class="image-card"><a href="assets/cell-highlight.png"><img src="assets/cell-highlight.png" width="900" height="700" alt="A green atom in a neighboring cell alongside orange primary highlights" loading="lazy"></a><figcaption><a href="downloads/cell-highlight.json" download>Copy-specific highlight recipe</a></figcaption></figure></div><p>Place <a href="downloads/CONTCAR.co" download>CONTCAR.co</a> and <a href="downloads/highlight-job.json" download>highlight-job.json</a> together, then run <code>qasr --job /path/to/highlight-job.json</code>. It writes highlight.png and highlight-report.json beside the job file.</p><p>Schemas: <a href="schemas/config.schema.json">config</a> · <a href="schemas/user.schema.json">user preferences</a> · <a href="schemas/job.schema.json">job</a>. <a href="configuration-manifest.json">Example provenance</a>.</p></section><footer><p><a href="index.html">QASR handbook</a> · GPL-3.0-only · Works offline.</p></footer></main></body></html>

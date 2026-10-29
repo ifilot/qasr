@@ -1,56 +1,49 @@
-# Standalone vasp-render handbook
+# Standalone QASR handbook
 
-Open `index.html` directly in a browser, or serve this directory with any static
-HTTP server. HTML, CSS, JavaScript, images and downloads are local; no external
-fonts, CDNs, package install, build step or backend is required. Search, examples,
-the command builder and image lightbox also work with `file://` URLs. External
-links are optional project-source links, not runtime dependencies.
+QASR means **Quick Atomic Structure Renderer**; the current executable is `qasr`.
+Open `index.html` directly or serve this directory using a static HTTP server.
+HTML, CSS, JavaScript, images and downloads are local; there are no runtime CDN,
+font, package or backend requirements. The command builder, search and lightbox
+also work from `file://` URLs. Configuration, batch and synthetic-workload guides
+are included as standalone HTML pages.
 
 ```sh
 python3 -m http.server 8000 --directory docs/website
 # Open http://localhost:8000
 ```
 
-The handbook covers v0.3.0, including M7 XML and M8 periodic context.
-The source download omits this website (`package_source.py --without-website`)
-to avoid recursive embedded archives. The full release archive also includes
-the standalone site. Both source forms retain program tests and licensing.
+The handbook follows the current development checkout, including M7–M11. Its
+`qasr-source.tar.gz` download builds `qasr`. The separately labeled immutable
+v0.3.0 archive, `vasp-render-source.tar.gz`, builds the provisional old command;
+it is preserved unchanged for historical use. Source downloads omit the website
+(`--without-website`) to avoid recursive archives; full source packaging includes
+it. Licensing, tests and source/input provenance accompany both forms.
 
-The illustration manifest records the commands, original input hashes, PNG
-hashes, build capabilities and executable SHA-256. All 12 examples are program
-output. The source/input downloads contain project license and provenance.
-
-To regenerate example images and the example kit using a current Release build:
+To regenerate source downloads, 14 actual rendered images and the example kit:
 
 ```sh
-python3 tools/build_documentation.py /path/to/build-release/vasp-render
-python3 tools/check_documentation.py /path/to/build-release/vasp-render
+python3 tools/package_source.py --without-website --output artifacts/website-source
+python3 tools/build_documentation.py /path/to/build-release/qasr \
+  --source-archive artifacts/website-source/qasr-0.3.0.tar.gz
+python3 tools/build_configuration_documentation.py /path/to/build-release/qasr \
+  --source-archive artifacts/website-source/qasr-0.3.0.tar.gz
+python3 tools/check_documentation.py /path/to/build-release/qasr
 ```
 
-To intentionally replace the downloadable source snapshot, pass a validated
-source archive made before embedding these documentation assets:
+The original v0.3.0 archive and `legacy-v0.3.0-source-manifest.json` must remain
+unchanged. Current manifests record executable, command, input/image and source
+hashes. Builders disable implicit user preferences for reproducibility. Keep
+source guides and their HTML copies consistent, then regenerate manifests after
+editing pages referenced by those manifests.
 
-```sh
-python3 tools/build_documentation.py /path/to/build-release/vasp-render \
-  --source-archive artifacts/v0.3.0/website-source/vasp-render-0.3.0.tar.gz
-```
-
-Publishing uses GitHub Actions from `master`, through
-`.github/workflows/pages.yml`. The workflow validates and uploads this directory
-directly, then deploys it with the Pages artifact actions. No publishing branch
-is needed. GitHub Pages serves the site at
-`https://ifilot.github.io/qasr/`. Local website archives, browser
-screenshots, the print preview PDF and validation evidence belong in
-`artifacts/website-validation/` or `artifacts/`, not in this source directory.
-
-Push changes under `docs/website/` to `master` to publish an update. To rerun
-publication without changing files:
+Publishing uses `.github/workflows/pages.yml` on `master`, with GitHub Pages
+configured to use **GitHub Actions**. CI validates the standalone assets before
+upload/deployment. No publishing branch is needed. The site is
+`https://ifilot.github.io/qasr/`.
 
 ```sh
 gh workflow run pages.yml --ref master
 ```
 
-The repository's Pages source must be **GitHub Actions**. The workflow has
-contents:read, pages:write and id-token:write permissions and deploys through
-the `github-pages` environment. Local source/example validation is supplemented
-by an executable-free asset/link/download check in CI.
+Offline website ZIPs, screenshots, print previews, test data and validation logs
+belong in `artifacts/`, not in this source directory.

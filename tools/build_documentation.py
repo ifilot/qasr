@@ -68,7 +68,7 @@ def main():
         'overlays': {'cell': True, 'cell_width': 3, 'labels': 'none', 'axes': True, 'legend': True, 'scale_bar': True},
     }
     (downloads/'publication.json').write_text(json.dumps(publication, indent=2)+'\n')
-    (downloads/'EXAMPLES.txt').write_text('''vasp-render handbook example kit
+    (downloads/'EXAMPLES.txt').write_text('''QASR: Quick Atomic Structure Renderer — handbook example kit
 
 Extract this kit into an examples/ directory inside your source checkout.
 Commands in the handbook are run from that checkout root.
@@ -87,7 +87,7 @@ See LICENSE. Website images are program-generated examples, not AI illustrations
 ''')
     shutil.copyfile(fixtures/'slabs/README.md', downloads/'SLAB-PROVENANCE.md')
     shutil.copyfile(fixtures/'slabs/manifest.json', downloads/'SLAB-MANIFEST.json')
-    with zipfile.ZipFile(downloads/'vasp-render-examples.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(downloads/'qasr-examples.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         kit = [*examples, 'vasprun.example.xml', 'publication.json', 'EXAMPLES.txt', 'SLAB-PROVENANCE.md', 'SLAB-MANIFEST.json']
         for name in sorted(kit): archive.write(downloads/name, name)
     jobs = [
@@ -108,24 +108,24 @@ See LICENSE. Website images are program-generated examples, not AI illustrations
     for name, source, flags in jobs:
         actual = [str(downloads/v) if v.endswith('.json') else v for v in flags]
         output = assets/(name+'.png')
-        cmd = [str(exe), str(downloads/source), *actual, '--png-compression', '6', '-o', str(output)]
+        cmd = [str(exe), str(downloads/source), '--no-user-config', *actual, '--png-compression', '6', '-o', str(output)]
         subprocess.run(cmd, check=True, capture_output=True)
-        shown = ['build-release/vasp-render', 'examples/'+source,
+        shown = ['build-release/qasr', 'examples/'+source, '--no-user-config',
                  *['examples/'+v if v.endswith('.json') else v for v in flags], '--png-compression', '6', '-o', name+'.png']
         records.append({'id': name, 'source': source, 'input_sha256': sha(downloads/source),
                         'image': 'assets/'+output.name, 'png_sha256': sha(output), 'command': shown})
     if args.source_archive:
-        shutil.copyfile(args.source_archive, downloads/'vasp-render-source.tar.gz')
+        shutil.copyfile(args.source_archive, downloads/'qasr-source.tar.gz')
         manifest = args.source_archive.parent/(args.source_archive.name.replace('.tar.gz', '-source-manifest.json'))
         if manifest.exists(): shutil.copyfile(manifest, downloads/'source-manifest.json')
-    subprocess.run([str(exe), str(downloads/'CONTCAR.co'), '--config', str(downloads/'publication.json'), '--inspect'], capture_output=True, check=True)
-    inspection = json.loads(subprocess.check_output([exe, downloads/'vasprun.example.xml', '--inspect']))
+    subprocess.run([str(exe), str(downloads/'CONTCAR.co'), '--config', str(downloads/'publication.json'), '--inspect', '--no-user-config'], capture_output=True, check=True)
+    inspection = json.loads(subprocess.check_output([exe, downloads/'vasprun.example.xml', '--inspect', '--no-user-config']))
     (downloads/'inspect-example.json').write_text(json.dumps(inspection, indent=2)+'\n')
     (site/'examples-manifest.json').write_text(json.dumps({
         'executable_sha256': sha(exe), 'build_info': json.loads(subprocess.check_output([exe, '--build-info'])),
-        'availability': 'v0.3.0 release including XML and centered periodic context',
+        'availability': 'QASR development after v0.3.0, including M7–M11; executable qasr',
         'images': records,
-        'downloads': {p.name: sha(p) for p in sorted(downloads.iterdir()) if p.is_file()},
+        'downloads': {name: sha(downloads/name) for name in sorted(set(kit + ['qasr-examples.zip','inspect-example.json','qasr-source.tar.gz','source-manifest.json','vasp-render-source.tar.gz','legacy-v0.3.0-source-manifest.json']))},
     }, indent=2)+'\n')
     print(f'Built {len(records)} rendered examples and the offline example kit in {site}')
 

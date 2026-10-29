@@ -20,7 +20,7 @@ class ConfigurationTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.env = dict(os.environ, HOME=str(self.root/'home'), XDG_CONFIG_HOME=str(self.root/'xdg'))
-        self.user = self.root/'xdg/vasp-render/config.json'
+        self.user = self.root/'xdg/qasr/config.json'
         self.cfg = self.root/'config.json'
 
     def write(self, value, path=None):
@@ -65,7 +65,7 @@ class ConfigurationTests(unittest.TestCase):
 
     def test_home_fallback_and_no_cwd_search(self):
         self.env['XDG_CONFIG_HOME']='relative'
-        home = self.root/'home/.config/vasp-render/config.json'
+        home = self.root/'home/.config/qasr/config.json'
         self.write({'image':{'width':201}},home)
         self.write({'image':{'width':202}},self.root/'config.json')
         self.assertEqual(self.dump()['config']['image']['width'],201)

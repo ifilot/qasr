@@ -7,15 +7,15 @@ It does not assume that these vectors align with Cartesian X/Y.
 
 ```sh
 # One neighbor on each side: a centered 3×3×1 patch, with muted image atoms.
-build/vasp-render CONTCAR --expand-xy 1,1 --view top \
+build/qasr CONTCAR --expand-xy 1,1 --view top \
   --config presets/illustrated.json -o muted.png
 
 # The same patch with neutral greyscale image atoms.
-build/vasp-render CONTCAR --expand-xy 1,1 --image-colors greyscale \
+build/qasr CONTCAR --expand-xy 1,1 --image-colors greyscale \
   --view top --config presets/illustrated.json -o greyscale.png
 
 # Five cells along a, three along b. All copies keep their element colors.
-build/vasp-render CONTCAR --expand-xy 2,1 --image-colors normal -o full-color.png
+build/qasr CONTCAR --expand-xy 2,1 --image-colors normal -o full-color.png
 ```
 
 `NX,NY` count additional cells **on each side**. Their integer ranges are
@@ -75,9 +75,9 @@ The complete Release and leak-enabled sanitizer suites include these checks.
 Generate the comparison galleries with:
 
 ```sh
-python3 tools/render_examples.py build/vasp-render --expand-xy 1,1 \
+python3 tools/render_examples.py build/qasr --expand-xy 1,1 \
   --image-colors muted --output artifacts/m8/muted
-python3 tools/render_examples.py build/vasp-render --expand-xy 1,1 \
+python3 tools/render_examples.py build/qasr --expand-xy 1,1 \
   --image-colors greyscale --output artifacts/m8/greyscale
 ```
 

@@ -22,18 +22,20 @@ Schema checks structure, while input identity, build capabilities, vector geomet
 range ordering, cross-field conflicts and resource budgets need runtime checks.
 Each JSON input is limited to 1 MiB and 32 nesting levels; NUL strings are rejected.
 
-The user file is `$XDG_CONFIG_HOME/vasp-render/config.json` for an absolute XDG
-path, otherwise `$HOME/.config/vasp-render/config.json` for an absolute HOME.
-Missing optional files are normal. No directory search or implicit file creation
+The user file is `$XDG_CONFIG_HOME/qasr/config.json` for an absolute XDG
+path, otherwise `$HOME/.config/qasr/config.json` for an absolute HOME.
+Missing optional files are normal. Earlier development builds used the provisional
+`vasp-render/config.json` path; move an existing preferences file into the new
+`qasr/config.json` location if you want to retain it. No directory search or implicit file creation
 occurs. `--init-config` explicitly creates a starter file and any missing parent
 directories; existing files and symlinks are never overwritten. Use
 `--no-user-config` in CI, benchmarks and reproducible jobs. User preferences may
 set element palettes/radii, but cannot contain nonempty `atom_overrides`.
 
 ```sh
-vasp-render --init-config
-vasp-render --dump-config
-vasp-render --no-user-config --config recipe.json --width 1200 --dump-config
+qasr --init-config
+qasr --dump-config
+qasr --no-user-config --config recipe.json --width 1200 --dump-config
 ```
 
 The dump contains `config`, `runtime`, `derived`, `sources`, `user_config` and a
@@ -92,17 +94,17 @@ list, whereas qasr uses zero-based offsets.
 ## Schemas, validation and jobs
 
 ```sh
-vasp-render --schema config > config.schema.json
-vasp-render --schema user > user.schema.json
-vasp-render --schema job > job.schema.json
-vasp-render --no-user-config --config recipe.json --validate-config
-vasp-render CONTCAR --no-user-config --config recipe.json --validate-config --json-errors
-vasp-render --job render-job.json
-cat render-job.json | vasp-render --job -
+qasr --schema config > config.schema.json
+qasr --schema user > user.schema.json
+qasr --schema job > job.schema.json
+qasr --no-user-config --config recipe.json --validate-config
+qasr CONTCAR --no-user-config --config recipe.json --validate-config --json-errors
+qasr --job render-job.json
+cat render-job.json | qasr --job -
 ```
 
 The three Draft 2020-12 schemas are embedded in the executable, installed under
-`share/vasp-render/schemas`, and served by the handbook. `--schema` alone selects
+`share/qasr/schemas`, and served by the handbook. `--schema` alone selects
 config. Schema discovery runs alone. Validation never builds/rasterizes a scene
 or writes PNG/report files. Without input it reports `input_validated: false`
 and `selectors_validated: false`; supply input for selector checks.

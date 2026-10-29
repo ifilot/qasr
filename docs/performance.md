@@ -1,5 +1,10 @@
 # Performance work after v0.1.0
 
+Historical measurements below use the provisional executable name `vasp-render`.
+The current application is QASR: Quick Atomic Structure Renderer; use `qasr`
+for new builds. Retained commands and measurements are preserved as recorded.
+
+
 v0.1.0 is the reference-renderer checkpoint before workstation optimization.
 M4 compares renderer/anti-aliasing strategies, M5 compares PNG encoding and
 threading, and M6 validates deployment/performance alongside overlays and

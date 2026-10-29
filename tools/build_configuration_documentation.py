@@ -32,11 +32,11 @@ def main():
         records.append({'image':'assets/'+image.name,'recipe':'downloads/'+recipe.name,'png_sha256':sha(image),'config_sha256':sha(recipe),'input_sha256':sha(downloads/'CONTCAR.co'),'instances':inspection['instance_count']})
     job={'schema_version':1,'input':'CONTCAR.co','output':'highlight.png','report':'highlight-report.json','no_user_config':True,'json_errors':True,'config':selected}
     (downloads/'highlight-job.json').write_text(json.dumps(job,indent=2)+'\n')
-    shutil.copyfile(args.source_archive,downloads/'vasp-render-development-source.tar.gz')
+    shutil.copyfile(args.source_archive,downloads/'qasr-source.tar.gz')
     source_manifest=args.source_archive.with_name(args.source_archive.name.replace('.tar.gz','-source-manifest.json'))
-    shutil.copyfile(source_manifest,downloads/'development-source-manifest.json')
-    files=[site/'batch.html',downloads/'worker-requests.jsonl',*schemas.glob('*.json'),*[downloads/n for n in ['source-highlight.json','cell-highlight.json','highlight-job.json','vasp-render-development-source.tar.gz','development-source-manifest.json']],*[site/r['image'] for r in records]]
-    (site/'configuration-manifest.json').write_text(json.dumps({'availability':'M9–M11 development on master after v0.3.0; not part of the v0.3.0 tag','executable_sha256':sha(exe),'build_info':json.loads(subprocess.check_output([exe,'--build-info'])),'files':{str(p.relative_to(site)):sha(p) for p in files},'images':records},indent=2)+'\n')
+    shutil.copyfile(source_manifest,downloads/'source-manifest.json')
+    files=[site/'batch.html',downloads/'worker-requests.jsonl',*schemas.glob('*.json'),*[downloads/n for n in ['source-highlight.json','cell-highlight.json','highlight-job.json','qasr-source.tar.gz','source-manifest.json']],*[site/r['image'] for r in records]]
+    (site/'configuration-manifest.json').write_text(json.dumps({'availability':'QASR development after v0.3.0, including M9–M11; executable qasr','executable_sha256':sha(exe),'build_info':json.loads(subprocess.check_output([exe,'--build-info'])),'files':{str(p.relative_to(site)):sha(p) for p in files},'images':records},indent=2)+'\n')
     print('Built two M9 styling examples, schemas and separate development source download')
 
 

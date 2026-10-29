@@ -1,6 +1,6 @@
 {
-  "availability": "M9\u2013M11 development on master after v0.3.0; not part of the v0.3.0 tag",
-  "executable_sha256": "bd281189c0572464f3b4bee5496ceb6125d7c064cfd84d856ce3996761c22a21",
+  "availability": "QASR development after v0.3.0, including M9\u2013M11; executable qasr",
+  "executable_sha256": "39c1cc12ffa4a13da7241f1e8e542a10a816ff6a1a8f124b0eb0b2af4fc5318b",
   "build_info": {
     "version": "0.3.0",
     "config_schema_version": 1,
@@ -14,17 +14,17 @@
     "libdeflate": true
   },
   "files": {
-    "batch.html": "f22b61eee038e191fac5ae2d843bf0c96563cbe71efd12b2ddf79e95c6d34ad5",
+    "batch.html": "603765eca4d567ee54ad8efd7c39160eda9876c1dad395fe2e75eafb45c67f25",
     "downloads/worker-requests.jsonl": "5fcc29a169efde676dab7af98b234ddcdc1a7b07339e33756510442006e18266",
-    "schemas/config.schema.json": "8fd8de2cd29504dfac6d50d418f7351ce6dbdca93fba62fa4e10d7f4e67005e1",
-    "schemas/job.schema.json": "5d261814c26ebe8f59361fcbee8e81a69d111865dc338ce4fe61c196e3d14bdf",
-    "schemas/user.schema.json": "a6b087637e36a68cba7ebf640fdafbf656d9c8cba9bb36d3bbc2f226df09aeb3",
-    "schemas/worker.schema.json": "9c5345535f58dd340c04746e54d50404e3f596a29ae2ab10ae4529ea44d046f9",
+    "schemas/config.schema.json": "d195fe0ebba7bdcaf30dd96f1df72d2a5631af4ce9fdad51c1e6eeba10aa6b68",
+    "schemas/job.schema.json": "1f4701621b77a83ea7c8e5a6c8a35e8eb2023507eda80b365e49308630129872",
+    "schemas/user.schema.json": "147a2dd7681ece532f4b3badc49263eae6b08712134e60ecf14adb87d2a95c3e",
+    "schemas/worker.schema.json": "3c51bde91126dcbb20a8d7d2719e31269d15fb2a182ca4c8bbd2812dbaf3294d",
     "downloads/source-highlight.json": "3633baa106a669d188529789a09fb9acf6624bfa4b9250fcdf7ace6a3bf06764",
     "downloads/cell-highlight.json": "d455de2b095a470aca2406c0d18c2318a2c6ec5931c4ec2c55e48f1fa57190c0",
     "downloads/highlight-job.json": "322b24a99259992b109b0cdc675bfb30c16a04b558eef9533aae3306a197301c",
-    "downloads/vasp-render-development-source.tar.gz": "19cf89a4d0707518f08f636b5b6f9cf365ac80464e54769f3f2d16d48e838098",
-    "downloads/development-source-manifest.json": "341911d9329fc86cf53d6b0b238468d5b83e3a6995f03a603a342e837d8b4a3f",
+    "downloads/qasr-source.tar.gz": "680a6993588fd26b212d17d4b80d6347d38f27be4446238404fd96d5db20bc77",
+    "downloads/source-manifest.json": "2269216b77cdc1bc9ddd2f28790ec26c5546b2ca18e1ffdf2a8462b6929155c0",
     "assets/source-highlight.png": "c33b9a74d2f1b827a034d12e1a42f3d82ce7c8c5805278dec838aaadad3842dc",
     "assets/cell-highlight.png": "441111fee064bde4b45a9585abdf9ea68ccce69f5d72b6600bbbfd63cf5b13cd"
   },
