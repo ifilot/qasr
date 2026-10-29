@@ -1,0 +1,5 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+#ifndef VR_VERSION_H
+#define VR_VERSION_H
+#define VR_VERSION "@PROJECT_VERSION@"
+#endif

@@ -1,0 +1,930 @@
+{
+  "format_version": 1,
+  "source_host": "snellius.surf.nl",
+  "retrieved_on": "2026-10-29",
+  "purpose": "Representative slab geometries for visualization development",
+  "files_preserved_byte_for_byte": true,
+  "description_basis": "Source directory labels and parsed element counts; no convergence or transition-state validation performed.",
+  "validation": "Parsed with pymatgen; explicit element names, finite coordinates and nonsingular cells, slab-normal empty gaps >7 Angstrom, minimum periodic interatomic distances >0.4 Angstrom, unique file hashes and geometry signatures.",
+  "structures": [
+    {
+      "id": "01_co0001_clean",
+      "file": "01_co0001_clean/CONTCAR",
+      "description": "Clean Co(0001), 3x3 cell",
+      "source_path": "/home/ifilot/ivo/Co/hcp_0001/3x3/CONTCAR",
+      "source_mtime_utc": "2016-07-14T13:42:02.527830+00:00",
+      "sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+      "bytes": 7222,
+      "atom_count": 63,
+      "species": [
+        "Co"
+      ],
+      "counts": [
+        63
+      ],
+      "composition": {
+        "Co": 63
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": false,
+      "fully_fixed_atoms": 0,
+      "lattice_vectors_angstrom": [
+        [
+          7.410396845999999,
+          0.0,
+          0.0
+        ],
+        [
+          3.7051984229999997,
+          6.417591921,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          26.798410397
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 14.696897,
+      "minimum_periodic_interatomic_distance_angstrom": 2.432676
+    },
+    {
+      "id": "02_co0001_h2_dissociated",
+      "file": "02_co0001_h2_dissociated/CONTCAR",
+      "description": "Co(0001), dissociated hydrogen",
+      "source_path": "/home/ifilot/ivo/Co/hcp_0001/3x3_H2_diss/CONTCAR",
+      "source_mtime_utc": "2016-07-18T02:41:59.197411+00:00",
+      "sha256": "212a405a854252c57613b595724ec123396cdc6cede75f2ba900edd656530135",
+      "bytes": 7453,
+      "atom_count": 65,
+      "species": [
+        "Co",
+        "H"
+      ],
+      "counts": [
+        63,
+        2
+      ],
+      "composition": {
+        "Co": 63,
+        "H": 2
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": false,
+      "fully_fixed_atoms": 0,
+      "lattice_vectors_angstrom": [
+        [
+          7.4104,
+          0.0,
+          0.0
+        ],
+        [
+          3.7052,
+          6.41759,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          26.79841
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 13.701406,
+      "minimum_periodic_interatomic_distance_angstrom": 1.715219
+    },
+    {
+      "id": "03_co0001_h_hcp",
+      "file": "03_co0001_h_hcp/CONTCAR",
+      "description": "Co(0001), hydrogen at an hcp site",
+      "source_path": "/home/ifilot/ivo/Co/hcp_0001/3x3_H_hcp/CONTCAR",
+      "source_mtime_utc": "2016-07-20T05:02:19.546016+00:00",
+      "sha256": "21df35329e010e647fe43d74469651a4f3c5576039aea31bb839a51d29bdb702",
+      "bytes": 7343,
+      "atom_count": 64,
+      "species": [
+        "Co",
+        "H"
+      ],
+      "counts": [
+        63,
+        1
+      ],
+      "composition": {
+        "Co": 63,
+        "H": 1
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": false,
+      "fully_fixed_atoms": 0,
+      "lattice_vectors_angstrom": [
+        [
+          7.4104,
+          0.0,
+          0.0
+        ],
+        [
+          3.7052,
+          6.41759,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          26.79841
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 13.694943,
+      "minimum_periodic_interatomic_distance_angstrom": 1.739323
+    },
+    {
+      "id": "04_co0001_h_subsurface",
+      "file": "04_co0001_h_subsurface/CONTCAR",
+      "description": "Co(0001), deep octahedral hydrogen",
+      "source_path": "/home/ifilot/ivo/Co/hcp_0001/3x3_H_oct_deep/CONTCAR",
+      "source_mtime_utc": "2016-07-19T04:35:39.271703+00:00",
+      "sha256": "31debb45c538d221eb0027438d30a2c6d71e154aa43c53ae79a808b8e5e2c1ef",
+      "bytes": 7343,
+      "atom_count": 64,
+      "species": [
+        "Co",
+        "H"
+      ],
+      "counts": [
+        63,
+        1
+      ],
+      "composition": {
+        "Co": 63,
+        "H": 1
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": false,
+      "fully_fixed_atoms": 0,
+      "lattice_vectors_angstrom": [
+        [
+          7.4104,
+          0.0,
+          0.0
+        ],
+        [
+          3.7052,
+          6.41759,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          26.79841
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 14.683561,
+      "minimum_periodic_interatomic_distance_angstrom": 1.782569
+    },
+    {
+      "id": "05_co0001_n2_low_coverage",
+      "file": "05_co0001_n2_low_coverage/CONTCAR",
+      "description": "Co(0001), lower nitrogen coverage",
+      "source_path": "/home/ifilot/ivo/Co/N2/Co0001/1N2/CONTCAR",
+      "source_mtime_utc": "2016-06-14T16:54:32.765271+00:00",
+      "sha256": "5f5df029a411be956c8dbc1d4ada0038375aa92974a7021ef2e3f809d7b82df3",
+      "bytes": 6300,
+      "atom_count": 49,
+      "species": [
+        "Co",
+        "N"
+      ],
+      "counts": [
+        45,
+        4
+      ],
+      "composition": {
+        "Co": 45,
+        "N": 4
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 45,
+      "lattice_vectors_angstrom": [
+        [
+          6.47778,
+          3.73995,
+          0.0
+        ],
+        [
+          0.0,
+          7.4799,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          23.0544
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 8.766456,
+      "minimum_periodic_interatomic_distance_angstrom": 1.135269
+    },
+    {
+      "id": "06_co0001_n2_ag",
+      "file": "06_co0001_n2_ag/CONTCAR",
+      "description": "Co(0001), nitrogen and silver",
+      "source_path": "/home/ifilot/ivo/Co/N2/Co0001/1N2Ag/CONTCAR",
+      "source_mtime_utc": "2016-06-14T18:39:32.369018+00:00",
+      "sha256": "376a5b1014e9faa8328bcf095f4aba66ffede5116fd6e5029c7459f2e9cca22b",
+      "bytes": 6555,
+      "atom_count": 51,
+      "species": [
+        "Co",
+        "N",
+        "Ag"
+      ],
+      "counts": [
+        45,
+        4,
+        2
+      ],
+      "composition": {
+        "Co": 45,
+        "N": 4,
+        "Ag": 2
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 47,
+      "lattice_vectors_angstrom": [
+        [
+          6.47778,
+          3.73995,
+          0.0
+        ],
+        [
+          0.0,
+          7.4799,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          23.0544
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 8.78272,
+      "minimum_periodic_interatomic_distance_angstrom": 1.138714
+    },
+    {
+      "id": "07_co0001_n2_high_coverage",
+      "file": "07_co0001_n2_high_coverage/CONTCAR",
+      "description": "Co(0001), higher nitrogen coverage",
+      "source_path": "/home/ifilot/ivo/Co/N2/Co0001/9N2/CONTCAR",
+      "source_mtime_utc": "2016-06-16T23:57:04.779524+00:00",
+      "sha256": "0046266468fc2875cb732d3ecd08606129b232f5760e9417b0c2dc3e20887f87",
+      "bytes": 10204,
+      "atom_count": 81,
+      "species": [
+        "Co",
+        "N"
+      ],
+      "counts": [
+        45,
+        36
+      ],
+      "composition": {
+        "Co": 45,
+        "N": 36
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 45,
+      "lattice_vectors_angstrom": [
+        [
+          6.47778,
+          3.73995,
+          0.0
+        ],
+        [
+          0.0,
+          7.4799,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          23.0544
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 9.078051,
+      "minimum_periodic_interatomic_distance_angstrom": 1.128201
+    },
+    {
+      "id": "08_co1121_n2",
+      "file": "08_co1121_n2/CONTCAR",
+      "description": "Co(11-21), nitrogen",
+      "source_path": "/home/ifilot/ivo/Co/N2/Co1121/1N2/CONTCAR",
+      "source_mtime_utc": "2016-06-24T23:32:44.910351+00:00",
+      "sha256": "dd0934bcbe147a6d0dcf861df2c43d52d04a2fc667fb100b8a0d1abe3347478e",
+      "bytes": 6023,
+      "atom_count": 52,
+      "species": [
+        "Co",
+        "N"
+      ],
+      "counts": [
+        48,
+        4
+      ],
+      "composition": {
+        "Co": 48,
+        "N": 4
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": false,
+      "fully_fixed_atoms": 0,
+      "lattice_vectors_angstrom": [
+        [
+          7.4638,
+          -3.88092,
+          0.0
+        ],
+        [
+          0.0,
+          9.11759,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          20.32661
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 7.837765,
+      "minimum_periodic_interatomic_distance_angstrom": 1.138157
+    },
+    {
+      "id": "09_co1121_n2_ag",
+      "file": "09_co1121_n2_ag/CONTCAR",
+      "description": "Co(11-21), nitrogen and silver",
+      "source_path": "/home/ifilot/ivo/Co/N2/Co1121/1N2Ag/CONTCAR",
+      "source_mtime_utc": "2016-06-25T01:55:32.369501+00:00",
+      "sha256": "4132bd9fd5291b577a38daddbf398c4c6877118c8034f931f3e028f4589061f4",
+      "bytes": 6254,
+      "atom_count": 54,
+      "species": [
+        "Co",
+        "N",
+        "Ag"
+      ],
+      "counts": [
+        48,
+        4,
+        2
+      ],
+      "composition": {
+        "Co": 48,
+        "N": 4,
+        "Ag": 2
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": false,
+      "fully_fixed_atoms": 0,
+      "lattice_vectors_angstrom": [
+        [
+          7.4638,
+          -3.88092,
+          0.0
+        ],
+        [
+          0.0,
+          9.11759,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          20.32661
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 7.884535,
+      "minimum_periodic_interatomic_distance_angstrom": 1.13576
+    },
+    {
+      "id": "10_rh211_co",
+      "file": "10_rh211_co/CONTCAR",
+      "description": "Rh(211), adsorbed CO",
+      "source_path": "/home/ifilot/ivo/Rh/Rh211/CO/CONTCAR",
+      "source_mtime_utc": "2020-09-20T02:21:37.630389+00:00",
+      "sha256": "521677a6a05dbd72a5cd69ab5de61fc7ac3470d8ea48b1bb0871703228e7629b",
+      "bytes": 8014,
+      "atom_count": 70,
+      "species": [
+        "Rh",
+        "C",
+        "O"
+      ],
+      "counts": [
+        66,
+        2,
+        2
+      ],
+      "composition": {
+        "Rh": 66,
+        "C": 2,
+        "O": 2
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": false,
+      "fully_fixed_atoms": 0,
+      "lattice_vectors_angstrom": [
+        [
+          13.1788,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          8.0704,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          22.7657
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 12.547381,
+      "minimum_periodic_interatomic_distance_angstrom": 1.225818
+    },
+    {
+      "id": "11_rh211_c_o",
+      "file": "11_rh211_c_o/CONTCAR",
+      "description": "Rh(211), dissociated C and O",
+      "source_path": "/home/ifilot/ivo/Rh/Rh211/C+O/CONTCAR",
+      "source_mtime_utc": "2020-09-20T00:44:22.325553+00:00",
+      "sha256": "8ebbf16405ff6f16487204bd6bcf8fc211a6822eec4eee8e73622a3b68c7ccff",
+      "bytes": 8014,
+      "atom_count": 70,
+      "species": [
+        "Rh",
+        "C",
+        "O"
+      ],
+      "counts": [
+        66,
+        2,
+        2
+      ],
+      "composition": {
+        "Rh": 66,
+        "C": 2,
+        "O": 2
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": false,
+      "fully_fixed_atoms": 0,
+      "lattice_vectors_angstrom": [
+        [
+          13.1788,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          8.0704,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          22.7657
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 12.250675,
+      "minimum_periodic_interatomic_distance_angstrom": 1.85535
+    },
+    {
+      "id": "12_rh_n2_high_coverage",
+      "file": "12_rh_n2_high_coverage/CONTCAR",
+      "description": "Rh slab, higher nitrogen coverage",
+      "source_path": "/home/ifilot/ivo/Rh/states/5N2/prefreq/CONTCAR",
+      "source_mtime_utc": "2014-07-29T18:23:58.576867+00:00",
+      "sha256": "e6cca052349715359c9baac2c01b9366efa1b0d83733798347a46efc0eb0d869",
+      "bytes": 10814,
+      "atom_count": 86,
+      "species": [
+        "Rh",
+        "N"
+      ],
+      "counts": [
+        66,
+        20
+      ],
+      "composition": {
+        "Rh": 66,
+        "N": 20
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 66,
+      "lattice_vectors_angstrom": [
+        [
+          13.178800016512,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          8.0704,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          22.765700003072
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 9.585394,
+      "minimum_periodic_interatomic_distance_angstrom": 1.046
+    },
+    {
+      "id": "13_ru1121_c",
+      "file": "13_ru1121_c/CONTCAR",
+      "description": "Ru(11-21), carbon",
+      "source_path": "/home/ifilot/Ru1121/C/CONTCAR",
+      "source_mtime_utc": "2025-11-02T09:57:27.821524+00:00",
+      "sha256": "3ab8db605f41e51ed339180c5c88eadbd60dda4b3b9119b8cef8f3d3296bec7d",
+      "bytes": 6795,
+      "atom_count": 50,
+      "species": [
+        "Ru",
+        "C"
+      ],
+      "counts": [
+        48,
+        2
+      ],
+      "composition": {
+        "Ru": 48,
+        "C": 2
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 48,
+      "lattice_vectors_angstrom": [
+        [
+          8.282994,
+          -4.306875,
+          0.0
+        ],
+        [
+          0.0,
+          10.1183,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          22.0694
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 15.12494,
+      "minimum_periodic_interatomic_distance_angstrom": 1.939253
+    },
+    {
+      "id": "14_ru1121_ch3",
+      "file": "14_ru1121_ch3/CONTCAR",
+      "description": "Ru(11-21), methyl",
+      "source_path": "/home/ifilot/Ru1121/CH3/CONTCAR",
+      "source_mtime_utc": "2025-11-02T11:25:00.352076+00:00",
+      "sha256": "451291e65c1dba504272f283232b41724914abe27c3f8910583f1a7a885558ee",
+      "bytes": 7591,
+      "atom_count": 56,
+      "species": [
+        "Ru",
+        "C",
+        "H"
+      ],
+      "counts": [
+        48,
+        2,
+        6
+      ],
+      "composition": {
+        "Ru": 48,
+        "C": 2,
+        "H": 6
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 48,
+      "lattice_vectors_angstrom": [
+        [
+          8.282994,
+          -4.306875,
+          0.0
+        ],
+        [
+          0.0,
+          10.1183,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          22.0694
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 10.90812,
+      "minimum_periodic_interatomic_distance_angstrom": 1.10097
+    },
+    {
+      "id": "15_ru1121_h2o",
+      "file": "15_ru1121_h2o/CONTCAR",
+      "description": "Ru(11-21), water",
+      "source_path": "/home/ifilot/Ru1121/H2O/CONTCAR",
+      "source_mtime_utc": "2025-11-02T17:18:15.023704+00:00",
+      "sha256": "52ae8bc7ddb994db8e1d0d27600433ad7e135b3816b3cb4497e6d528b36e8a57",
+      "bytes": 7333,
+      "atom_count": 54,
+      "species": [
+        "Ru",
+        "O",
+        "H"
+      ],
+      "counts": [
+        48,
+        2,
+        4
+      ],
+      "composition": {
+        "Ru": 48,
+        "O": 2,
+        "H": 4
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 48,
+      "lattice_vectors_angstrom": [
+        [
+          8.282994,
+          -4.306875,
+          0.0
+        ],
+        [
+          0.0,
+          10.1183,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          22.0694
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 11.18757,
+      "minimum_periodic_interatomic_distance_angstrom": 0.981151
+    },
+    {
+      "id": "16_ru1121_oh",
+      "file": "16_ru1121_oh/CONTCAR",
+      "description": "Ru(11-21), hydroxyl",
+      "source_path": "/home/ifilot/Ru1121/OH/CONTCAR",
+      "source_mtime_utc": "2025-11-02T12:22:02.609385+00:00",
+      "sha256": "2aa194b958efa24b3c8c29429043ab59f3f7590b1b7ab6a77186cf71729f272e",
+      "bytes": 7075,
+      "atom_count": 52,
+      "species": [
+        "Ru",
+        "O",
+        "H"
+      ],
+      "counts": [
+        48,
+        2,
+        2
+      ],
+      "composition": {
+        "Ru": 48,
+        "O": 2,
+        "H": 2
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 48,
+      "lattice_vectors_angstrom": [
+        [
+          8.282994,
+          -4.306875,
+          0.0
+        ],
+        [
+          0.0,
+          10.1183,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          22.0694
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 11.58064,
+      "minimum_periodic_interatomic_distance_angstrom": 0.977582
+    },
+    {
+      "id": "17_pd6_ceria",
+      "file": "17_pd6_ceria/CONTCAR",
+      "description": "Pd6 cluster on a ceria slab",
+      "source_path": "/home/ifilot/adstructor/pd6-ceo2-supported-snellius/support-landing-pd6-0001/CONTCAR",
+      "source_mtime_utc": "2026-05-31T12:42:55.911282+00:00",
+      "sha256": "c4b0a2805a3df70ab7c32b422e25ab008165cf3c01e3c3f82237d86803284f36",
+      "bytes": 18667,
+      "atom_count": 150,
+      "species": [
+        "Ce",
+        "O",
+        "Pd"
+      ],
+      "counts": [
+        48,
+        96,
+        6
+      ],
+      "composition": {
+        "Ce": 48,
+        "O": 96,
+        "Pd": 6
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 48,
+      "lattice_vectors_angstrom": [
+        [
+          15.5281000137,
+          0.0,
+          0.0
+        ],
+        [
+          -7.7640500069,
+          13.4477290844,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          22.9241008759
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 10.510855,
+      "minimum_periodic_interatomic_distance_angstrom": 2.020723
+    },
+    {
+      "id": "18_pd_ceria_co_oxidation_ts",
+      "file": "18_pd_ceria_co_oxidation_ts/CONTCAR",
+      "description": "Pd/ceria with C/O adsorbates; source labeled CO oxidation TS",
+      "source_path": "/home/ifilot/sarah/nn_TS_co_ox/CONTCAR",
+      "source_mtime_utc": "2026-03-12T14:46:23.794877+00:00",
+      "sha256": "f818dbebd6290b2eb0ccfa1434d653d8f50852fef31cfa242d86093363cd6214",
+      "bytes": 30767,
+      "atom_count": 249,
+      "species": [
+        "O",
+        "Ce",
+        "Pd",
+        "C"
+      ],
+      "counts": [
+        162,
+        80,
+        4,
+        3
+      ],
+      "composition": {
+        "O": 162,
+        "Ce": 80,
+        "Pd": 4,
+        "C": 3
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 246,
+      "lattice_vectors_angstrom": [
+        [
+          -15.496867,
+          0.0,
+          0.0
+        ],
+        [
+          -7.748434,
+          -13.420681,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          48.188888
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 28.882588,
+      "minimum_periodic_interatomic_distance_angstrom": 1.179021
+    },
+    {
+      "id": "19_pd_ceria_o2_dissociation_ts",
+      "file": "19_pd_ceria_o2_dissociation_ts/CONTCAR",
+      "description": "Pd/ceria with C/O adsorbates; source labeled O2 dissociation TS",
+      "source_path": "/home/ifilot/sarah/nn_TS_o2diss/CONTCAR",
+      "source_mtime_utc": "2026-03-12T14:25:24.577871+00:00",
+      "sha256": "cfb6f3e87e9804bb1b42fb25d16a45905e4e3a3239dfd0f242966fb58a0ae7c9",
+      "bytes": 30645,
+      "atom_count": 248,
+      "species": [
+        "O",
+        "Ce",
+        "Pd",
+        "C"
+      ],
+      "counts": [
+        162,
+        80,
+        4,
+        2
+      ],
+      "composition": {
+        "O": 162,
+        "Ce": 80,
+        "Pd": 4,
+        "C": 2
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 246,
+      "lattice_vectors_angstrom": [
+        [
+          -15.496867,
+          0.0,
+          0.0
+        ],
+        [
+          -7.748434,
+          -13.420681,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          48.188888
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 28.884034,
+      "minimum_periodic_interatomic_distance_angstrom": 1.179349
+    },
+    {
+      "id": "20_fe_c_li2o",
+      "file": "20_fe_c_li2o/CONTCAR",
+      "description": "Fe/C slab with Li/O; source directory Li2O",
+      "source_path": "/home/ifilot/yuhan/Li2O/CONTCAR",
+      "source_mtime_utc": "2025-10-15T14:47:10.981271+00:00",
+      "sha256": "d32d8d1cec31da95019eee2554a0a0c2c0031c91a00fd3146492cd2e1eb62810",
+      "bytes": 8000,
+      "atom_count": 59,
+      "species": [
+        "Li",
+        "C",
+        "O",
+        "Fe"
+      ],
+      "counts": [
+        2,
+        16,
+        1,
+        40
+      ],
+      "composition": {
+        "Li": 2,
+        "C": 16,
+        "O": 1,
+        "Fe": 40
+      },
+      "coordinate_mode": "Direct",
+      "selective_dynamics": true,
+      "fully_fixed_atoms": 28,
+      "lattice_vectors_angstrom": [
+        [
+          9.895387,
+          -1.325741,
+          0.0
+        ],
+        [
+          0.0,
+          11.5338,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          18.9298
+        ]
+      ],
+      "largest_empty_gap_along_ab_normal_angstrom": 13.779822,
+      "minimum_periodic_interatomic_distance_angstrom": 1.850861
+    }
+  ]
+}
