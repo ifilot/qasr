@@ -8,7 +8,14 @@
  * @param[out] s Non-null zero-initialized destination. Owns atoms on success;
  * remains empty on failure. Release with structure_free.
  * @param[out] e Error diagnostic on failure.
- * @return true on success. Numeric OUTCAR selection still validates later frames.
+ * @return true on success. Numeric trajectory selection still validates later frames.
  */
 bool parse_structure(const Config *c, Structure *s, Error *e);
+#ifdef VR_HAVE_XML
+/** Stream a complete vasprun.xml document from an open, borrowed file.
+ * Retains only metadata, the current structure and the selected snapshot.
+ * The caller owns/cleans s, including on failure. No truncated XML recovery.
+ */
+bool parse_xml(FILE *file, const Config *c, Structure *s, Error *e);
+#endif
 #endif

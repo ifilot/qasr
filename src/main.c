@@ -15,7 +15,7 @@ static void print_vector(Vec3 v)
 static bool inspect(const Config *c, const Structure *s)
 {
     printf("{\"format\":\"%s\",\"frame\":%zu,\"frame_count\":%zu,\"recovered\":%s,\"atom_count\":%zu,\"lattice_A\":[",
-           s->format == FORMAT_POSCAR ? "poscar" : "outcar", s->frame, s->frame_count, s->recovered ? "true" : "false", s->count);
+           s->format == FORMAT_POSCAR ? "poscar" : s->format == FORMAT_XML ? "xml" : "outcar", s->frame, s->frame_count, s->recovered ? "true" : "false", s->count);
     for (size_t i = 0; i < 3; ++i) { if (i) putchar(','); print_vector(s->lattice[i]); }
     printf("],\"atoms\":[");
     for (size_t i = 0; i < s->count; ++i) {
@@ -69,7 +69,7 @@ static void help(void)
          "Usage: vasp-render INPUT -o OUTPUT.png [options]\n"
          "  --inspect                   Normalized input JSON, without scene building\n"
          "  --inspect-scene             Wrapped instances, clipped bonds and camera JSON\n"
-         "  --format auto|poscar|contcar|outcar\n"
+         "  --format auto|poscar|contcar|outcar|xml\n"
          "  --frame final|N             Zero-based ionic geometry index\n"
          "  --recover                   Accept unfinished OUTCAR with complete geometry\n"
          "  --species Si,O              Explicit ordered species for unlabeled input\n"
@@ -132,7 +132,12 @@ int main(int argc, char **argv)
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
     if (argc == 2 && !strcmp(argv[1], "--version")) { puts("vasp-render " VR_VERSION); return 0; }
     if (argc == 2 && !strcmp(argv[1],"--build-info")) {
-        printf("{\"version\":\"%s\",\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
+        printf("{\"version\":\"%s\",\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
+#ifdef VR_HAVE_XML
+               "true",
+#else
+               "false",
+#endif
 #ifdef _OPENMP
                "true",
 #else

@@ -340,6 +340,15 @@ done:
 
 static bool detect_format(Reader *r, Format *format, Error *e)
 {
+    /* Probe declarations, BOMs and comments, then prefer a valid POSCAR
+     * numeric header: its unrestricted title can itself begin with '<'. */
+    unsigned char prefix[4096];
+    size_t nread = fread(prefix, 1, sizeof prefix, r->file), at = 0;
+    if (ferror(r->file)) return fail(e, 7, "%s: input read error", r->path);
+    if (nread >= 3 && !memcmp(prefix, "\xef\xbb\xbf", 3)) at = 3;
+    while (at < nread && isspace(prefix[at])) ++at;
+    bool xml = at < nread && prefix[at] == '<';
+    if (fseek(r->file, 0, SEEK_SET)) return fail(e, 7, "%s: input must be seekable for auto detection; use --format", r->path);
     bool poscar = true, outcar = false;
     for (size_t i = 0; i < 64; ++i) {
         int rc = read_line(r, e);
@@ -358,10 +367,12 @@ static bool detect_format(Reader *r, Format *format, Error *e)
         }
         if (i == 4 && poscar) break;
         if (i >= 4 && outcar) break;
+        if (i >= 4 && xml) break;
     }
     if (poscar) *format = FORMAT_POSCAR;
     else if (outcar) *format = FORMAT_OUTCAR;
-    else return fail(e, 3, "%s: unrecognized format; use --format poscar|contcar|outcar for headerless inputs", r->path);
+    else if (xml) *format = FORMAT_XML;
+    else return fail(e, 3, "%s: unrecognized format; use --format poscar|contcar|outcar|xml for headerless inputs", r->path);
     if (fseek(r->file, 0, SEEK_SET)) return fail(e, 7, "%s: input must be seekable for auto detection; use --format", r->path);
     r->line = 0; r->bytes = 0;
     return true;
@@ -374,7 +385,13 @@ bool parse_structure(const Config *c, Structure *s, Error *e)
     if (!r.file) return fail(e, 7, "%s: cannot open input", r.path);
     Format format = c->format;
     bool ok = format != FORMAT_AUTO || detect_format(&r, &format, e);
-    if (ok) ok = format == FORMAT_POSCAR ? parse_poscar(&r, c, s, e) : parse_outcar(&r, c, s, e);
+    if (ok && format == FORMAT_XML) {
+#ifdef VR_HAVE_XML
+        ok = parse_xml(r.file, c, s, e);
+#else
+        ok = fail(e, 3, "%s: XML input requires a build with ENABLE_XML=ON", r.path);
+#endif
+    } else if (ok) ok = format == FORMAT_POSCAR ? parse_poscar(&r, c, s, e) : parse_outcar(&r, c, s, e);
     if (fclose(r.file) && ok) ok = fail(e, 7, "%s: failed to close input", r.path);
     if (ok) {
         size_t count = s->count;

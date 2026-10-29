@@ -8,11 +8,15 @@ v0.1.0 reference checkpoint with validated input,
 periodic ball-and-stick geometry, and an orthographic software depth-buffer
 renderer with shaded spheres/capped cylinders and a PNG output path.
 
+Unreleased work after the v0.2.0 tag adds M7 streaming `vasprun.xml` input;
+see [XML selection, validation and measurements](docs/m7-xml.md).
+
 ## Build and test
 
 Requirements: Linux, a C11 compiler (GCC or Clang), CMake 3.16+, libpng/zlib
 and libdeflate development packages, pkg-config, the compiler's OpenMP runtime,
-and Python 3 for tests. JSON parsing uses vendored
+and Python 3 for tests. M7 builds additionally use libxml2 2.9+ development
+headers; disable XML with `-DENABLE_XML=OFF`. JSON parsing uses vendored
 MIT-licensed cJSON 1.7.19. No network access is needed to build or test once
 system dependencies are installed.
 
@@ -60,6 +64,7 @@ does not check leaks.
 build/vasp-render tests/fixtures/POSCAR.skew --inspect
 build/vasp-render tests/fixtures/OUTCAR.relax --inspect --frame 0
 build/vasp-render OUTCAR --inspect --recover
+build/vasp-render vasprun.xml --inspect --frame final
 build/vasp-render POSCAR --inspect --species Si,O --config preset.json
 build/vasp-render POSCAR --inspect-scene --repeat 2,2,1
 ```
@@ -68,6 +73,10 @@ Input is detected by content; `--format poscar|contcar|outcar` overrides it.
 Compressed files must be decompressed before parsing. Frames are zero-based
 ionic snapshots; the default is `final`. An unfinished OUTCAR requires
 `--recover`, which warns on stderr. Malformed geometry is always an error.
+XML accepts `--format xml` or content detection and requires a complete
+document. `--frame N` counts ionic structures; `initialpos`, primitive cells
+and SCF structures are excluded. `final` prefers `finalpos` when present.
+XML does not support `--recover`; see the M7 notes for final-only semantics.
 VASP 4-style POSCAR needs an explicit ordered `--species` mapping or JSON
 `species` array. Comments never supply element identity.
 
@@ -211,6 +220,9 @@ independent per-ray reference for crossing cylinders, caps, near-parallel axes,
 and cell occlusion. Fixed-environment decoded-RGBA hashes are recorded in
 `tests/golden_pixels.json`. Tests also cover transparent edges, determinism,
 resource limits, atomic replacement/cleanup, and PNG rendering of all 20 slabs.
+M7 adds 19 XML test groups in one additional CTest entry; XML-disabled builds
+run the capability check and skip the 18 XML-specific groups. The XML network
+denial test uses a local HTTP sentinel and needs permission to bind localhost.
 
 ## Workstation handoff and release packages
 

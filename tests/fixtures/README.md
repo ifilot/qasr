@@ -1,5 +1,36 @@
 # Input fixtures
 
+## M7 XML fixtures
+
+These unmodified compressed fixtures come from the same MIT-licensed pymatgen
+commit `682bfd855dd89264b0ff8d6bee4815f8834cc5ac`, under
+`tests/files/io/vasp/outputs/`. `PYMATGEN-LICENSE` also covers these files.
+They contain calculation output, not POTCAR datasets. Tests decompress them
+to temporary files; the CLI consumes uncompressed XML.
+
+| Local file | Upstream filename | Generator / scope | Atoms / ionic frames |
+| --- | --- | --- | --- |
+| `vasprun.relax.xml.gz` | `vasprun.xml.gz` | VASP 5.2.2, Li/Fe/P/O relaxation with repeated Fe potential types | 25 / 29 |
+| `vasprun.md.xml.gz` | `vasprun.md.xml.gz` | VASP 6.3.2, Si MD | 64 / 10 |
+| `vasprun.vasp6.xml.gz` | `vasprun.dielectric_6.0.8.xml.gz` | VASP 6.0.8, Li/Bi/O static dielectric calculation with primitive-cell structure | 30 / 1 |
+
+Compressed-byte SHA-256:
+
+```text
+46bea71afefe257ddcb85f8b360d5ee17457216d1e82ba2429bf99693baf5036  vasprun.relax.xml.gz
+61774b76374744f07bb40b2fad2f2a72556be1009ed8541d27c386dff590c8ff  vasprun.md.xml.gz
+4f06eac39002d48be34e750380d51f7a04a5b5c5f1f96a798918280e78f098e5  vasprun.vasp6.xml.gz
+```
+
+The independent ElementTree oracle checks first/last ionic and final-position
+geometry, metadata, changing-cell conversion and frame counts. Equivalent
+POSCARs must render identical RGBA with/without annotations. Synthetic cases
+cover flat ionic steps, final-only documents, changed final positions, skewed
+cells, incomplete/malformed input, resource limits and entity/network denial.
+This real MD coverage applies to XML; OUTCAR's real-MD coverage remains open.
+
+## POSCAR and OUTCAR fixtures
+
 `POSCAR.skew` and `OUTCAR.relax` are original synthetic fixtures. Expected
 skew-cell Cartesian coordinates are independently checked. The test driver
 also generates scaling/volume/Cartesian variants, malformed inputs, truncated

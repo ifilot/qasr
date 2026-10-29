@@ -5,7 +5,7 @@
 
 typedef struct { double x[3]; } Vec3;
 typedef struct { unsigned element; Vec3 position; } Atom;
-typedef enum { FORMAT_AUTO, FORMAT_POSCAR, FORMAT_OUTCAR } Format;
+typedef enum { FORMAT_AUTO, FORMAT_POSCAR, FORMAT_OUTCAR, FORMAT_XML } Format;
 typedef struct {
     Vec3 lattice[3]; /* Rows are basis vectors in angstroms: Cartesian = sum(f[i]*row[i]). */
     Atom *atoms; /* Owned contiguous array; source index is its zero-based offset. */

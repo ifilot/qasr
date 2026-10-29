@@ -1,6 +1,6 @@
 # Technical Design v0.1 — Headless VASP Geometry-to-PNG Renderer
 
-**Status:** v0.1.0 is the M0–M3 reference checkpoint on 2026-10-29. v0.2.0 completes M4–M5 rendering/AA/encoder/thread experiments and M6 overlays, production validation and scoped workstation acceptance. The user accepts WSL results for performance selection and deployment validation; native Linux/HPC access is not an acceptance requirement. Sections 16, 18–24 record decisions and validation. M7 follows the v0.2.0 release boundary.
+**Status:** v0.1.0 is the M0–M3 reference checkpoint on 2026-10-29. Published v0.2.0 completes M4–M6. Subsequent unreleased M7 adds validated streaming XML input. The user accepts WSL results for performance selection and deployment validation; native Linux/HPC access is not an acceptance requirement. Sections 16, 18–25 record decisions and validation.
 
 **Language:** C11. **Platform:** Linux workstations and HPC nodes. **Interface:** standalone CLI. **Default image:** 512 × 512 PNG.
 
@@ -9,7 +9,7 @@ Implementation lives in `src/`; build and inspection instructions are in `README
 
 ## 1. Executive summary
 
-Build a headless C executable, provisionally named `vasp-render`, that reads VASP geometry from **POSCAR, CONTCAR, or OUTCAR** and produces an orthographic, automatically framed, shaded ball-and-stick PNG. **`vasprun.xml` is optional/deferred**. XDATCAR and other VASP data formats are explicitly out of scope. Typical input structures contain 100–1,000 atoms. The pipeline will implement correct handling of skewed cells and periodic bonds, configurable cell repetition, deterministic view settings, and strict validation.
+Build a headless C executable, provisionally named `vasp-render`, that reads VASP geometry from **POSCAR, CONTCAR, OUTCAR, or optionally `vasprun.xml`** and produces an orthographic, automatically framed, shaded ball-and-stick PNG. XML was deferred through v0.2.0 and is implemented by M7. XDATCAR and other VASP data formats are explicitly out of scope. Typical input structures contain 100–1,000 atoms. The pipeline implements correct handling of skewed cells and periodic bonds, configurable cell repetition, deterministic view settings, and strict validation.
 
 Rendering backend, anti-aliasing method, PNG encoder, and parallelism are **benchmark decisions** rather than fixed technology choices. Compare a Cairo painter's-algorithm implementation with an accurate software depth-buffer implementation. Select the fastest method that passes visual correctness tests.
 
@@ -17,7 +17,7 @@ Rendering backend, anti-aliasing method, PNG encoder, and parallelism are **benc
 
 ### Confirmed behavior
 
-- Required formats: POSCAR, CONTCAR, OUTCAR. POSCAR and CONTCAR use one parser. Optional future format: `vasprun.xml` using streaming libxml2.
+- Required formats: POSCAR, CONTCAR, OUTCAR. POSCAR and CONTCAR use one parser. Optional M7 format: `vasprun.xml` using streaming libxml2 (`ENABLE_XML`, enabled by default).
 - In multi-step OUTCAR inputs, use the **last complete ionic geometry** by default; `--frame` selects a specific geometry. A frame is an ionic coordinate snapshot, *not* an electronic SCF iteration.
 - Ball-and-stick: shaded spheres, shaded cylindrical-looking bonds, directional lighting and anti-aliased boundaries.
 - Element-pair-specific bond cutoffs, with periodic-bond support.
@@ -167,7 +167,7 @@ vasp-render INPUT -o OUTPUT.png [options]
   --benchmark-stages
 ```
 
-`N` is zero-based; `final` is the default, and negative indices are rejected. POSCAR/CONTCAR accept only `final` or `0`. M1 additionally exposes `--inspect`, `--species Si,O`, and `--recover`. XML remains deferred and is rejected as an unsupported CLI format. Runtime backend/AA/encoder overrides may be added for experiments but need not be part of the stable user interface.
+`N` is zero-based; `final` is the default, and negative indices are rejected. POSCAR/CONTCAR accept only `final` or `0`. M1 additionally exposes `--inspect`, `--species Si,O`, and `--recover`. M7 adds `--format xml` and content detection, ionic-frame selection and finalpos precedence; XML requires a complete document and does not support recovery. Section 25 records the exact selection rules. Runtime backend/AA/encoder overrides support the documented experiments.
 
 ### JSON configuration
 
@@ -580,5 +580,36 @@ archives, private-prefix installation, runtime dependencies, clean offline
 source builds/tests and serial/libpng-only fallback output are checked by
 `tools/validate_deployment.py`. See `m6-validation.md` and `performance.md` for
 commands, evidence paths, numeric targets and limits. WSL fully satisfies the
-user-approved deployment-validation scope; M4–M6 are complete. M7 XML, broader
-OUTCAR version/real-MD claims and any new release publication remain separate.
+user-approved deployment-validation scope; M4–M6 are complete. M7 XML and broader
+OUTCAR version/real-MD claims remain separate from the v0.2.0 release.
+
+## 25. M7 XML decision and validation record
+
+M7 follows the published v0.2.0 tag in a separate development change. The
+optional libxml2 reader is enabled by default (`ENABLE_XML=OFF` removes its
+dependency). It streams the entire document while retaining only metadata,
+the current structure and the selected snapshot. Per-ion/type identities and
+populations are cross-checked; positions use each structure's own basis.
+
+Numeric frames count unnamed ionic structures directly under calculation or
+modeling, excluding initialpos, primitive cells and nested SCF structures.
+Default final selection prefers finalpos, otherwise the last ionic structure;
+finalpos does not duplicate the ionic frame count. A final-only document has
+one logical frame 0; an initial-only document has no result frame. Numeric
+selection still validates all later geometry and the complete closing root.
+Malformed/truncated XML is rejected and `--recover` remains OUTCAR-only.
+
+DTDs/entity-reference nodes are rejected, external loading/substitution and
+XInclude are disabled, NONET is set, and libxml2's normal limits remain active.
+Application byte/line, depth/node/text/name/attribute, geometry and frame limits
+bound work and state. File input is application-owned; compressed/UTF-16 and
+namespaced XML are outside the contract. Failed parses preserve output files.
+
+Nineteen XML test groups cover synthetic limits/security/frame semantics and
+three pinned MIT pymatgen fixtures: VASP 5.2.2 relaxation, 6.3.2 Si MD and
+6.0.8 dielectric output. Independent ElementTree geometry and equivalent-POSCAR
+RGBA comparisons pass, with/without annotations. Release and leak-enabled
+address/undefined-behavior checks include these tests; XML-disabled source builds
+retain the existing formats and explicit capability errors. Thirty-sample
+timings and a 100-versus-10,000-frame RSS comparison are retained under
+`artifacts/m7/`. See `m7-xml.md` for measurements, commands and exact scope.

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Complete M7 streaming `vasprun.xml` input with optional system libxml2,
+  content detection, zero-based ionic frames and final-position semantics.
+- Validate per-ion/type identities, changing cells, complete documents and
+  bounded input/state; reject DTDs, entities and truncated XML.
+- Add pinned MIT-licensed VASP 5 relaxation and VASP 6 MD/static fixtures,
+  independent geometry/pixel comparisons, parser limits/security tests and
+  reproducible XML timing/trajectory-memory measurements.
+
 ## [0.2.0] - 2026-10-29
 
 Complete design milestones M4–M6 on the user-approved WSL workstation.

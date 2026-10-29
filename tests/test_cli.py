@@ -288,7 +288,7 @@ class InputTests(unittest.TestCase):
                      ("--repeat", "1.5,1,1"), ("--repeat", "1024,1024,1024"),
                      ("--width", "16384", "--height", "16384"), ("--threads", "0"),
                      ("--width", "64", "--width", "32"), ("--missing", "42"),
-                     ("--format", "xml"), ("--background", "#gggggg"),
+                     ("--format", "xdatcar"), ("--background", "#gggggg"),
                      ("--view", "nan,1,1"), ("--repeat", "1,2,0"), ("--species", "Si,"),
                      ("--config",), ("--frame", "0x1")]:
             with self.subTest(args=args):

@@ -59,7 +59,7 @@ def environment(exe):
         raise ValueError("benchmark a CMake Release build")
     governor = Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
     dependencies = {}
-    for name in ("libpng", "zlib", "cairo", "libdeflate"):
+    for name in ("libpng", "zlib", "cairo", "libdeflate", "libxml-2.0"):
         try:
             dependencies[name] = command_output("pkg-config", "--modversion", name)
         except subprocess.CalledProcessError:
@@ -80,7 +80,7 @@ def environment(exe):
         "c_flags": setting("CMAKE_C_FLAGS"),
         "release_flags": setting("CMAKE_C_FLAGS_RELEASE"),
         "build_options": {key: setting(key) for key in (
-            "ENABLE_SANITIZERS", "ENABLE_CAIRO_EXPERIMENTS", "ENABLE_OPENMP", "ENABLE_LIBDEFLATE")},
+            "ENABLE_SANITIZERS", "ENABLE_CAIRO_EXPERIMENTS", "ENABLE_OPENMP", "ENABLE_LIBDEFLATE", "ENABLE_XML")},
         "dependencies": dependencies,
         "linked_libraries": command_output("ldd", str(exe)),
         "executable": str(exe), "executable_sha256": digest(exe),

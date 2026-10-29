@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import gzip
 from benchmark import ROOT, decode_png, digest
 
 
@@ -55,6 +56,12 @@ def main():
     flags=[source,'--labels','element','--legend','on','--axes','on','--scale-bar','on']
     installed_png=runtime/'installed.png'
     run('installed-render',[installed,*flags,'--config',install/'share/vasp-render/presets/illustrated.json','-o',installed_png],cwd=runtime)
+    if capabilities.get('xml'):
+        xml_source=runtime/'vasprun.xml'
+        xml_source.write_bytes(gzip.decompress((ROOT/'tests/fixtures/vasprun.md.xml.gz').read_bytes()))
+        xml_info=json.loads(run('installed-xml',[installed,xml_source,'--inspect']))
+        if xml_info['format']!='xml' or xml_info['frame_count']!=10 or xml_info['atom_count']!=64:
+            raise RuntimeError('installed XML inspection differs from pinned MD fixture')
     linked=run('installed-libraries',['ldd',installed])
     if 'not found' in linked:raise RuntimeError('unresolved installed shared library')
     if not (install/'share/doc/vasp_render/LICENSE').is_file():raise RuntimeError('installed GPL notice missing')
@@ -89,11 +96,11 @@ def main():
     if decode_png(source_png)!=decode_png(installed_png):raise RuntimeError('fresh source build image differs')
     minimal=work/'minimal-build'
     run('minimal-configure',['cmake','-S',unpacked,'-B',minimal,'-DCMAKE_BUILD_TYPE=Release','-DBUILD_TESTING=ON',
-                             '-DENABLE_OPENMP=OFF','-DENABLE_LIBDEFLATE=OFF','-DENABLE_CAIRO_EXPERIMENTS=OFF'])
+                             '-DENABLE_OPENMP=OFF','-DENABLE_LIBDEFLATE=OFF','-DENABLE_CAIRO_EXPERIMENTS=OFF','-DENABLE_XML=OFF'])
     run('minimal-build',['cmake','--build',minimal,'-j',args.jobs])
     run('minimal-tests',['ctest','--test-dir',minimal,'--output-on-failure'])
     minimal_cap=json.loads(run('minimal-build-info',[minimal/'vasp-render','--build-info']))
-    if any(minimal_cap[key] for key in ['openmp','libdeflate','cairo']):raise RuntimeError('minimal features were not disabled')
+    if any(minimal_cap.get(key,False) for key in ['openmp','libdeflate','cairo','xml']):raise RuntimeError('minimal features were not disabled')
     minimal_png=runtime/'minimal.png'
     run('minimal-render',[minimal/'vasp-render',*flags,'--config',unpacked/'presets/illustrated.json','-o',minimal_png],cwd=runtime)
     if decode_png(minimal_png)!=decode_png(installed_png):raise RuntimeError('minimal build changes annotation pixels')

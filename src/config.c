@@ -469,6 +469,7 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
             if (!strcmp(v, "auto")) c->format = FORMAT_AUTO;
             else if (!strcmp(v, "poscar") || !strcmp(v, "contcar")) c->format = FORMAT_POSCAR;
             else if (!strcmp(v, "outcar")) c->format = FORMAT_OUTCAR;
+            else if (!strcmp(v, "xml")) c->format = FORMAT_XML;
             else ok = false;
         }
         if (!ok) return fail(e, 2, "unknown option or invalid value: %s %s", k, v);
