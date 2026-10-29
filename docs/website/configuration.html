@@ -1,0 +1,142 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Layered configuration and atom styling — vasp-render</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#guide">Skip to configuration guide</a><main id="guide" style="margin:0 auto;max-width:1100px;padding:32px 24px;overflow-wrap:anywhere"><nav aria-label="Handbook navigation"><a href="index.html">← vasp-render handbook</a> · <a href="index.html#cli-reference">CLI reference</a> · <a href="downloads/vasp-render-m9-source.tar.gz" download>M9 development sources</a></nav>
+<p class="eyebrow">DEVELOPMENT GUIDE · AFTER v0.3.0</p><article class="doc-section"><h1 id="layered-configuration-and-automation-m9">Layered configuration and automation (M9)</h1>
+<p>Available on <code>master</code> after v0.3.0. The immutable v0.3.0 tag contains XML input,
+periodic context and the original handbook; it does not contain M9 flags.
+Check <code>--build-info</code> for <code>user_config</code>, <code>atom_overrides</code>, <code>job_requests</code> and
+<code>config_schema_version: 1</code> before using this interface.</p>
+<h2 id="defaults-and-reproducibility">Defaults and reproducibility</h2>
+<p>Rendering settings resolve in this order:</p>
+<ol>
+<li>Compiled defaults.</li>
+<li>Optional user preferences.</li>
+<li>Explicit <code>--config FILE</code> settings, or <code>--job FILE</code> embedded <code>config</code>.</li>
+<li>Explicit CLI values.</li>
+</ol>
+<p>Use JSON, with optional <code>"schema_version": 1</code>. Unknown/duplicate keys and malformed
+present files fail. Objects merge by field; arrays replace. A higher layer's
+<code>O-Si</code> bond cutoff replaces a lower layer's <code>Si-O</code>; both spellings within one file
+are an error. Validate the final combined settings with the executable: JSON
+Schema checks structure, while input identity, build capabilities, vector geometry,
+range ordering, cross-field conflicts and resource budgets need runtime checks.
+Each JSON input is limited to 1 MiB and 32 nesting levels; NUL strings are rejected.</p>
+<p>The user file is <code>$XDG_CONFIG_HOME/vasp-render/config.json</code> for an absolute XDG
+path, otherwise <code>$HOME/.config/vasp-render/config.json</code> for an absolute HOME.
+Missing optional files are normal. No directory search or implicit file creation
+occurs. <code>--init-config</code> explicitly creates a starter file and any missing parent
+directories; existing files and symlinks are never overwritten. Use
+<code>--no-user-config</code> in CI, benchmarks and reproducible jobs. User preferences may
+set element palettes/radii, but cannot contain nonempty <code>atom_overrides</code>.</p>
+<pre><code class="language-sh">vasp-render --init-config
+vasp-render --dump-config
+vasp-render --no-user-config --config recipe.json --width 1200 --dump-config
+</code></pre>
+<p>The dump contains <code>config</code>, <code>runtime</code>, <code>derived</code>, <code>sources</code>, <code>user_config</code> and a
+flat per-field <code>provenance</code> map (<code>layer</code>, <code>file</code>). Extract only <code>config</code> to reload
+with <code>--config</code>; the complete diagnostic envelope is not a render configuration.
+Requested repeat counts and an implicit camera up vector retain their meaning
+when reloaded. Derived repeat counts/up are reported separately. Relative CLI and
+<code>--config</code> paths use the current directory.</p>
+<h2 id="per-atom-styles">Per-atom styles</h2>
+<pre><code class="language-json">{
+  &quot;schema_version&quot;: 1,
+  &quot;geometry&quot;: {&quot;expand_xy&quot;: [1, 1], &quot;image_colors&quot;: &quot;greyscale&quot;},
+  &quot;atom_overrides&quot;: [
+    {&quot;select&quot;: {&quot;source_indices&quot;: [0, 4]}, &quot;color&quot;: &quot;#ff6633&quot;, &quot;radius_A&quot;: 0.8},
+    {&quot;select&quot;: {&quot;element&quot;: &quot;O&quot;, &quot;source_range&quot;: [10, 20]}, &quot;color&quot;: &quot;#8844cc&quot;},
+    {&quot;select&quot;: {&quot;source_indices&quot;: [4], &quot;cell&quot;: [1, 0, 0]}, &quot;color&quot;: &quot;#18a88b&quot;}
+  ]
+}
+</code></pre>
+<p>This illustrates syntax; indices/elements must exist in the selected structure.
+The downloadable handbook recipes use actual indices from their accompanying input.</p>
+<p>Indices refer to the <strong>zero-based full source atom list</strong> printed by <code>--inspect</code>,
+within the selected frame. <code>source_range</code> has inclusive bounds. Supply indices or
+range, never both; element-only selectors are valid. An element and index/range
+combine with AND. Exact IUPAC symbols are required. Duplicate, negative and
+out-of-range indices, reversed ranges, empty matches and cells outside the chosen
+expansion fail with a JSON path. Cell-only selectors are rejected.</p>
+<p>Omitting <code>cell</code> styles the source and all copies. <code>cell: [0,0,0]</code> selects the
+primary copy; negative xy origins work with centered expansion. Later matches
+win <strong>per property</strong>. Resolution is element settings → source rules → periodic
+context RGB → cell-specific rules. The cell phase runs after all source rules,
+regardless of their positions in the array. Alpha is preserved by context colors.
+<code>radius_A</code> is an angstrom display radius before <code>sphere_scale</code>; changing it does
+not change bond connectivity. Legend swatches retain the element palette.</p>
+<p><code>--inspect-scene</code> adds <code>applied_rules: {"color": N|null, "radius": N|null}</code> to
+spheres when rules are present. IDs are zero-based indices in <code>atom_overrides</code>.
+Source identity and lattice origin remain the selector keys; rendered instance
+numbers depend on expansion. Source rules resolve once; a linked list of cell
+rules is evaluated per instance. Limits: 4096 rules, 64 MiB for owned configuration
+plus source style table, 200 million source checks and 200 million cell-rule
+checks, alongside existing scene/image budgets.</p>
+<p>Saucepan slash strings are not accepted automatically. Convert explicitly:
+<code>H/1/1/#ff0000</code> becomes <code>{"select":{"element":"H","source_indices":[0]},"color":"#ff0000"}</code>;
+<code>H/3/6/#00ff00</code> uses <code>source_range: [2,5]</code>; <code>C/0/0/1.0</code> uses
+<code>elements.C.radius_A: 1.0</code>. Saucepan's indices are one-based offsets in the full
+list, whereas qasr uses zero-based offsets.</p>
+<h2 id="schemas-validation-and-jobs">Schemas, validation and jobs</h2>
+<pre><code class="language-sh">vasp-render --schema config &gt; config.schema.json
+vasp-render --schema user &gt; user.schema.json
+vasp-render --schema job &gt; job.schema.json
+vasp-render --no-user-config --config recipe.json --validate-config
+vasp-render CONTCAR --no-user-config --config recipe.json --validate-config --json-errors
+vasp-render --job render-job.json
+cat render-job.json | vasp-render --job -
+</code></pre>
+<p>The three Draft 2020-12 schemas are embedded in the executable, installed under
+<code>share/vasp-render/schemas</code>, and served by the handbook. <code>--schema</code> alone selects
+config. Schema discovery runs alone. Validation never builds/rasterizes a scene
+or writes PNG/report files. Without input it reports <code>input_validated: false</code>
+and <code>selectors_validated: false</code>; supply input for selector checks.</p>
+<p>A job is an invocation, distinct from persistent preferences:</p>
+<pre><code class="language-json">{
+  &quot;schema_version&quot;: 1,
+  &quot;input&quot;: &quot;CONTCAR&quot;,
+  &quot;output&quot;: &quot;render.png&quot;,
+  &quot;report&quot;: &quot;render-report.json&quot;,
+  &quot;frame&quot;: &quot;final&quot;,
+  &quot;threads&quot;: &quot;auto&quot;,
+  &quot;no_user_config&quot;: true,
+  &quot;json_errors&quot;: true,
+  &quot;config&quot;: {&quot;image&quot;: {&quot;width&quot;: 768, &quot;height&quot;: 768}}
+}
+</code></pre>
+<p>Optional runtime fields also include <code>format</code> and <code>recover</code>. Paths in a job file
+are relative to that file's directory; stdin jobs use the working directory.
+Input structures remain file paths. PNG stdout is unsupported. <code>report: "-"</code>
+uses stdout. CLI input/output/frame/settings override the corresponding job
+values. <code>--job</code> and <code>--config</code> are mutually exclusive. Both accept <code>-</code> for one
+bounded stdin JSON object. Dump/validate modes can read a full render job without
+creating its outputs; explicit CLI <code>-o</code>/<code>--report</code> are rejected in these modes.
+Choose one init/dump/validate/inspect mode per call.</p>
+<p>With <code>--json-errors</code>, stderr is one JSON error envelope, for example:</p>
+<pre><code class="language-json">{&quot;ok&quot;:false,&quot;error&quot;:{&quot;code&quot;:&quot;invalid_atom_index&quot;,&quot;exit_code&quot;:2,&quot;path&quot;:&quot;atom_overrides[0].select.source_indices[0]&quot;,&quot;message&quot;:&quot;…&quot;}}
+</code></pre>
+<p>Numeric exit categories remain unchanged. Config and selector errors include
+paths; generic parser/I/O errors may have a null path. Use explicit
+<code>--json-errors</code> when malformed job JSON itself must produce structured errors:
+an unreadable job cannot activate its own <code>json_errors</code> field. Recovery warnings
+and optional benchmark diagnostics remain on stderr; avoid enabling them when a
+consumer needs an error-only stream.</p>
+<h2 id="render-reports">Render reports</h2>
+<p><code>--report FILE</code> atomically replaces a compact JSON success report; <code>--report -</code>
+writes it to stdout. It records version, input/output paths and SHA-256 hashes,
+selected frame/frame count, recovery state, atom/instance/bond/rule counts,
+image dimensions/bytes, compact settings, configuration hash, sources and stage
+times. The configuration hash covers the unformatted resolved config JSON
+produced by cJSON, excluding runtime paths. Full rules, element tables and cutoff
+maps are available in <code>--dump-config</code>, not repeated in each report.</p>
+<p>Stage times exclude startup, JSON report encoding, output hashing and report
+writing. Input hashing is included in <code>parse</code> when a report is requested. PNG
+compression is resolved for its destination. Report paths must differ from
+input/PNG (including existing aliases); common write failures are checked before
+rendering. PNG and report are individually atomic, <strong>not one transaction</strong>: a
+late report I/O failure can leave a successfully written PNG and an older report.
+Consumers must check exit status and output hash. Atomic rename does not imply
+fsync durability or concurrent-input protection; do not modify inputs during a job.</p>
+<p>See <a href="https://github.com/ifilot/qasr/blob/master/docs/m9-validation.md">M9 validation evidence</a> for correctness and performance checks.</p>
+<p>A network server is not required. Optional M10 batch/stdio caching or an MCP
+adapter remains conditional on a repeated-input/integration workflow and measured
+benefit. This iteration adds no service dependency.</p></article><section aria-label="Verified atom styling examples"><h2>Try a verified highlight</h2><p>These are program-generated views of the 63-source-atom cobalt slab, expanded to 567 instances. Orange highlights source atoms 6 and 34; the second view adds a green override to source 6 in cell [1,0,0]. Greyscale context is applied before the explicit cell override. The legend keeps the ordinary cobalt palette.</p><div class="two-col"><figure class="image-card"><a href="assets/source-highlight.png"><img src="assets/source-highlight.png" width="900" height="700" alt="Orange source highlights in the primary cobalt cell with greyscale copies" loading="lazy"></a><figcaption><a href="downloads/source-highlight.json" download>Source highlight recipe</a></figcaption></figure><figure class="image-card"><a href="assets/cell-highlight.png"><img src="assets/cell-highlight.png" width="900" height="700" alt="A green highlighted atom in a neighboring cell alongside orange primary-cell highlights" loading="lazy"></a><figcaption><a href="downloads/cell-highlight.json" download>Copy-specific highlight recipe</a></figcaption></figure></div><p>Place <a href="downloads/CONTCAR.co" download>CONTCAR.co</a> and <a href="downloads/highlight-job.json" download>highlight-job.json</a> in the same directory, then run:</p><pre><code>vasp-render --job /path/to/highlight-job.json</code></pre><p>It writes highlight.png and highlight-report.json next to the job file. Build the separate development source download first; the stable v0.3.0 binary does not have these flags.</p><p>Download schemas: <a href="schemas/config.schema.json">config</a> · <a href="schemas/user.schema.json">user preferences</a> · <a href="schemas/job.schema.json">job request</a>. <a href="configuration-manifest.json">Example and source provenance</a>.</p></section><footer><p><a href="index.html">Return to the handbook</a> · GPL-3.0-only · Runs offline with no external scripts or fonts.</p></footer></main></body></html>

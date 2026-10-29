@@ -41,6 +41,7 @@ class Document(HTMLParser):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('executable', type=Path, nargs='?')
+    parser.add_argument('--development-executable', type=Path, help='also verify post-release M9 schemas and source against this executable/worktree')
     parser.add_argument('--static-only', action='store_true', help='check standalone site assets without compiling or invoking the renderer')
     parser.add_argument('--output', type=Path, default=ROOT/'artifacts/website-validation/static-report.json')
     args = parser.parse_args()
@@ -50,14 +51,15 @@ def main():
     sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
     document = Document(); document.feed((site/'index.html').read_text())
     assert len(document.ids) == len(set(document.ids)), 'duplicate HTML IDs'
+    guide = Document(); guide.feed((site/'configuration.html').read_text())
     checked = 0
-    for value in document.links:
+    for value in document.links + guide.links:
         url = urlsplit(value)
         if url.scheme or url.netloc: continue
         if url.path:
             path = (site/unquote(url.path)).resolve()
             assert path.is_relative_to(site.resolve()) and path.is_file(), value
-        if url.fragment and not url.path: assert unquote(url.fragment) in document.ids, value
+        if url.fragment and not url.path: assert unquote(url.fragment) in document.ids + guide.ids, value
         checked += 1
     for path in ['app.js', 'styles.css']:
         text = (site/path).read_text()
@@ -88,8 +90,28 @@ def main():
             if member.isfile():
                 relative = Path(*parts[1:]).as_posix()
                 assert hashlib.sha256(archive.extractfile(member).read()).hexdigest() == source['files'][relative]
-                if not args.static_only and (parts[1] == 'src' or relative == 'CMakeLists.txt'):
+                if not args.static_only and not args.development_executable and (parts[1] == 'src' or relative == 'CMakeLists.txt'):
                     assert sha(ROOT/relative) == source['files'][relative], 'source download differs from current renderer: '+relative
+    development = json.loads((site/'configuration-manifest.json').read_text())
+    for name,digest in development['files'].items(): assert sha(site/name) == digest, name
+    dev_source = json.loads((site/'downloads/m9-source-manifest.json').read_text())
+    assert sha(site/'downloads/vasp-render-m9-source.tar.gz') == dev_source['sha256']
+    with tarfile.open(site/'downloads/vasp-render-m9-source.tar.gz') as archive:
+        for member in archive:
+            parts = Path(member.name).parts
+            assert not Path(member.name).is_absolute() and '..' not in parts and not member.issym() and not member.islnk()
+            assert not set(parts)&{'.git','.aws','.codex','.agents','artifacts','__pycache__'}
+            if member.isfile():
+                relative = Path(*parts[1:]).as_posix()
+                assert hashlib.sha256(archive.extractfile(member).read()).hexdigest() == dev_source['files'][relative]
+                if args.development_executable: assert sha(ROOT/relative) == dev_source['files'][relative], relative
+    if args.development_executable:
+        dev = args.development_executable.resolve()
+        assert sha(dev) == development['executable_sha256']
+        for kind in ['config','user','job']:
+            assert json.loads(subprocess.check_output([dev,'--schema',kind])) == json.loads((site/'schemas'/f'{kind}.schema.json').read_text())
+        reference = ''.join(document.reference)
+        assert all(flag in reference for flag in re.findall(r'--[a-z][a-z-]*',subprocess.check_output([dev,'--help'],text=True)))
     flags = set()
     if not args.static_only:
         help_text = subprocess.check_output([exe, '--help'], text=True)
@@ -97,6 +119,7 @@ def main():
         reference = ''.join(document.reference)
         assert all(flag in reference for flag in flags), 'CLI flags missing from reference: '+str(flags-set(re.findall(r'--[a-z][a-z-]*', reference)))
     record = {'passed':True, 'local_links_checked':checked, 'images_with_verified_provenance':12,
+              'development_images_with_verified_provenance':len(development['images']),
               'documented_cli_flags':None if args.static_only else len(flags),'static_only':args.static_only,
               'example_kit_verified':True,'validated_source_archive_verified':True,
               'source_files':len(source['files']),'source_archive_sha256':source['sha256']}

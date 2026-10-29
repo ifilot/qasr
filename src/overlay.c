@@ -142,14 +142,15 @@ static void text(Image *image, double x, double y, const char *value, double uni
     }
 }
 
-static size_t elements(const Scene *s, size_t counts[119], uint8_t colors[119][4])
+static size_t elements(const Config *c, const Scene *s, size_t counts[119], uint8_t colors[119][4])
 {
     size_t total=0;memset(counts,0,119*sizeof *counts);
     for (size_t i=0;i<s->count;++i) if (s->items[i].kind==SPHERE) {
         unsigned z=s->items[i].element<=118 ? s->items[i].element : 0;
-        if (!counts[z]) ++total;
-        if (!counts[z] || (!s->items[i].origin[0] && !s->items[i].origin[1] && !s->items[i].origin[2]))
-            memcpy(colors[z],s->items[i].color,4);
+        if (!counts[z]) {
+            ++total;
+            if (z) element_color(c,z,colors[z]);else memcpy(colors[z],s->items[i].color,4);
+        }
         ++counts[z];
     }
     return total;
@@ -171,7 +172,7 @@ bool overlay_layout(const Config *c, const Scene *s, Camera *camera, Error *e)
     if (c->scale_bar && c->width<(c->axes ? 176u : 88u))
         return fail(e,2,"scale bar and axes require a wider image");
     if (c->legend) {
-        size_t counts[119];uint8_t colors[119][4];size_t n=elements(s,counts,colors);
+        size_t counts[119];uint8_t colors[119][4];size_t n=elements(c,s,counts,colors);
         size_t available=camera->viewport_height>36 ? (camera->viewport_height-36)/18 : 0;
         if (!available) return fail(e,2,"image is too short for an element legend");
         camera->legend_rows=n<available ? n : available;
@@ -279,7 +280,7 @@ bool overlay_render(const Config *c, const Scene *s, const Camera *camera,
     }
     free(order);free(placed);
     if (c->legend) {
-        size_t counts[119];uint8_t colors[119][4];(void)elements(s,counts,colors);
+        size_t counts[119];uint8_t colors[119][4];(void)elements(c,s,counts,colors);
         double left=(double)(image->width-camera->legend_width)-8;
         rectangle(image,left,8,(double)image->width-8,8+(double)camera->legend_height,plate);
         text(image,left+8,13,"ELEMENTS",1.5,ink);

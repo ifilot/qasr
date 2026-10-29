@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased — M9
+
+- Load optional XDG user defaults, support explicit initialization/opt-out and
+  dump resolved settings with per-field provenance.
+- Merge JSON objects by field across layers, replace arrays, and replace
+  lower-layer bond cutoffs without accepting duplicates within one file.
+- Add bounded per-source/per-cell atom color/radius selectors with explicit
+  rule precedence, inspection metadata and stable element legend colors.
+- Embed/install strict config, user and job JSON Schemas; add validation,
+  structured errors, stdin/file jobs and compact hashed render reports.
+- Document the development interface with real highlight images and a separate
+  development source download, retaining the v0.3.0 release archive.
+
 ## [0.3.0] - 2026-10-29
 
 Complete M7 XML, M8 periodic context and the standalone GitHub Pages handbook.

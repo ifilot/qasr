@@ -228,7 +228,7 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     }
     const size_t factor=c->aa_scale, per_pixel=factor*factor;
     const double scale=(double)factor;
-    size_t count=c->width*c->height, samples=count*per_pixel, retained=s->capacity*sizeof(Primitive)+source_bytes;
+    size_t count=c->width*c->height, samples=count*per_pixel, retained=scene_memory_bytes(s)+source_bytes;
     size_t reserve=8u*1024u*1024u; /* PNG/zlib working-space allowance. */
     if (c->labels) reserve+=s->count*sizeof(LabelAnchor)+overlay_label_scratch_bytes(s);
     if (c->adaptive_aa)

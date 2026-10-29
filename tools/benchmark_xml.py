@@ -23,13 +23,14 @@ def main():
     args = parser.parse_args()
     if args.samples < 1: parser.error('samples must be positive')
     exe = args.executable.resolve()
+    isolated = ["--no-user-config"] if json.loads(subprocess.check_output([exe,"--build-info"])).get("user_config") else []
     work = (args.work_dir or Path(tempfile.mkdtemp(prefix='qasr-xml-bench-'))).resolve()
     work.mkdir(parents=True, exist_ok=True)
     report = {'started_utc': datetime.now(timezone.utc).isoformat(), 'environment': environment(exe),
               'scope': 'Warm-cache process wall time including JSON/PNG output; parse stage excludes startup; no fsync',
               'work_dir': str(work), 'samples': args.samples, 'warmups': 3, 'cases': []}
     def measure(name, source, flags, oracle=None):
-        command = [str(exe), str(source), *map(str, flags), '--benchmark-stages']
+        command = [str(exe), str(source), *isolated, *map(str, flags), '--benchmark-stages']
         for _ in range(3): subprocess.run(command, capture_output=True, check=True)
         elapsed, parsing = [], []
         last = None

@@ -1,9 +1,9 @@
 # Next iteration: configuration, atom selection and automation
 
-Status: **design proposal**, requested on 2026-10-29. None of the new flags or
-schema fields below are implemented yet. Current M8 behavior and the published
-handbook remain unchanged. The user requested publication plus a proposal before
-runtime implementation.
+Status: **M9a–M9c implemented on master after v0.3.0**. The v0.3.0 tag
+remains the release boundary for M7/M8 and the original handbook. The design
+rationale below is retained; see [the implemented interface](configuration.md)
+for exact flags, limits, precedence and examples. M10 remains conditional.
 
 ## Recommended decisions
 
@@ -53,7 +53,7 @@ Proposed controls:
 - `--dump-config`: return the resolved configuration as JSON, including loaded
   file paths and per-field provenance. A separate resolution map keeps this
   report inspectable without putting report-only keys into render-job JSON.
-- Preserve `--config FILE`; future `--config -` may read one bounded job from
+- Preserve `--config FILE`; `--config -` can read one bounded job from
   stdin, while the structure itself remains a path.
 
 Merge objects field by field. Omitted fields inherit; unknown or duplicate keys
@@ -207,9 +207,8 @@ Prioritize:
    should not accidentally become persistent user defaults. Keep the existing
    CLI as a wrapper over the same validated request.
 
-These proposed flags/modes are not currently accepted by the executable. For
-today's agents, use --config plus --inspect, --build-info and the documented
-exit categories.
+These flags/modes are available in the post-v0.3.0 development build. Check
+--build-info capabilities before using them with an older executable.
 
 ## Batch/server/MCP tradeoff
 

@@ -1,7 +1,11 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
+#define _POSIX_C_SOURCE 200809L
 #include "config.h"
 #include "cJSON.h"
 #include <ctype.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -218,14 +222,28 @@ static bool json_lexical(const char *s)
     return true;
 }
 
+static int key_order(const void *a, const void *b)
+{
+    const cJSON *const *left=a,*const *right=b;
+    return strcmp((*left)->string,(*right)->string);
+}
 static bool unique_keys(const cJSON *j, Error *e)
 {
     if (cJSON_IsObject(j)) {
-        for (const cJSON *a = j->child; a; a = a->next)
-            for (const cJSON *b = a->next; b; b = b->next)
-                if (!strcmp(a->string, b->string)) return fail(e, 2, "config: duplicate key '%s'", a->string);
+        size_t n=0;for (const cJSON *a=j->child;a;a=a->next) ++n;
+        if (n>1) {
+            const cJSON **keys=malloc(n*sizeof *keys);
+            if (!keys) return fail(e,6,"cannot allocate JSON key validation");
+            size_t i=0;for (const cJSON *a=j->child;a;a=a->next) keys[i++]=a;
+            qsort(keys,n,sizeof *keys,key_order);
+            for (i=1;i<n;++i) if (!strcmp(keys[i-1]->string,keys[i]->string)) {
+                fail_at(e,2,"duplicate_json_key",keys[i]->string,"config: duplicate key '%s'",keys[i]->string);
+                free(keys);return false;
+            }
+            free(keys);
+        }
     }
-    for (const cJSON *a = j->child; a; a = a->next) if (!unique_keys(a, e)) return false;
+    for (const cJSON *a=j->child;a;a=a->next) if (!unique_keys(a,e)) return false;
     return true;
 }
 
@@ -300,7 +318,10 @@ static bool settings_group(const cJSON *group, const char *name, Config *c, Erro
                 else if (!strcmp(k, "scale_bar")) { c->scale_bar = b; valid = true; }
             }
         }
-        if (!valid) return fail(e, 2, "config.%s.%s: unknown key or invalid value", name, k);
+        if (!valid) {
+            char path[256];snprintf(path,sizeof path,"%s.%s",name,k);
+            return fail_at(e,2,"invalid_configuration",path,"config.%s.%s: unknown key or invalid value",name,k);
+        }
     }
     return true;
 }
@@ -325,6 +346,7 @@ static bool element_settings(const cJSON *group, Config *c, Error *e)
 static bool cutoff_settings(const cJSON *group, Config *c, Error *e)
 {
     if (!cJSON_IsObject(group)) return fail(e, 2, "config.bond_cutoffs_A: expected object");
+    bool seen[119][119]={{false}};
     for (const cJSON *j = group->child; j; j = j->next) {
         char pair[8];
         if (strlen(j->string) >= sizeof pair) return fail(e, 2, "config: invalid element pair '%s'", j->string);
@@ -334,58 +356,209 @@ static bool cutoff_settings(const cJSON *group, Config *c, Error *e)
         *dash++ = '\0';
         unsigned a = element_id(pair), b = element_id(dash);
         double d;
-        if (!a || !b || c->cutoffs[a][b] || !positive_json(j, &d))
+        if (!a || !b || seen[a][b] || !positive_json(j, &d))
             return fail(e, 2, "config.bond_cutoffs_A.%s: unknown pair, duplicate unordered pair, or invalid cutoff", j->string);
+        seen[a][b]=seen[b][a]=true;
         c->cutoffs[a][b] = c->cutoffs[b][a] = d;
     }
     return true;
 }
 
-static bool read_config(const char *path, Config *c, Error *e)
+static cJSON *read_json(const char *path, bool optional, Error *e)
 {
-    FILE *f = fopen(path, "rb");
-    if (!f) return fail(e, 7, "%s: cannot open config", path);
-    char *text = malloc(VR_MAX_CONFIG_BYTES + 1);
-    if (!text) { fclose(f); return fail(e, 6, "config: allocation failed"); }
-    size_t n = fread(text, 1, VR_MAX_CONFIG_BYTES, f);
-    bool io = ferror(f) != 0;
-    int extra = fgetc(f);
-    io = io || ferror(f) != 0;
-    if (fclose(f)) io = true;
-    if (io || extra != EOF || memchr(text, 0, n)) {
-        free(text); return fail(e, io ? 7 : 2, "%s: read failure, size limit exceeded, or embedded NUL", path);
+    FILE *f=!strcmp(path,"-") ? stdin : fopen(path,"rb");
+    if (!f) {
+        if (optional && errno==ENOENT) return NULL;
+        fail_at(e,7,"config_read_error",path,"%s: cannot open JSON file",path);return NULL;
     }
-    text[n] = '\0';
-    cJSON *root = json_lexical(text) ? cJSON_ParseWithOpts(text, NULL, 1) : NULL;
-    free(text);
-    if (!root) return fail(e, 2, "%s: invalid JSON (depth limit 32)", path);
-    bool ok = cJSON_IsObject(root) && unique_keys(root, e);
-    if (!ok && !e->code) fail(e, 2, "%s: config root must be an object", path);
-    for (const cJSON *j = root->child; ok && j; j = j->next) {
-        const char *k = j->string;
-        if (!strcmp(k, "image") || !strcmp(k, "camera") || !strcmp(k, "geometry") || !strcmp(k, "overlays"))
-            ok = settings_group(j, k, c, e);
-        else if (!strcmp(k, "elements")) ok = element_settings(j, c, e);
-        else if (!strcmp(k, "bond_cutoffs_A")) ok = cutoff_settings(j, c, e);
-        else if (!strcmp(k, "species") && cJSON_IsArray(j)) {
-            int count = cJSON_GetArraySize(j);
-            ok = count > 0 && count <= (int)VR_MAX_SPECIES;
-            c->species_count = (size_t)count;
-            for (int i = 0; ok && i < count; ++i) {
-                const cJSON *v = cJSON_GetArrayItem(j, i);
-                unsigned z = cJSON_IsString(v) ? element_id(v->valuestring) : 0;
-                if (!z) ok = false;
-                else c->species[i] = z;
+    char *text=malloc(VR_MAX_CONFIG_BYTES+1);
+    if (!text) {if (f!=stdin) fclose(f);fail(e,6,"config allocation failed");return NULL;}
+    size_t n=fread(text,1,VR_MAX_CONFIG_BYTES,f);
+    bool io=ferror(f)!=0;int extra=fgetc(f);io=io || ferror(f)!=0;
+    if (f!=stdin && fclose(f)) io=true;
+    if (io || extra!=EOF || memchr(text,0,n)) {
+        free(text);fail_at(e,io ? 7 : 2,"invalid_json_file",path,"%s: read failure, size limit or embedded NUL",path);return NULL;
+    }
+    text[n]='\0';
+    cJSON *root=json_lexical(text) ? cJSON_ParseWithOpts(text,NULL,1) : NULL;free(text);
+    if (!root) {fail_at(e,2,"invalid_json",path,"%s: invalid JSON (depth limit 32)",path);return NULL;}
+    if (!cJSON_IsObject(root) || !unique_keys(root,e)) {
+        cJSON_Delete(root);if (!e->code) fail_at(e,2,"invalid_configuration",path,"%s: JSON root must be an object",path);return NULL;
+    }
+    return root;
+}
+
+static bool mark(Config *c, const char *path, const char *layer, const char *file, Error *e)
+{
+    cJSON *entry=cJSON_CreateObject();
+    if (!entry || !cJSON_AddStringToObject(entry,"layer",layer) ||
+        !(file ? cJSON_AddStringToObject(entry,"file",file) : cJSON_AddNullToObject(entry,"file"))) {
+        cJSON_Delete(entry);return fail(e,6,"cannot allocate configuration provenance");
+    }
+    bool ok=cJSON_GetObjectItemCaseSensitive(c->provenance,path) ?
+        cJSON_ReplaceItemInObjectCaseSensitive(c->provenance,path,entry) : cJSON_AddItemToObject(c->provenance,path,entry);
+    if (!ok) {cJSON_Delete(entry);return fail(e,6,"cannot allocate configuration provenance");}return true;
+}
+
+static bool mark_tree(Config *c, const cJSON *node, const char *prefix, const char *layer, const char *file, Error *e)
+{
+    for (const cJSON *j=node->child;j;j=j->next) {
+        char key[8],path[256];const char *name=j->string;
+        if (!strcmp(prefix,"bond_cutoffs_A")) {
+            char pair[8];snprintf(pair,sizeof pair,"%s",name);char *dash=strchr(pair,'-');
+            if (dash) { *dash++='\0';unsigned a=element_id(pair),b=element_id(dash);
+                snprintf(key,sizeof key,"%s-%s",element_symbol(a<b ? a : b),element_symbol(a<b ? b : a));name=key; }
+        }
+        int n=snprintf(path,sizeof path,"%s%s%s",prefix,*prefix ? "." : "",name);
+        if (n<0 || (size_t)n>=sizeof path) return fail(e,2,"configuration path too long");
+        if (cJSON_IsObject(j)) {if (!mark_tree(c,j,path,layer,file,e)) return false;}
+        else if (!mark(c,path,layer,file,e)) return false;
+    }
+    return true;
+}
+
+static bool source(Config *c, const char *layer, const char *file, Error *e)
+{
+    cJSON *entry=cJSON_CreateObject();
+    if (!entry || !cJSON_AddStringToObject(entry,"layer",layer) ||
+        !(file ? cJSON_AddStringToObject(entry,"file",file) : cJSON_AddNullToObject(entry,"file")) ||
+        !cJSON_AddItemToArray(c->sources,entry)) {cJSON_Delete(entry);return fail(e,6,"cannot allocate config source");}
+    return true;
+}
+
+static bool apply_config(const cJSON *root, Config *c, const char *layer, const char *file, Error *e)
+{
+    bool ok=true;
+    for (const cJSON *j=root->child;ok && j;j=j->next) {
+        const char *k=j->string;
+        if (!strcmp(k,"schema_version")) ok=cJSON_IsNumber(j) && j->valuedouble==1;
+        else if (!strcmp(k,"$schema")) ok=cJSON_IsString(j);
+        else if (!strcmp(k,"image") || !strcmp(k,"camera") || !strcmp(k,"geometry") || !strcmp(k,"overlays")) ok=settings_group(j,k,c,e);
+        else if (!strcmp(k,"elements")) ok=element_settings(j,c,e);
+        else if (!strcmp(k,"bond_cutoffs_A")) ok=cutoff_settings(j,c,e);
+        else if (!strcmp(k,"atom_overrides")) {
+            if (!strcmp(layer,"user") && (!cJSON_IsArray(j) || cJSON_GetArraySize(j)>0))
+                ok=fail_at(e,2,"user_atom_rules_forbidden",k,"per-atom selections belong in a job config, not user preferences");
+            else ok=config_atom_rules(c,j,e);
+        } else if (!strcmp(k,"species") && cJSON_IsArray(j)) {
+            int count=cJSON_GetArraySize(j);ok=count>0 && count<=(int)VR_MAX_SPECIES;c->species_count=(size_t)count;
+            size_t i=0;
+            for (const cJSON *v=j->child;ok && v;v=v->next,++i) {
+                unsigned z=cJSON_IsString(v) ? element_id(v->valuestring) : 0;
+                if (!z) ok=false;else c->species[i]=z;
             }
-            if (!ok) fail(e, 2, "config.species: expected 1..118 element symbols");
-        } else ok = fail(e, 2, "config: unknown key or invalid value '%s'", k);
+        } else ok=false;
+        if (!ok) {
+            if (!e->code) fail_at(e,2,"invalid_configuration",k,"config.%s: unknown key or invalid value",k);
+            else if (!e->path[0]) snprintf(e->path,sizeof e->path,"%s",k);
+        }
     }
-    cJSON_Delete(root);
+    if (ok) ok=mark_tree(c,root,"",layer,file,e) && source(c,layer,file,e);
+    if (ok && config_memory_bytes(c)>VR_CONFIG_MEMORY_LIMIT) ok=fail(e,6,"configuration exceeds 64 MiB owned allocation limit");
     return ok;
+}
+
+static bool load_config(const char *path, Config *c, const char *layer, bool optional, Error *e)
+{
+    cJSON *root=read_json(path,optional,e);
+    if (!root) return !e->code;
+    bool ok=apply_config(root,c,layer,path,e);cJSON_Delete(root);
+    if (ok && !strcmp(layer,"user")) c->user_loaded=true;
+    return ok;
+}
+
+static char *user_path(Error *e)
+{
+    const char *base=getenv("XDG_CONFIG_HOME");const char *suffix="/vasp-render/config.json";
+    if (!base || *base!='/') {base=getenv("HOME");suffix="/.config/vasp-render/config.json";}
+    if (!base || *base!='/') return NULL;
+    size_t n=strlen(base)+strlen(suffix)+1;
+    if (n>4096) {fail_at(e,7,"config_path_too_long","user_config","user config path exceeds 4095 bytes");return NULL;}
+    char *path=malloc(n);if (!path) {fail(e,6,"cannot allocate user config path");return NULL;}
+    size_t prefix=strlen(base);memcpy(path,base,prefix);memcpy(path+prefix,suffix,strlen(suffix)+1);return path;
+}
+
+static bool flag_option(const char *k)
+{
+    return !strcmp(k,"--inspect") || !strcmp(k,"--inspect-scene") || !strcmp(k,"--recover") ||
+        !strcmp(k,"--benchmark-stages") || !strcmp(k,"--no-user-config") || !strcmp(k,"--init-config") ||
+        !strcmp(k,"--dump-config") || !strcmp(k,"--validate-config") || !strcmp(k,"--json-errors");
+}
+
+static const char *cli_path(const char *k)
+{
+    static const char *pairs[][2]={
+        {"--width","image.width"},{"--height","image.height"},{"--background","image.background"},
+        {"--style","image.style"},{"--aa","image.aa"},{"--backend","image.backend"},
+        {"--png-encoder","image.png_encoder"},{"--png-filter","image.png_filter"},{"--png-compression","image.png_compression"},
+        {"--outline-width","image.outline_width"},{"--view","camera.view"},{"--up","camera.up"},
+        {"--repeat","geometry.repeat"},{"--expand-xy","geometry.expand_xy"},{"--image-colors","geometry.image_colors"},
+        {"--sphere-scale","geometry.sphere_scale"},{"--bond-radius","geometry.bond_radius_A"},
+        {"--cell","overlays.cell"},{"--cell-width","overlays.cell_width"},{"--labels","overlays.labels"},
+        {"--axes","overlays.axes"},{"--legend","overlays.legend"},{"--scale-bar","overlays.scale_bar"},
+        {"--species","species"},{"--frame","runtime.frame"},{"--format","runtime.format"},{"--threads","runtime.threads"},
+        {"-o","runtime.output"},{"--output","runtime.output"},{"--report","runtime.report"}};
+    for (size_t i=0;i<sizeof pairs/sizeof *pairs;++i) if (!strcmp(k,pairs[i][0])) return pairs[i][1];
+    return NULL;
+}
+
+static bool job_runtime(Config *c, const char *path, Error *e)
+{
+    const cJSON *root=c->job_json;
+    const cJSON *errors=cJSON_GetObjectItemCaseSensitive(root,"json_errors");
+    if (cJSON_IsTrue(errors)) c->json_errors=true;
+    for (const cJSON *j=root->child;j;j=j->next) {
+        const char *k=j->string;bool ok=false;
+        if (!strcmp(k,"schema_version")) ok=cJSON_IsNumber(j) && j->valuedouble==1;
+        else if (!strcmp(k,"$schema")) ok=cJSON_IsString(j);
+        else if (!strcmp(k,"config")) ok=cJSON_IsObject(j);
+        else if (!strcmp(k,"input") || !strcmp(k,"output") || !strcmp(k,"report")) {
+            ok=cJSON_IsString(j) && *j->valuestring;
+            if (ok) {
+                /* Paths in a job file are relative to that file. Stdin jobs
+                 * and CLI paths are relative to the current directory. */
+                const char *slash=strrchr(path,'/');
+                if (slash && j->valuestring[0]!='/' && strcmp(j->valuestring,"-")) {
+                    size_t prefix=(size_t)(slash-path)+1,n=prefix+strlen(j->valuestring)+1;
+                    if (n>4096) return fail_at(e,2,"job_path_too_long",k,"job path exceeds 4095 bytes");
+                    char joined[4096];memcpy(joined,path,prefix);strcpy(joined+prefix,j->valuestring);
+                    if (!cJSON_SetValuestring((cJSON *)j,joined)) return fail(e,6,"cannot allocate job path");
+                }
+                if (!strcmp(k,"input")) c->input=j->valuestring;
+                else if (!strcmp(k,"output")) {c->output=j->valuestring;ok=strcmp(c->output,"-")!=0;}
+                else c->report=j->valuestring;
+            }
+        } else if (!strcmp(k,"frame")) {
+            c->final_frame=cJSON_IsString(j) && !strcmp(j->valuestring,"final");
+            ok=c->final_frame || (cJSON_IsNumber(j) && j->valuedouble>=0 && j->valuedouble<VR_MAX_FRAMES && floor(j->valuedouble)==j->valuedouble);
+            if (ok && !c->final_frame) c->frame=(size_t)j->valuedouble;
+        } else if (!strcmp(k,"threads")) {
+            ok=cJSON_IsString(j) && !strcmp(j->valuestring,"auto");
+            if (!ok) ok=size_json(j,256,&c->threads);
+        } else if (!strcmp(k,"recover") || !strcmp(k,"json_errors") || !strcmp(k,"no_user_config")) {
+            ok=cJSON_IsBool(j);
+            if (ok) {
+                if (!strcmp(k,"recover")) c->recover=cJSON_IsTrue(j);
+                else if (!strcmp(k,"json_errors")) c->json_errors=c->json_errors || cJSON_IsTrue(j);
+                else c->no_user_config=c->no_user_config || cJSON_IsTrue(j);
+            }
+        } else if (!strcmp(k,"format") && cJSON_IsString(j)) {
+            ok=true;const char *v=j->valuestring;
+            if (!strcmp(v,"auto")) c->format=FORMAT_AUTO;
+            else if (!strcmp(v,"poscar") || !strcmp(v,"contcar")) c->format=FORMAT_POSCAR;
+            else if (!strcmp(v,"outcar")) c->format=FORMAT_OUTCAR;
+            else if (!strcmp(v,"xml")) c->format=FORMAT_XML;
+            else ok=false;
+        }
+        if (!ok) return fail_at(e,2,"invalid_job",k,"job.%s: unknown key or invalid value",k);
+        if (strcmp(k,"config")) {char field[128];snprintf(field,sizeof field,"runtime.%s",k);if (!mark(c,field,"job",path,e)) return false;}
+    }
+    return true;
 }
 
 static bool validate(Config *c, Error *e)
 {
+    memcpy(c->requested_repeat,c->repeat,sizeof c->repeat);
     bool expanded = c->expand_xy[0] || c->expand_xy[1];
     if (expanded) {
         if (c->repeat[0] != 1 || c->repeat[1] != 1 || c->repeat[2] != 1)
@@ -433,26 +606,44 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
     c->outline_width=1;
     c->cell_width=2;
     strcpy(c->background, "#ffffff"); c->cell = true; c->final_frame = true;
-    const char *config_path = NULL;
-    /* Apply JSON first regardless of its position among explicit options. */
-    for (int i = 1; i < argc; ++i) {
-        if (!strcmp(argv[i], "--")) break;
-        if (!strcmp(argv[i], "--config")) {
-            if (config_path || i + 1 == argc) return fail(e, 2, "--config requires exactly one file");
-            config_path = argv[++i];
-        } else if (argv[i][0] == '-' && strcmp(argv[i], "--inspect") && strcmp(argv[i], "--inspect-scene") && strcmp(argv[i], "--recover") && strcmp(argv[i], "--benchmark-stages")) {
-            if (i + 1 < argc) ++i;
-        }
+    c->provenance=cJSON_CreateObject();c->sources=cJSON_CreateArray();
+    if (!c->provenance || !c->sources || !source(c,"built-in",NULL,e)) return fail(e,6,"cannot allocate configuration metadata");
+    const char *config_path=NULL,*job_path=NULL;
+    for (int i=1;i<argc;++i) {
+        const char *k=argv[i];if (!strcmp(k,"--")) break;
+        if (flag_option(k)) {
+            if (!strcmp(k,"--no-user-config")) c->no_user_config=true;
+            else if (!strcmp(k,"--init-config")) c->init_config=true;
+            else if (!strcmp(k,"--json-errors")) c->json_errors=true;
+        } else if (!strcmp(k,"--config") || !strcmp(k,"--job")) {
+            const char **slot=!strcmp(k,"--config") ? &config_path : &job_path;
+            if (*slot || i+1==argc) return fail(e,2,"%s requires exactly one file",k);
+            *slot=argv[++i];
+        } else if (k[0]=='-' && i+1<argc) ++i;
     }
-    if (config_path && !read_config(config_path, c, e)) return false;
-    bool positional = false;
+    if (config_path && job_path) return fail_at(e,2,"conflicting_job_config","job","use --job with embedded config or --config, not both");
+    if (job_path) {
+        c->job_json=read_json(job_path,false,e);
+        if (!c->job_json || !job_runtime(c,job_path,e)) return false;
+    }
+    c->user_path=user_path(e);if (e->code) return false;
+    if (!c->no_user_config && !c->init_config && c->user_path && !load_config(c->user_path,c,"user",true,e)) return false;
+    if (job_path) {
+        const cJSON *settings=cJSON_GetObjectItemCaseSensitive(c->job_json,"config");
+        if (settings && !apply_config(settings,c,"job",job_path,e)) return false;
+        if (!source(c,"job-runtime",job_path,e)) return false;
+    }
+    if (config_path && !load_config(config_path,c,"config",false,e)) return false;
+    bool positional = false, cli_input=false, explicit_output=false, explicit_report=false;
     const char *seen[64]; size_t nseen = 0;
     for (int i = 1; i < argc; ++i) {
         const char *k = argv[i];
         if (!positional && !strcmp(k, "--")) { positional = true; continue; }
         if (positional || k[0] != '-') {
-            if (c->input) return fail(e, 2, "exactly one input is required");
-            c->input = k; continue;
+            if (cli_input) return fail(e, 2, "exactly one input is required");
+            c->input = k;cli_input=true;
+            if (!mark(c,"runtime.input","cli",NULL,e)) return false;
+            continue;
         }
         const char *canonical = !strcmp(k, "--output") ? "-o" : k;
         for (size_t j = 0; j < nseen; ++j) if (!strcmp(canonical, seen[j])) return fail(e, 2, "duplicate option '%s'", k);
@@ -460,13 +651,19 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
         seen[nseen++] = canonical;
         if (!strcmp(k, "--inspect")) { c->inspect = true; continue; }
         if (!strcmp(k, "--inspect-scene")) { c->inspect = true; c->inspect_scene = true; continue; }
-        if (!strcmp(k, "--recover")) { c->recover = true; continue; }
+        if (!strcmp(k, "--recover")) { c->recover = true;if (!mark(c,"runtime.recover","cli",NULL,e)) return false;continue; }
+        if (!strcmp(k,"--no-user-config")) continue;
+        if (!strcmp(k,"--init-config")) {c->init_config=true;continue;}
+        if (!strcmp(k,"--dump-config")) {c->dump_config=true;continue;}
+        if (!strcmp(k,"--validate-config")) {c->validate_config=true;continue;}
+        if (!strcmp(k,"--json-errors")) {c->json_errors=true;continue;}
         if (!strcmp(k, "--benchmark-stages")) { c->benchmark = true; continue; }
         if (i + 1 == argc) return fail(e, 2, "option '%s' requires a value", k);
         const char *v = argv[++i];
         bool ok = false;
-        if (!strcmp(k, "--config")) ok = true;
-        else if (!strcmp(k, "-o") || !strcmp(k, "--output")) { c->output = v; ok = *v && strcmp(v, "-"); }
+        if (!strcmp(k, "--config") || !strcmp(k,"--job")) ok = true;
+        else if (!strcmp(k,"--report")) {c->report=v;explicit_report=true;ok=*v!=0;}
+        else if (!strcmp(k, "-o") || !strcmp(k, "--output")) { c->output = v;explicit_output=true; ok = *v && strcmp(v, "-"); }
         else if (!strcmp(k, "--width")) ok = integer(v, 16384, &c->width) && c->width;
         else if (!strcmp(k, "--height")) ok = integer(v, 16384, &c->height) && c->height;
         else if (!strcmp(k, "--repeat")) ok = repeat_text(v, c->repeat);
@@ -502,7 +699,7 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
         else if (!strcmp(k, "--frame")) {
             c->final_frame = !strcmp(v, "final");
             ok = c->final_frame || integer(v, VR_MAX_FRAMES - 1, &c->frame);
-        } else if (!strcmp(k, "--threads")) ok = !strcmp(v, "auto") || (integer(v, 256, &c->threads) && c->threads);
+        } else if (!strcmp(k, "--threads")) {if (!strcmp(v,"auto")) {c->threads=0;ok=true;} else ok=integer(v,256,&c->threads) && c->threads;}
         else if (!strcmp(k, "--format")) {
             ok = true;
             if (!strcmp(v, "auto")) c->format = FORMAT_AUTO;
@@ -511,10 +708,17 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
             else if (!strcmp(v, "xml")) c->format = FORMAT_XML;
             else ok = false;
         }
-        if (!ok) return fail(e, 2, "unknown option or invalid value: %s %s", k, v);
+        if (!ok) return fail_at(e, 2,"invalid_option",k, "unknown option or invalid value: %s %s", k, v);
+        const char *field=cli_path(k);if (field && !mark(c,field,"cli",NULL,e)) return false;
     }
-    if (!c->input) return fail(e, 2, "input required; use --help for usage");
-    if (!c->inspect && !c->output) return fail(e, 2, "-o OUTPUT.png or --inspect is required");
-    if (c->inspect && c->output) return fail(e, 2, "--inspect writes JSON to stdout; omit -o");
-    return validate(c, e);
+    unsigned modes=(unsigned)c->init_config+(unsigned)c->dump_config+(unsigned)c->validate_config+(unsigned)c->inspect;
+    if (modes>1) return fail_at(e,2,"conflicting_modes","mode","choose one init/dump/validate/inspect mode");
+    if (c->init_config && (config_path || job_path || c->input || c->output || c->report)) return fail(e,2,"--init-config creates compiled defaults only; omit job/input/output options");
+    if (!c->input && !c->init_config && !c->dump_config && !c->validate_config) return fail(e,2,"input required; use --help for usage");
+    if (!modes && !c->output) return fail(e,2,"-o OUTPUT.png or an inspection/config mode is required");
+    if (modes && explicit_output) return fail(e,2,"inspection/config modes write JSON to stdout; omit -o");
+    if (modes && explicit_report) return fail(e,2,"--report is for PNG rendering, not inspection/config modes");
+    if (!source(c,"cli",NULL,e)) return false;
+    if (config_memory_bytes(c)>VR_CONFIG_MEMORY_LIMIT) return fail(e,6,"configuration exceeds 64 MiB owned allocation limit");
+    return validate(c,e);
 }

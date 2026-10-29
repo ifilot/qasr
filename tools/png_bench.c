@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     Config c;Error e={0};size_t samples;
     if (!config_parse((int)(sizeof config_argv/sizeof *config_argv),config_argv,&c,&e) ||
         !integer(argv[8],10000,&samples) || samples<2) {
-        fprintf(stderr,"invalid encoder benchmark configuration: %s\n",e.message);return 2;
+        fprintf(stderr,"invalid encoder benchmark configuration: %s\n",e.message);config_free(&c);return 2;
     }
     size_t bytes=c.width*c.height*4;
     Image image={c.width,c.height,malloc(bytes)};
@@ -44,8 +44,8 @@ int main(int argc, char **argv)
     for (size_t i=0;i<samples;++i) printf("%s%.6f",i ? "," : "",elapsed[i]);
     printf("],\"cpu_ms\":[");
     for (size_t i=0;i<samples;++i) printf("%s%.6f",i ? "," : "",cpu[i]);
-    puts("]}");image_free(&image);free(elapsed);free(cpu);return 0;
+    puts("]}");image_free(&image);free(elapsed);free(cpu);config_free(&c);return 0;
 error:
     fprintf(stderr,"%s\n",e.message);image_free(&image);free(elapsed);free(cpu);
-    return e.code ? e.code : 6;
+    config_free(&c);return e.code ? e.code : 6;
 }

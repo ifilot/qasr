@@ -278,3 +278,12 @@ license notices; matching system runtime libraries must be installed.
 See [v0.3.0 release notes and validation](docs/release-v0.3.0.md) for current
 scope, checks and limitations. The [v0.1.0 notes](docs/release-v0.1.0.md)
 retain the reference checkpoint history.
+
+## Configuration and automation on master (M9)
+
+The development branch after v0.3.0 adds built-in → user → job → CLI defaults,
+per-source/per-cell atom styles, JSON Schema discovery, validation, JSON errors
+and compact render reports. Read [the configuration guide](docs/configuration.md)
+for the exact interface. Check `--build-info` capabilities: these additions are
+not included in the immutable v0.3.0 tag. JSON remains the canonical format;
+no YAML parser or server is required.

@@ -1,0 +1,714 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ifilot.github.io/qasr/schemas/user.schema.json",
+  "title": "vasp-render personal defaults schema version 1",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "$schema": {
+      "type": "string"
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "background": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "style": {
+          "type": "string",
+          "enum": [
+            "shaded",
+            "illustrated"
+          ]
+        },
+        "aa": {
+          "type": "string",
+          "enum": [
+            "native",
+            "2x",
+            "4x",
+            "adaptive"
+          ]
+        },
+        "backend": {
+          "type": "string",
+          "enum": [
+            "zbuffer",
+            "cairo"
+          ]
+        },
+        "depth_fade": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "outline_width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "png_encoder": {
+          "type": "string",
+          "enum": [
+            "libpng",
+            "libdeflate",
+            "cairo"
+          ]
+        },
+        "png_filter": {
+          "type": "string",
+          "enum": [
+            "none",
+            "sub",
+            "up",
+            "adaptive"
+          ]
+        },
+        "png_compression": {
+          "oneOf": [
+            {
+              "const": "auto"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "camera": {
+      "type": "object",
+      "properties": {
+        "projection": {
+          "const": "orthographic"
+        },
+        "view": {
+          "oneOf": [
+            {
+              "const": "top"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            }
+          ]
+        },
+        "up": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "margin": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 0.5
+        }
+      },
+      "additionalProperties": false
+    },
+    "geometry": {
+      "type": "object",
+      "properties": {
+        "repeat": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1024
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "expand_xy": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 511
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "image_colors": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "muted",
+            "greyscale"
+          ]
+        },
+        "sphere_scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "bond_radius_A": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "elements": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": [
+          "H",
+          "He",
+          "Li",
+          "Be",
+          "B",
+          "C",
+          "N",
+          "O",
+          "F",
+          "Ne",
+          "Na",
+          "Mg",
+          "Al",
+          "Si",
+          "P",
+          "S",
+          "Cl",
+          "Ar",
+          "K",
+          "Ca",
+          "Sc",
+          "Ti",
+          "V",
+          "Cr",
+          "Mn",
+          "Fe",
+          "Co",
+          "Ni",
+          "Cu",
+          "Zn",
+          "Ga",
+          "Ge",
+          "As",
+          "Se",
+          "Br",
+          "Kr",
+          "Rb",
+          "Sr",
+          "Y",
+          "Zr",
+          "Nb",
+          "Mo",
+          "Tc",
+          "Ru",
+          "Rh",
+          "Pd",
+          "Ag",
+          "Cd",
+          "In",
+          "Sn",
+          "Sb",
+          "Te",
+          "I",
+          "Xe",
+          "Cs",
+          "Ba",
+          "La",
+          "Ce",
+          "Pr",
+          "Nd",
+          "Pm",
+          "Sm",
+          "Eu",
+          "Gd",
+          "Tb",
+          "Dy",
+          "Ho",
+          "Er",
+          "Tm",
+          "Yb",
+          "Lu",
+          "Hf",
+          "Ta",
+          "W",
+          "Re",
+          "Os",
+          "Ir",
+          "Pt",
+          "Au",
+          "Hg",
+          "Tl",
+          "Pb",
+          "Bi",
+          "Po",
+          "At",
+          "Rn",
+          "Fr",
+          "Ra",
+          "Ac",
+          "Th",
+          "Pa",
+          "U",
+          "Np",
+          "Pu",
+          "Am",
+          "Cm",
+          "Bk",
+          "Cf",
+          "Es",
+          "Fm",
+          "Md",
+          "No",
+          "Lr",
+          "Rf",
+          "Db",
+          "Sg",
+          "Bh",
+          "Hs",
+          "Mt",
+          "Ds",
+          "Rg",
+          "Cn",
+          "Nh",
+          "Fl",
+          "Mc",
+          "Lv",
+          "Ts",
+          "Og"
+        ]
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+          },
+          "radius_A": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "bond_cutoffs_A": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(H|He|Li|Be|B|C|N|O|F|Ne|Na|Mg|Al|Si|P|S|Cl|Ar|K|Ca|Sc|Ti|V|Cr|Mn|Fe|Co|Ni|Cu|Zn|Ga|Ge|As|Se|Br|Kr|Rb|Sr|Y|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|In|Sn|Sb|Te|I|Xe|Cs|Ba|La|Ce|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Lu|Hf|Ta|W|Re|Os|Ir|Pt|Au|Hg|Tl|Pb|Bi|Po|At|Rn|Fr|Ra|Ac|Th|Pa|U|Np|Pu|Am|Cm|Bk|Cf|Es|Fm|Md|No|Lr|Rf|Db|Sg|Bh|Hs|Mt|Ds|Rg|Cn|Nh|Fl|Mc|Lv|Ts|Og)-(H|He|Li|Be|B|C|N|O|F|Ne|Na|Mg|Al|Si|P|S|Cl|Ar|K|Ca|Sc|Ti|V|Cr|Mn|Fe|Co|Ni|Cu|Zn|Ga|Ge|As|Se|Br|Kr|Rb|Sr|Y|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|In|Sn|Sb|Te|I|Xe|Cs|Ba|La|Ce|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Lu|Hf|Ta|W|Re|Os|Ir|Pt|Au|Hg|Tl|Pb|Bi|Po|At|Rn|Fr|Ra|Ac|Th|Pa|U|Np|Pu|Am|Cm|Bk|Cf|Es|Fm|Md|No|Lr|Rf|Db|Sg|Bh|Hs|Mt|Ds|Rg|Cn|Nh|Fl|Mc|Lv|Ts|Og)$"
+      },
+      "additionalProperties": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "overlays": {
+      "type": "object",
+      "properties": {
+        "cell": {
+          "type": "boolean"
+        },
+        "cell_width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 32
+        },
+        "labels": {
+          "type": "string",
+          "enum": [
+            "none",
+            "element",
+            "index"
+          ]
+        },
+        "axes": {
+          "type": "boolean"
+        },
+        "legend": {
+          "type": "boolean"
+        },
+        "scale_bar": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "species": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "H",
+          "He",
+          "Li",
+          "Be",
+          "B",
+          "C",
+          "N",
+          "O",
+          "F",
+          "Ne",
+          "Na",
+          "Mg",
+          "Al",
+          "Si",
+          "P",
+          "S",
+          "Cl",
+          "Ar",
+          "K",
+          "Ca",
+          "Sc",
+          "Ti",
+          "V",
+          "Cr",
+          "Mn",
+          "Fe",
+          "Co",
+          "Ni",
+          "Cu",
+          "Zn",
+          "Ga",
+          "Ge",
+          "As",
+          "Se",
+          "Br",
+          "Kr",
+          "Rb",
+          "Sr",
+          "Y",
+          "Zr",
+          "Nb",
+          "Mo",
+          "Tc",
+          "Ru",
+          "Rh",
+          "Pd",
+          "Ag",
+          "Cd",
+          "In",
+          "Sn",
+          "Sb",
+          "Te",
+          "I",
+          "Xe",
+          "Cs",
+          "Ba",
+          "La",
+          "Ce",
+          "Pr",
+          "Nd",
+          "Pm",
+          "Sm",
+          "Eu",
+          "Gd",
+          "Tb",
+          "Dy",
+          "Ho",
+          "Er",
+          "Tm",
+          "Yb",
+          "Lu",
+          "Hf",
+          "Ta",
+          "W",
+          "Re",
+          "Os",
+          "Ir",
+          "Pt",
+          "Au",
+          "Hg",
+          "Tl",
+          "Pb",
+          "Bi",
+          "Po",
+          "At",
+          "Rn",
+          "Fr",
+          "Ra",
+          "Ac",
+          "Th",
+          "Pa",
+          "U",
+          "Np",
+          "Pu",
+          "Am",
+          "Cm",
+          "Bk",
+          "Cf",
+          "Es",
+          "Fm",
+          "Md",
+          "No",
+          "Lr",
+          "Rf",
+          "Db",
+          "Sg",
+          "Bh",
+          "Hs",
+          "Mt",
+          "Ds",
+          "Rg",
+          "Cn",
+          "Nh",
+          "Fl",
+          "Mc",
+          "Lv",
+          "Ts",
+          "Og"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 118
+    },
+    "atom_overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "select": {
+            "type": "object",
+            "properties": {
+              "element": {
+                "type": "string",
+                "enum": [
+                  "H",
+                  "He",
+                  "Li",
+                  "Be",
+                  "B",
+                  "C",
+                  "N",
+                  "O",
+                  "F",
+                  "Ne",
+                  "Na",
+                  "Mg",
+                  "Al",
+                  "Si",
+                  "P",
+                  "S",
+                  "Cl",
+                  "Ar",
+                  "K",
+                  "Ca",
+                  "Sc",
+                  "Ti",
+                  "V",
+                  "Cr",
+                  "Mn",
+                  "Fe",
+                  "Co",
+                  "Ni",
+                  "Cu",
+                  "Zn",
+                  "Ga",
+                  "Ge",
+                  "As",
+                  "Se",
+                  "Br",
+                  "Kr",
+                  "Rb",
+                  "Sr",
+                  "Y",
+                  "Zr",
+                  "Nb",
+                  "Mo",
+                  "Tc",
+                  "Ru",
+                  "Rh",
+                  "Pd",
+                  "Ag",
+                  "Cd",
+                  "In",
+                  "Sn",
+                  "Sb",
+                  "Te",
+                  "I",
+                  "Xe",
+                  "Cs",
+                  "Ba",
+                  "La",
+                  "Ce",
+                  "Pr",
+                  "Nd",
+                  "Pm",
+                  "Sm",
+                  "Eu",
+                  "Gd",
+                  "Tb",
+                  "Dy",
+                  "Ho",
+                  "Er",
+                  "Tm",
+                  "Yb",
+                  "Lu",
+                  "Hf",
+                  "Ta",
+                  "W",
+                  "Re",
+                  "Os",
+                  "Ir",
+                  "Pt",
+                  "Au",
+                  "Hg",
+                  "Tl",
+                  "Pb",
+                  "Bi",
+                  "Po",
+                  "At",
+                  "Rn",
+                  "Fr",
+                  "Ra",
+                  "Ac",
+                  "Th",
+                  "Pa",
+                  "U",
+                  "Np",
+                  "Pu",
+                  "Am",
+                  "Cm",
+                  "Bk",
+                  "Cf",
+                  "Es",
+                  "Fm",
+                  "Md",
+                  "No",
+                  "Lr",
+                  "Rf",
+                  "Db",
+                  "Sg",
+                  "Bh",
+                  "Hs",
+                  "Mt",
+                  "Ds",
+                  "Rg",
+                  "Cn",
+                  "Nh",
+                  "Fl",
+                  "Mc",
+                  "Lv",
+                  "Ts",
+                  "Og"
+                ]
+              },
+              "source_indices": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1000000,
+                "uniqueItems": true,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 999999
+                }
+              },
+              "source_range": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 999999
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 999999
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2,
+                "items": false
+              },
+              "cell": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": -1024,
+                  "maximum": 1024
+                },
+                "minItems": 3,
+                "maxItems": 3
+              }
+            },
+            "additionalProperties": false,
+            "anyOf": [
+              {
+                "required": [
+                  "element"
+                ]
+              },
+              {
+                "required": [
+                  "source_indices"
+                ]
+              },
+              {
+                "required": [
+                  "source_range"
+                ]
+              }
+            ],
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "source_indices",
+                    "source_range"
+                  ]
+                }
+              }
+            ]
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+          },
+          "radius_A": {
+            "type": "number",
+            "minimum": 1e-09,
+            "maximum": 1000000.0
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "select"
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "color"
+            ]
+          },
+          {
+            "required": [
+              "radius_A"
+            ]
+          }
+        ]
+      },
+      "maxItems": 0
+    }
+  },
+  "additionalProperties": false
+}

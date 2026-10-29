@@ -3,6 +3,9 @@
 #include "parse.h"
 #include "render.h"
 #include "version.h"
+#include "automation.h"
+#include "schema.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -23,45 +26,20 @@ static bool inspect(const Config *c, const Structure *s)
         printf("{\"index\":%zu,\"element\":\"%s\",\"position_A\":", i, element_symbol(s->atoms[i].element));
         print_vector(s->atoms[i].position); putchar('}');
     }
-    printf("],\"settings\":{\"image\":{\"width\":%zu,\"height\":%zu,\"background\":\"%s\",\"style\":\"%s\",\"aa\":\"%s\",\"backend\":\"%s\",\"depth_fade\":%.17g,\"outline_width\":%.17g",
-           c->width, c->height, c->background,c->style==STYLE_ILLUSTRATED ? "illustrated" : "shaded",
-           c->adaptive_aa ? "adaptive" : c->aa_scale==1 ? "native" : c->aa_scale==4 ? "4x" : "2x",
-           c->backend==BACKEND_CAIRO ? "cairo" : "zbuffer",c->depth_fade,c->outline_width);
-    printf(",\"png_encoder\":\"%s\",\"png_filter\":\"%s\",\"png_compression\":",
-           c->png.encoder==ENCODER_CAIRO ? "cairo" : c->png.encoder==ENCODER_LIBDEFLATE ? "libdeflate" : "libpng",
-           c->png.encoder==ENCODER_CAIRO ? "internal" : c->png.filter==FILTER_NONE ? "none" :
-           c->png.filter==FILTER_SUB ? "sub" : c->png.filter==FILTER_UP ? "up" : "adaptive");
-    if (c->png.encoder==ENCODER_CAIRO) printf("null");
-    else if (c->png.compression==-1) printf("\"auto\"");
-    else printf("%d",c->png.compression);
-    printf("},");
-    printf("\"camera\":{\"projection\":\"orthographic\",\"view\":");
-    if (c->view_top) printf("\"top\""); else print_vector(c->view);
-    printf(",\"up\":"); print_vector(c->up); printf(",\"margin\":%.17g},", c->margin);
-    printf("\"geometry\":{\"repeat\":[%zu,%zu,%zu],\"expand_xy\":[%zu,%zu],\"image_colors\":\"%s\",\"sphere_scale\":%.17g,\"bond_radius_A\":%.17g},",
-           c->repeat[0], c->repeat[1], c->repeat[2], c->expand_xy[0], c->expand_xy[1],
-           c->image_colors == IMAGES_MUTED ? "muted" : c->image_colors == IMAGES_GREYSCALE ? "greyscale" : "normal",
-           c->sphere_scale, c->bond_radius);
-    printf("\"overlays\":{\"cell\":%s,\"cell_width\":%.17g,\"labels\":\"%s\",\"axes\":%s,\"legend\":%s,\"scale_bar\":%s},",
-           c->cell ? "true" : "false",c->cell_width, c->labels == 0 ? "none" : c->labels == 1 ? "element" : "index",
-           c->axes ? "true" : "false", c->legend ? "true" : "false", c->scale_bar ? "true" : "false");
-    printf("\"threads\":%zu,\"elements\":{", c->threads);
-    bool comma = false;
-    for (unsigned z = 1; z <= 118; ++z) {
-        if (!c->element_radius[z] && !c->element_color[z][0]) continue;
-        if (comma) putchar(',');
-        printf("\"%s\":{", element_symbol(z));
-        if (c->element_radius[z]) printf("\"radius_A\":%.17g", c->element_radius[z]);
-        if (c->element_color[z][0]) printf("%s\"color\":\"%s\"", c->element_radius[z] ? "," : "", c->element_color[z]);
-        putchar('}'); comma = true;
+    cJSON *settings=config_settings_json(c);
+    if (!settings) return false;
+    cJSON_AddNumberToObject(settings,"threads",(double)c->threads);
+    double repeats[3]={(double)c->repeat[0],(double)c->repeat[1],(double)c->repeat[2]};
+    cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(settings,"geometry"),"repeat",cJSON_CreateDoubleArray(repeats,3));
+    if (!c->up_explicit) cJSON_AddItemToObject(cJSON_GetObjectItemCaseSensitive(settings,"camera"),"up",cJSON_CreateDoubleArray(c->up.x,3));
+    if (c->png.encoder==ENCODER_CAIRO) {
+        cJSON *image=cJSON_GetObjectItemCaseSensitive(settings,"image");
+        cJSON_ReplaceItemInObjectCaseSensitive(image,"png_filter",cJSON_CreateString("internal"));
+        cJSON_ReplaceItemInObjectCaseSensitive(image,"png_compression",cJSON_CreateNull());
     }
-    printf("},\"bond_cutoffs_A\":{"); comma = false;
-    for (unsigned a = 1; a <= 118; ++a) for (unsigned b = a; b <= 118; ++b) {
-        if (!c->cutoffs[a][b]) continue;
-        if (comma) putchar(',');
-        printf("\"%s-%s\":%.17g", element_symbol(a), element_symbol(b), c->cutoffs[a][b]); comma = true;
-    }
-    printf("}}}\n");
+    char *text=cJSON_PrintUnformatted(settings);cJSON_Delete(settings);
+    if (!text) return false;
+    printf("],\"settings\":%s}\n",text);free(text);
     return fflush(stdout) == 0 && !ferror(stdout);
 }
 
@@ -75,7 +53,15 @@ static void help(void)
          "  --frame final|N             Zero-based ionic geometry index\n"
          "  --recover                   Accept unfinished OUTCAR with complete geometry\n"
          "  --species Si,O              Explicit ordered species for unlabeled input\n"
-         "  --config FILE               Strict JSON config; CLI overrides it\n"
+         "  --config FILE|-             Strict job settings; CLI overrides them\n"
+         "  --job FILE|-                Invocation JSON with embedded config\n"
+         "  --no-user-config            Ignore automatic XDG personal defaults\n"
+         "  --init-config               Create personal starter JSON, never overwrite\n"
+         "  --dump-config               Resolved settings, runtime and provenance JSON\n"
+         "  --validate-config           Validate settings/selectors without rendering\n"
+         "  --json-errors               Structured errors on stderr\n"
+         "  --report FILE|-             Compact successful render manifest\n"
+         "  --schema [config|user|job]   Print JSON Schema; run alone\n"
          "  --width N --height N --repeat NX,NY,NZ\n"
          "  --expand-xy NX,NY           Neighbor cells on each side along a/b (0..511)\n"
          "  --image-colors normal|muted|greyscale  Color copies outside primary cell\n"
@@ -122,6 +108,14 @@ static bool inspect_scene(const Config *c, const Scene *s, const Camera *camera)
                p->source_a,p->source_b,p->image[0],p->image[1],p->image[2],p->origin[0],p->origin[1],p->origin[2],p->distance);
         if (p->kind==SPHERE) printf(",\"element\":\"%s\",\"instance_index\":%zu,\"primary_cell\":%s",element_symbol(p->element),i,
                                   !p->origin[0] && !p->origin[1] && !p->origin[2] ? "true" : "false");
+        if (p->kind==SPHERE && s->style_rules) {
+            RuleStamp rules=s->style_rules[i];
+            printf(",\"applied_rules\":{\"color\":");
+            if (rules.color==SIZE_MAX) printf("null");else printf("%zu",rules.color);
+            printf(",\"radius\":");
+            if (rules.radius==SIZE_MAX) printf("null");else printf("%zu",rules.radius);
+            putchar('}');
+        }
         printf("}");
     }
     puts("]}"); return fflush(stdout)==0 && !ferror(stdout);
@@ -134,10 +128,17 @@ static double elapsed_ms(struct timespec a, struct timespec b)
 
 int main(int argc, char **argv)
 {
+    if ((argc==2 || argc==3) && !strcmp(argv[1],"--schema")) {
+        const unsigned char *schema=config_schema;
+        if (argc==3 && !strcmp(argv[2],"job")) schema=job_schema;
+        else if (argc==3 && !strcmp(argv[2],"user")) schema=user_schema;
+        else if (argc==3 && strcmp(argv[2],"config")) {fputs("unknown schema; use config, user or job\n",stderr);return 2;}
+        return fputs((const char *)schema,stdout)==EOF || fflush(stdout) ? 7 : 0;
+    }
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
     if (argc == 2 && !strcmp(argv[1], "--version")) { puts("vasp-render " VR_VERSION); return 0; }
     if (argc == 2 && !strcmp(argv[1],"--build-info")) {
-        printf("{\"version\":\"%s\",\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
+        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
 #ifdef VR_HAVE_XML
                "true",
 #else
@@ -160,12 +161,34 @@ int main(int argc, char **argv)
 #endif
         );return 0;
     }
-    Error e = {0}; Config c; Structure s = {0}; Scene scene={0}; Image image={0}; Camera camera={0};
+    Error e = {0}; Config c={0}; Structure s = {0}; Scene scene={0}; Image image={0}; Camera camera={0};
     struct timespec begin, configured, parsed, built, rendered, written;
     clock_gettime(CLOCK_MONOTONIC, &begin);
     if (!config_parse(argc, argv, &c, &e)) goto failure;
     clock_gettime(CLOCK_MONOTONIC, &configured);
-    if (!parse_structure(&c, &s, &e)) goto failure;
+    if (c.init_config) {
+        if (!config_initialize_file(&c,&e)) goto failure;
+        config_free(&c);return 0;
+    }
+    if (c.dump_config) {
+        cJSON *dump=config_dump_json(&c);bool ok=json_write("-",dump,false,&e);cJSON_Delete(dump);
+        if (!ok) goto failure;
+        config_free(&c);return 0;
+    }
+    if (!c.validate_config && !c.inspect && !report_preflight(&c,&e)) goto failure;
+    if (c.input && !parse_structure(&c, &s, &e)) goto failure;
+    if (c.validate_config) {
+        AtomStyle *styles=NULL;
+        if (c.input && !atom_styles_resolve(&c,&s,&styles,&e)) goto failure;
+        free(styles);
+        cJSON *result=cJSON_CreateObject();cJSON_AddBoolToObject(result,"ok",1);cJSON_AddNumberToObject(result,"schema_version",1);
+        cJSON_AddBoolToObject(result,"input_validated",c.input!=NULL);cJSON_AddBoolToObject(result,"selectors_validated",c.input!=NULL);
+        cJSON_AddNumberToObject(result,"atom_rules",(double)c.rule_count);
+        bool ok=json_write("-",result,false,&e);cJSON_Delete(result);if (!ok) goto failure;
+        structure_free(&s);config_free(&c);return 0;
+    }
+    char input_hash[65]={0};PngOptions resolved_png=c.png;
+    if (c.report && !c.inspect && !sha256_file(c.input,input_hash,&e)) goto failure;
     clock_gettime(CLOCK_MONOTONIC, &parsed);
     if (s.recovered) fprintf(stderr, "%s: warning: recovered complete ionic frame %zu from unfinished OUTCAR\n", c.input, s.frame);
     built=rendered=written=parsed;
@@ -178,24 +201,29 @@ int main(int argc, char **argv)
             fail(&e,7,"failed to write inspection JSON to stdout");goto failure;
         }
     } else {
-        if (!render_image(&c,&scene,&camera,s.count*sizeof(Atom),&image,&e)) goto failure;
+        if (!render_image(&c,&scene,&camera,s.count*sizeof(Atom)+config_memory_bytes(&c),&image,&e)) goto failure;
         clock_gettime(CLOCK_MONOTONIC,&rendered);
-        PngOptions png=png_resolve_options(c.output,c.png);
+        PngOptions png=png_resolve_options(c.output,c.png);resolved_png=png;
         if (c.benchmark) {
             if (png.encoder==ENCODER_CAIRO) fprintf(stderr,"png_encoder_internal=1\n");
             else fprintf(stderr,"png_compression_resolved=%d\n",png.compression);
         }
         if (!png_write_options_atomic(c.output,&image,&png,
-            scene.capacity*sizeof(Primitive)+s.count*sizeof(Atom),&e)) goto failure;
+            scene_memory_bytes(&scene)+s.count*sizeof(Atom)+config_memory_bytes(&c),&e)) goto failure;
         clock_gettime(CLOCK_MONOTONIC,&written);
     }
     if (c.benchmark) {
         fprintf(stderr,"stages_ms: config=%.3f parse=%.3f scene=%.3f render=%.3f png=%.3f (excludes process startup and JSON output)\n",
                 elapsed_ms(begin,configured),elapsed_ms(configured,parsed),elapsed_ms(parsed,built),elapsed_ms(built,rendered),elapsed_ms(rendered,written));
     }
-    image_free(&image);scene_free(&scene);structure_free(&s); return 0;
+    if (c.report && !c.inspect) {
+        double stages[5]={elapsed_ms(begin,configured),elapsed_ms(configured,parsed),elapsed_ms(parsed,built),elapsed_ms(built,rendered),elapsed_ms(rendered,written)};
+        cJSON *report=render_report(&c,&s,&scene,&camera,&resolved_png,VR_VERSION,input_hash,stages,&e);
+        bool ok=report && json_write(c.report,report,false,&e);cJSON_Delete(report);if (!ok) goto failure;
+    }
+    image_free(&image);scene_free(&scene);structure_free(&s);config_free(&c); return 0;
 failure:
     image_free(&image);scene_free(&scene);structure_free(&s);
-    fprintf(stderr, "vasp-render: %s\n", e.message);
-    return e.code ? e.code : 8;
+    if (c.json_errors) print_json_error(&e);else fprintf(stderr, "vasp-render: %s\n", e.message);
+    config_free(&c);return e.code ? e.code : 8;
 }

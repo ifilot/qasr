@@ -145,6 +145,8 @@ def main():
         env = environment(exe)
     except ValueError as error:
         parser.error(str(error))
+    capabilities = json.loads(subprocess.check_output([exe, "--build-info"]))
+    isolated = ["--no-user-config"] if capabilities.get("user_config") else []
     preset = work / "illustrated.json"
     shutil.copyfile(ROOT / "presets/illustrated.json", preset)
     available = cases(work)
@@ -175,7 +177,7 @@ def main():
             key = f"{style}-{name}"
             png = work / f"{key}.png"
             settings = (["--config", str(preset)] if style == "illustrated" else [])
-            settings += ["--threads", args.threads, *options, *args.render_args]
+            settings += [*isolated, "--threads", args.threads, *options, *args.render_args]
             cmd = [str(exe), str(path), "-o", str(png), "--benchmark-stages", *settings]
             for _ in range(args.warmups):
                 subprocess.run(cmd, check=True, capture_output=True, timeout=300)

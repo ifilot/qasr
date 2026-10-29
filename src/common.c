@@ -11,9 +11,21 @@ bool fail(Error *e, int code, const char *format, ...)
 {
     va_list args;
     e->code = code;
+    static const char *names[]={"success","error","invalid_configuration","unsupported_capability","invalid_input","invalid_geometry","resource_limit","io_error","internal_error"};
+    snprintf(e->name,sizeof e->name,"%s",code>=0 && code<=8 ? names[code] : "error");
+    e->path[0]='\0';
     va_start(args, format);
     vsnprintf(e->message, sizeof e->message, format, args);
     va_end(args);
+    return false;
+}
+
+bool fail_at(Error *e, int code, const char *name, const char *path, const char *format, ...)
+{
+    e->code=code;
+    snprintf(e->name,sizeof e->name,"%s",name);
+    snprintf(e->path,sizeof e->path,"%s",path ? path : "");
+    va_list args;va_start(args,format);vsnprintf(e->message,sizeof e->message,format,args);va_end(args);
     return false;
 }
 

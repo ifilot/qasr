@@ -116,10 +116,19 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
     reciprocal[0] = vmul(cross(s->lattice[1],s->lattice[2]),1/volume);
     reciprocal[1] = vmul(cross(s->lattice[2],s->lattice[0]),1/volume);
     reciprocal[2] = vmul(cross(s->lattice[0],s->lattice[1]),1/volume);
-    size_t scratch = s->count * (sizeof(Vec3) + sizeof(Atom));
+    size_t scratch = s->count * (sizeof(Vec3) + sizeof(Atom)) + config_memory_bytes(c);
+    AtomStyle *styles=NULL;
     Vec3 *fractional = malloc(s->count * sizeof *fractional);
     if (!fractional) return fail(e,6,"cannot allocate fractional positions");
     bool ok = false;
+    if (!atom_styles_resolve(c,s,&styles,e)) goto done;
+    if (styles) {
+        size_t instances=s->count*c->repeat[0]*c->repeat[1]*c->repeat[2];
+        scratch+=s->count*sizeof(AtomStyle)+instances*sizeof(RuleStamp);
+        if (scratch>VR_MEMORY_BUDGET) {fail(e,6,"atom styles exceed aggregate allocation budget");goto done;}
+        scene->style_rules=calloc(instances,sizeof *scene->style_rules);
+        if (!scene->style_rules) {fail(e,6,"cannot allocate instance rule metadata");goto done;}
+    }
     if (!isfinite(c->bond_radius) || c->bond_radius < 1e-9 || c->bond_radius > 1e6) {
         fail(e,5,"bond radius must be within [1e-9,1e6] angstroms"); goto done;
     }
@@ -134,14 +143,20 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
         p.kind = SPHERE; p.element=s->atoms[i].element;
         p.radius = element_radius(c,s->atoms[i].element); p.source_a = i;
         if (!isfinite(p.radius) || p.radius < 1e-9 || p.radius > 1e6) { fail(e,5,"sphere radius must be within [1e-9,1e6] angstroms"); goto done; }
-        uint8_t base[4]; element_color(c,s->atoms[i].element,base);
+        AtomStyle base={.radius=p.radius,.rules={SIZE_MAX,SIZE_MAX}};
+        element_color(c,s->atoms[i].element,base.color);
+        if (styles) base=styles[i];
         int lx = -(int)c->expand_xy[0], ly = -(int)c->expand_xy[1];
         for (int x = lx; x < lx+(int)c->repeat[0]; ++x) for (int y = ly; y < ly+(int)c->repeat[1]; ++y) for (int z = 0; z < (int)c->repeat[2]; ++z) {
             Vec3 f = vadd(fractional[i],(Vec3){{(double)x,(double)y,(double)z}});
             p.a = p.b = cartesian(s->lattice,f);
             p.origin[0]=(int)x; p.origin[1]=(int)y; p.origin[2]=(int)z;
-            image_color(x || y || z ? c->image_colors : IMAGES_NORMAL, base, p.color);
+            AtomStyle instance=base;
+            image_color(x || y || z ? c->image_colors : IMAGES_NORMAL, base.color, instance.color);
+            if (c->cell_rule_count) atom_style_instance(c,i,p.element,p.origin,&instance);
+            p.radius=instance.radius;memcpy(p.color,instance.color,4);
             if (!append(scene,p,scratch,e)) goto done;
+            if (scene->style_rules) scene->style_rules[scene->atom_count]=instance.rules;
             ++scene->atom_count;
         }
     }
@@ -184,12 +199,13 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
     }
     ok = true;
 done:
-    free(fractional);
+    free(fractional);free(styles);
     if (!ok) scene_free(scene);
     return ok;
 }
 
-void scene_free(Scene *s) { free(s->items); memset(s,0,sizeof *s); }
+size_t scene_memory_bytes(const Scene *s) {return s->capacity*sizeof(Primitive)+(s->style_rules ? s->atom_count*sizeof(RuleStamp) : 0);}
+void scene_free(Scene *s) { free(s->items);free(s->style_rules); memset(s,0,sizeof *s); }
 
 Vec3 camera_project(const Camera *c, Vec3 p)
 {

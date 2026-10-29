@@ -2,6 +2,7 @@
 #ifndef VR_SCENE_H
 #define VR_SCENE_H
 #include "elements.h"
+#include "atom_style.h"
 
 #define VR_MEMORY_BUDGET ((size_t)1073741824)
 #define VR_MAX_BONDS 10000000u
@@ -21,7 +22,9 @@ typedef struct {
     Primitive *items;
     size_t count, capacity, atom_count, bond_count, base_bond_count;
     Vec3 supercell[3];
+    RuleStamp *style_rules; /* Optional winning per-property IDs, one per sphere. */
 } Scene;
+size_t scene_memory_bytes(const Scene *s);
 typedef struct {
     Vec3 right, up, view;
     double center_x, center_y, scale;

@@ -123,7 +123,7 @@ bool render_cairo(const Config *c, const Scene *s, const Camera *camera, size_t 
 {
     if (c->adaptive_aa) return fail(e,3,"adaptive sampling is a Z-buffer experiment; Cairo uses native coverage or uniform supersampling");
     size_t count=c->width*c->height, factor=c->aa_scale;
-    size_t retained=s->capacity*sizeof(Primitive)+source_bytes;
+    size_t retained=scene_memory_bytes(s)+source_bytes;
     const size_t reserve=8u*1024u*1024u;
     if (retained>VR_MEMORY_BUDGET-reserve || s->count>(VR_MEMORY_BUDGET-reserve-retained)/sizeof(PaintPrimitive))
         return fail(e,6,"Cairo scene exceeds 1 GiB allocation budget");

@@ -14,7 +14,7 @@
 #define VR_MAX_CONFIG_BYTES 1048576u
 #define VR_MAX_SPECIES 118u
 
-typedef struct { int code; char message[512]; } Error;
+typedef struct { int code; char message[512], name[64], path[256]; } Error;
 typedef struct {
     FILE *file;
     const char *path;
@@ -31,6 +31,8 @@ typedef struct {
  * @return false, for propagation from failing branches.
  */
 bool fail(Error *e, int code, const char *format, ...);
+/** Set a stable machine error name and JSON path as well as the human message. */
+bool fail_at(Error *e, int code, const char *name, const char *path, const char *format, ...);
 /** @brief Read a bounded text line, rejecting embedded NUL and I/O errors.
  * @param[in,out] r Open reader; text is replaced and newline stripped.
  * @param[out] e Error destination, set only on failure.
