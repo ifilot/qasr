@@ -1,0 +1,16 @@
+vasp-render handbook example kit
+
+Extract this kit into an examples/ directory inside your source checkout.
+Commands in the handbook are run from that checkout root.
+
+CONTCAR.co: user-provided clean Co(0001), 3x3 cell, 63 source atoms.
+CONTCAR.pd-ceria: user-provided Pd/ceria CO-oxidation transition-state snapshot,
+249 source atoms. The source's TS/convergence assignment is not independently verified.
+The original slab provenance is retained in SLAB-PROVENANCE.md and SLAB-MANIFEST.json.
+POSCAR.skew and OUTCAR.relax: original synthetic parser/geometry fixtures.
+vasprun.example.xml: original synthetic, complete two-atom XML document.
+illustrated.json: the repository's illustrated top-view preset.
+publication.json: a portable libpng example with transparent output and periodic context.
+
+Original project material and these user-provided examples: GPL-3.0-only.
+See LICENSE. Website images are program-generated examples, not AI illustrations.

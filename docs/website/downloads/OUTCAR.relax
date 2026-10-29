@@ -1,0 +1,36 @@
+ vasp.6.4.3 synthetic format fixture; not a captured VASP run
+ POTCAR: PAW_PBE Si 05Jan2001
+ POTCAR: PAW_PBE O 08Apr2002
+ POTCAR: PAW_PBE Si 05Jan2001
+ POTCAR: PAW_PBE O 08Apr2002
+ VRHFIN =Si: s2p2
+ TITEL = PAW_PBE Si 05Jan2001
+ VRHFIN =O: s2p4
+ TITEL = PAW_PBE O 08Apr2002
+ number of ions NIONS = 2
+ ions per type = 1 1
+ direct lattice vectors                 reciprocal lattice vectors
+ 2 0 0   0.5 0 0
+ 0 2 0   0 0.5 0
+ 0 0 2   0 0 0.5
+ Iteration 1(1)
+ Iteration 1(2)
+ POSITION                                       TOTAL-FORCE (eV/Angst)
+ -----------------------------------------------------------------------------------
+ 0 0 0  0.1 0 0
+ 1 1 1 -0.1 0 0
+ -----------------------------------------------------------------------------------
+ direct lattice vectors                 reciprocal lattice vectors
+ 3 0 0   0.3333333 0 0
+ 0.5 3 0   0 0.3333333 0
+ 0 0 4   0 0 0.25
+ Iteration 2(1)
+ POSITION                                       TOTAL-FORCE (eV/Angst)
+ -----------------------------------------------------------------------------------
+ 0.25 0 0  0 0 0
+ 1.5 1.5 2  0 0 0
+ -----------------------------------------------------------------------------------
+ General timing and accounting informations for this job:
+ Total CPU time used (sec): 1.0
+ Elapsed time (sec): 1.0
+ Voluntary context switches: 1

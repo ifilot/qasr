@@ -227,6 +227,9 @@ Test all optional overlays even if their implementation is deferred; a feature b
 - **M5 — Encoder and threading experiments:** optimized PNG encoder candidates and optional tile parallelism; select best end-to-end combination.
 - **M6 — Production hardening:** overlays, robust error cleanup, representative deployment builds, documentation, performance report and targets. The approved deployment-validation environment is the WSL workstation (see `performance.md`).
 - **M7 — Optional XML:** libxml2 streaming `vasprun.xml` support if prioritized; matching input/geometry fixtures and performance tests.
+- **M8 — Periodic context:** centered xy neighbor cells, full primary-cell palette/outline and muted/greyscale image atoms, with skew-cell clipping and unchanged repeat defaults.
+- **M9 — Proposed next iteration:** JSON user defaults, typed per-atom selectors and a discoverable machine contract; see `next-iteration.md`. Design only, not yet implemented.
+- **M10 — Optional follow-on:** benchmark-driven batch/caching or a thin MCP adapter if repeated-input or agent integration workflows need it; no server requirement for the existing CLI.
 
 Each milestone has explicit test evidence and benchmark output; do not postpone correctness gates until the end.
 
@@ -613,3 +616,28 @@ address/undefined-behavior checks include these tests; XML-disabled source build
 retain the existing formats and explicit capability errors. Thirty-sample
 timings and a 100-versus-10,000-frame RSS comparison are retained under
 `artifacts/m7/`. See `m7-xml.md` for measurements, commands and exact scope.
+
+## 26. M8 periodic context — 2026-10-29
+
+The user selected centered neighboring cells. `--expand-xy NX,NY` adds NX/NY
+cells on both sides of the primary cell along lattice a/b, with no z expansion.
+`1,1` generates a 3×3×1 patch with origins -1..1 on a/b. Each source atom is
+wrapped once as before and copied at integer lattice translations; primary-cell
+identity is origin [0,0,0], independent of Cartesian axes or input wrapping.
+
+`--image-colors normal|muted|greyscale` affects only nonprimary atom RGB,
+preserving element alpha and radii. Expansion defaults to muted; no expansion
+retains the old normal-color defaults. It can also color existing positive
+`--repeat` copies. Context mode outlines the primary cell; plain legacy repeat
+keeps its repeated-supercell outline. Bond endpoints are clipped against the
+centered skewed region, connectivity and gray bond colors remain unchanged,
+and the camera fits all instances. Legend counts still include all instances,
+but swatches prefer the primary element palette.
+
+CLI/strict JSON, inspection metadata, bounds/instance limits, zero expansion
+and override behavior are documented in `periodic-context.md`. Nonzero centered
+expansion and nontrivial repeat are mutually exclusive. Seven focused groups
+check counts, primary identity, colors/alpha, translated-bond equivalence,
+wrapping, cell corners, limits, legacy pixels, threading and legend colors,
+including all 20 supplied slabs. Muted and greyscale 20-image galleries are
+retained under `artifacts/m8/`; full Release and sanitizer suites cover M8.

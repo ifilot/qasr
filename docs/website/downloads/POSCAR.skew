@@ -1,0 +1,11 @@
+Synthetic skewed SiO cell; independently calculated Cartesian expectations
+2
+1 0 0
+0.5 1 0
+0.25 0.5 1
+Si O
+1 1
+Selective dynamics
+Direct
+0.5 0.25 0.125 T F T
+0 0 0 F F F

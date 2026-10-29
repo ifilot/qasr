@@ -11,6 +11,15 @@ renderer with shaded spheres/capped cylinders and a PNG output path.
 Unreleased work after the v0.2.0 tag adds M7 streaming `vasprun.xml` input;
 see [XML selection, validation and measurements](docs/m7-xml.md).
 
+Open the [online user handbook](https://ifilot.github.io/qasr/) or its
+[standalone offline copy](docs/website/index.html) for installation,
+input/output formats, illustrated recipes, periodic-context examples, the full
+CLI/config reference and downloadable inputs. It works offline; see
+[website maintenance](docs/website/README.md) to serve or regenerate its assets.
+The [next-iteration proposal](docs/next-iteration.md) covers user defaults,
+per-atom selectors and agent interfaces; those proposed additions are not yet
+implemented.
+
 ## Build and test
 
 Requirements: Linux, a C11 compiler (GCC or Clang), CMake 3.16+, libpng/zlib
@@ -67,6 +76,7 @@ build/vasp-render OUTCAR --inspect --recover
 build/vasp-render vasprun.xml --inspect --frame final
 build/vasp-render POSCAR --inspect --species Si,O --config preset.json
 build/vasp-render POSCAR --inspect-scene --repeat 2,2,1
+build/vasp-render CONTCAR --expand-xy 1,1 --image-colors greyscale --view top -o context.png
 ```
 
 Input is detected by content; `--format poscar|contcar|outcar` overrides it.
@@ -226,6 +236,13 @@ denial test uses a local HTTP sentinel and needs permission to bind localhost.
 
 ## Workstation handoff and release packages
 
+For a centered periodic view, use `--expand-xy NX,NY`: these are the numbers
+of additional cells **on each side** along the lattice a/b vectors. `1,1`
+produces a 3×3×1 view, with the primary cell outlined and its atoms in their
+original element colors. Neighbor atoms default to muted colors; choose
+`--image-colors greyscale` for neutral greys or `normal` for full colors.
+See [periodic context examples and rules](docs/periodic-context.md).
+
 v0.1.0 is the pre-optimization release checkpoint. v0.2.0 has
 completed M4–M6 on the accepted WSL workstation: renderer/AA/encoder/thread
 selection, annotations, deployment validation and scoped performance acceptance.
@@ -253,6 +270,8 @@ cpack --config /tmp/qasr-release/CPackConfig.cmake -B artifacts/releases
 The source archive has a SHA-256 file and a per-file manifest. Its explicit
 allowlist includes source, presets, docs, tests and vendor snapshots, excluding
 artifacts, builds, Git metadata and local agent/credential configuration.
+The standalone handbook intentionally bundles selected rendered images, example
+inputs and a validated development-source download under `docs/website/`.
 The Linux binary archive includes the executable, presets, documentation and
 license notices; matching system runtime libraries must be installed.
 

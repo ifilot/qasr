@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modeling>
+ <atominfo>
+  <atoms>2</atoms><types>2</types>
+  <array name="atoms"><set>
+   <rc><c>Si</c><c>1</c></rc><rc><c>O</c><c>2</c></rc>
+  </set></array>
+  <array name="atomtypes"><set>
+   <rc><c>1</c><c>Si</c></rc><rc><c>1</c><c>O</c></rc>
+  </set></array>
+ </atominfo>
+ <calculation><structure>
+  <crystal><varray name="basis">
+   <v>2 0 0</v><v>1 2 0</v><v>0.5 1 2</v>
+  </varray></crystal>
+  <varray name="positions"><v>0.5 0.25 0.125</v><v>0 0 0</v></varray>
+ </structure></calculation>
+ <structure name="finalpos">
+  <crystal><varray name="basis">
+   <v>2 0 0</v><v>1 2 0</v><v>0.5 1 2</v>
+  </varray></crystal>
+  <varray name="positions"><v>0.5 0.25 0.125</v><v>0 0 0</v></varray>
+ </structure>
+</modeling>

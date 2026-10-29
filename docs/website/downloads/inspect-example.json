@@ -1,0 +1,98 @@
+{
+  "format": "xml",
+  "frame": 0,
+  "frame_count": 1,
+  "recovered": false,
+  "atom_count": 2,
+  "lattice_A": [
+    [
+      2,
+      0,
+      0
+    ],
+    [
+      1,
+      2,
+      0
+    ],
+    [
+      0.5,
+      1,
+      2
+    ]
+  ],
+  "atoms": [
+    {
+      "index": 0,
+      "element": "Si",
+      "position_A": [
+        1.3125,
+        0.625,
+        0.25
+      ]
+    },
+    {
+      "index": 1,
+      "element": "O",
+      "position_A": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "settings": {
+    "image": {
+      "width": 512,
+      "height": 512,
+      "background": "#ffffff",
+      "style": "shaded",
+      "aa": "2x",
+      "backend": "zbuffer",
+      "depth_fade": 0,
+      "outline_width": 1,
+      "png_encoder": "libdeflate",
+      "png_filter": "none",
+      "png_compression": "auto"
+    },
+    "camera": {
+      "projection": "orthographic",
+      "view": [
+        1,
+        1,
+        1
+      ],
+      "up": [
+        0,
+        0,
+        1
+      ],
+      "margin": 0.06
+    },
+    "geometry": {
+      "repeat": [
+        1,
+        1,
+        1
+      ],
+      "expand_xy": [
+        0,
+        0
+      ],
+      "image_colors": "normal",
+      "sphere_scale": 1,
+      "bond_radius_A": 0.12
+    },
+    "overlays": {
+      "cell": true,
+      "cell_width": 2,
+      "labels": "none",
+      "axes": false,
+      "legend": false,
+      "scale_bar": false
+    },
+    "threads": 0,
+    "elements": {},
+    "bond_cutoffs_A": {}
+  }
+}

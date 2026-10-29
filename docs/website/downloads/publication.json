@@ -1,0 +1,45 @@
+{
+  "image": {
+    "width": 1200,
+    "height": 900,
+    "background": "#ffffff00",
+    "style": "illustrated",
+    "aa": "2x",
+    "depth_fade": 0.6,
+    "outline_width": 1.5,
+    "png_encoder": "libpng",
+    "png_compression": 1,
+    "png_filter": "adaptive"
+  },
+  "camera": {
+    "projection": "orthographic",
+    "view": "top",
+    "margin": 0.06
+  },
+  "geometry": {
+    "expand_xy": [
+      1,
+      1
+    ],
+    "image_colors": "greyscale",
+    "sphere_scale": 1,
+    "bond_radius_A": 0.12
+  },
+  "elements": {
+    "O": {
+      "color": "#e88069",
+      "radius_A": 0.5
+    }
+  },
+  "bond_cutoffs_A": {
+    "Co-O": 2.5
+  },
+  "overlays": {
+    "cell": true,
+    "cell_width": 3,
+    "labels": "none",
+    "axes": true,
+    "legend": true,
+    "scale_bar": true
+  }
+}

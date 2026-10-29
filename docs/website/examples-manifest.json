@@ -1,0 +1,278 @@
+{
+  "executable_sha256": "58fb8df79148e9a2f043b532d859c9dd95de2556be0c619f68177bc8445190c6",
+  "build_info": {
+    "version": "0.2.0",
+    "xml": true,
+    "openmp": true,
+    "cairo": false,
+    "libdeflate": true
+  },
+  "availability": "v0.2.0 release plus post-release M7 XML and local M8 periodic context",
+  "images": [
+    {
+      "id": "co-shaded",
+      "source": "CONTCAR.co",
+      "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+      "image": "assets/co-shaded.png",
+      "png_sha256": "23a4680d43b0e4dd1c3405abbe65887c4ab8e6179b1c914891d3d94ff6521139",
+      "command": [
+        "build-release/vasp-render",
+        "examples/CONTCAR.co",
+        "--view",
+        "top",
+        "--width",
+        "768",
+        "--height",
+        "768",
+        "--png-compression",
+        "6",
+        "-o",
+        "co-shaded.png"
+      ]
+    },
+    {
+      "id": "co-illustrated",
+      "source": "CONTCAR.co",
+      "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+      "image": "assets/co-illustrated.png",
+      "png_sha256": "8788efb185166ae69669a867c66c33831266c85fe23d1b60f5bda27327cdcaaa",
+      "command": [
+        "build-release/vasp-render",
+        "examples/CONTCAR.co",
+        "--config",
+        "examples/illustrated.json",
+        "--png-compression",
+        "6",
+        "-o",
+        "co-illustrated.png"
+      ]
+    },
+    {
+      "id": "co-annotated",
+      "source": "CONTCAR.co",
+      "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+      "image": "assets/co-annotated.png",
+      "png_sha256": "6481f2aff19f1f5033de7ea0640c0c73a2c0cc0b66ea2947d82b8b8bd3641150",
+      "command": [
+        "build-release/vasp-render",
+        "examples/CONTCAR.co",
+        "--config",
+        "examples/illustrated.json",
+        "--labels",
+        "element",
+        "--legend",
+        "on",
+        "--axes",
+        "on",
+        "--scale-bar",
+        "on",
+        "--png-compression",
+        "6",
+        "-o",
+        "co-annotated.png"
+      ]
+    },
+    {
+      "id": "co-periodic-normal",
+      "source": "CONTCAR.co",
+      "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+      "image": "assets/co-periodic-normal.png",
+      "png_sha256": "8ad4736bc164a3f36fa2bc827c6f8a6d53ab90f4cfcd6f89b439590afb15ce07",
+      "command": [
+        "build-release/vasp-render",
+        "examples/CONTCAR.co",
+        "--config",
+        "examples/illustrated.json",
+        "--expand-xy",
+        "1,1",
+        "--image-colors",
+        "normal",
+        "--png-compression",
+        "6",
+        "-o",
+        "co-periodic-normal.png"
+      ]
+    },
+    {
+      "id": "co-periodic-muted",
+      "source": "CONTCAR.co",
+      "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+      "image": "assets/co-periodic-muted.png",
+      "png_sha256": "ee35a7dcd452d76c66bdaf207ff41a8aeb09bcea5ebf6dcb2bea17e9e6059982",
+      "command": [
+        "build-release/vasp-render",
+        "examples/CONTCAR.co",
+        "--config",
+        "examples/illustrated.json",
+        "--expand-xy",
+        "1,1",
+        "--image-colors",
+        "muted",
+        "--png-compression",
+        "6",
+        "-o",
+        "co-periodic-muted.png"
+      ]
+    },
+    {
+      "id": "co-periodic-greyscale",
+      "source": "CONTCAR.co",
+      "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+      "image": "assets/co-periodic-greyscale.png",
+      "png_sha256": "b7673795076924c3fe16a411906007d76888992d2f73a46044dc3337158ccdf3",
+      "command": [
+        "build-release/vasp-render",
+        "examples/CONTCAR.co",
+        "--config",
+        "examples/illustrated.json",
+        "--expand-xy",
+        "1,1",
+        "--image-colors",
+        "greyscale",
+        "--png-compression",
+        "6",
+        "-o",
+        "co-periodic-greyscale.png"
+      ]
+    },
+    {
+      "id": "pd-ceria",
+      "source": "CONTCAR.pd-ceria",
+      "input_sha256": "f818dbebd6290b2eb0ccfa1434d653d8f50852fef31cfa242d86093363cd6214",
+      "image": "assets/pd-ceria.png",
+      "png_sha256": "51954ba9b4034628c2a66815bc840605377b6d910d97cf8033a4aad386f601dd",
+      "command": [
+        "build-release/vasp-render",
+        "examples/CONTCAR.pd-ceria",
+        "--config",
+        "examples/illustrated.json",
+        "--png-compression",
+        "6",
+        "-o",
+        "pd-ceria.png"
+      ]
+    },
+    {
+      "id": "skew-transparent",
+      "source": "POSCAR.skew",
+      "input_sha256": "840ef63c4512eab9091e46106931df2b0c284b7d8bdd618ef79757454428ee75",
+      "image": "assets/skew-transparent.png",
+      "png_sha256": "58c6e44dfb6df9027d5c0691b8a01293e874e2bc9c8086cbbdce3d58e697106b",
+      "command": [
+        "build-release/vasp-render",
+        "examples/POSCAR.skew",
+        "--width",
+        "768",
+        "--height",
+        "768",
+        "--background",
+        "#ffffff00",
+        "--png-compression",
+        "6",
+        "-o",
+        "skew-transparent.png"
+      ]
+    },
+    {
+      "id": "relax-first",
+      "source": "OUTCAR.relax",
+      "input_sha256": "38b0665ad596547098e249363aaa9d8be475ad776b16804533918c42520e3c53",
+      "image": "assets/relax-first.png",
+      "png_sha256": "964a2aa11237ca93f62d5f574ba90f8f8b2523f74d1a762b5f68d829c1681d7d",
+      "command": [
+        "build-release/vasp-render",
+        "examples/OUTCAR.relax",
+        "--view",
+        "top",
+        "--width",
+        "768",
+        "--height",
+        "768",
+        "--frame",
+        "0",
+        "--png-compression",
+        "6",
+        "-o",
+        "relax-first.png"
+      ]
+    },
+    {
+      "id": "relax-final",
+      "source": "OUTCAR.relax",
+      "input_sha256": "38b0665ad596547098e249363aaa9d8be475ad776b16804533918c42520e3c53",
+      "image": "assets/relax-final.png",
+      "png_sha256": "cff472e50e445566d7f6b34d6f4fa5f1a3f8d5ce6879bc791a2752466d25cc32",
+      "command": [
+        "build-release/vasp-render",
+        "examples/OUTCAR.relax",
+        "--view",
+        "top",
+        "--width",
+        "768",
+        "--height",
+        "768",
+        "--frame",
+        "final",
+        "--png-compression",
+        "6",
+        "-o",
+        "relax-final.png"
+      ]
+    },
+    {
+      "id": "xml-example",
+      "source": "vasprun.example.xml",
+      "input_sha256": "07044e51565165a8bad4dd24d5bbe1ecc679d651b6f61268296fa8d61188de6f",
+      "image": "assets/xml-example.png",
+      "png_sha256": "f2fb8c174844b2d1bd804930da917de9f3a51a16b8ee2c176c9576188adda534",
+      "command": [
+        "build-release/vasp-render",
+        "examples/vasprun.example.xml",
+        "--width",
+        "768",
+        "--height",
+        "768",
+        "--view",
+        "1,1,1",
+        "--png-compression",
+        "6",
+        "-o",
+        "xml-example.png"
+      ]
+    },
+    {
+      "id": "publication",
+      "source": "CONTCAR.co",
+      "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+      "image": "assets/publication.png",
+      "png_sha256": "0e5c879fed14eed541ac21d91953c6be26af2671546d53ce10b438dd3eb1965d",
+      "command": [
+        "build-release/vasp-render",
+        "examples/CONTCAR.co",
+        "--config",
+        "examples/publication.json",
+        "--png-compression",
+        "6",
+        "-o",
+        "publication.png"
+      ]
+    }
+  ],
+  "downloads": {
+    "CONTCAR.co": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+    "CONTCAR.pd-ceria": "f818dbebd6290b2eb0ccfa1434d653d8f50852fef31cfa242d86093363cd6214",
+    "EXAMPLES.txt": "d319bedca7b7902ae33c402625a53be810ac38c802aee765314ccae49a6f26c1",
+    "LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+    "OUTCAR.relax": "38b0665ad596547098e249363aaa9d8be475ad776b16804533918c42520e3c53",
+    "POSCAR.skew": "840ef63c4512eab9091e46106931df2b0c284b7d8bdd618ef79757454428ee75",
+    "SLAB-MANIFEST.json": "76272de5ceaefcad8db4101fec634f4431b1248270689382a01b1207562a862c",
+    "SLAB-PROVENANCE.md": "1a93a7759a7d33f47e4d92670d1f4c3c6ab12baf3521daac85f15fb70a10aaa7",
+    "illustrated.json": "dad007b81b682194e4ade6147bec18051e9ab670f2109f051c998e582a59242f",
+    "inspect-example.json": "1c2d92b71d6020c80d9fd0f0d112e5062c3925550dc33a1f46a0f772b0883518",
+    "publication.json": "50f5e7207c0708b0683d5f4482cce801d9451f5c948a0391e5a97b38f5628165",
+    "source-manifest.json": "46dca035512ad06df2b2126814f24a42b518f91430befe1c9fc55a014a8efb47",
+    "vasp-render-development.tar.gz": "64d64a745b32316d66aaf6a042f993d3671a5718436bb2fdb8f887236229299a",
+    "vasp-render-examples.zip": "5e943f72ac462c37e068fd4861ab07e881dd27a50e8fa675b49ec54827d7775e",
+    "vasprun.example.xml": "07044e51565165a8bad4dd24d5bbe1ecc679d651b6f61268296fa8d61188de6f"
+  }
+}

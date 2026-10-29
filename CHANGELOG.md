@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add an offline-ready standalone user-handbook website with input/output
+  reference, tested render examples, periodic/style comparisons, command builder,
+  configuration/CLI tables and downloadable inputs/development source.
+- Add centered xy periodic context with `--expand-xy`, full primary-cell
+  colors/outline and muted or greyscale periodic-image colors. Preserve alpha,
+  skew-cell clipping and the existing repeat defaults; expose JSON controls.
 - Complete M7 streaming `vasprun.xml` input with optional system libxml2,
   content detection, zero-based ionic frames and final-position semantics.
 - Validate per-ion/type identities, changing cells, complete documents and
