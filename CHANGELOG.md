@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## [0.3.0] - 2026-10-29
+
+Complete M7 XML, M8 periodic context and the standalone GitHub Pages handbook.
+The M9 configuration/automation design remains subsequent work.
 
 - Add an offline-ready standalone user-handbook website with input/output
   reference, tested render examples, periodic/style comparisons, command builder,

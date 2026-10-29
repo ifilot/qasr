@@ -1,6 +1,6 @@
 # vasp-render
 
-Version **0.2.0**, licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
+Version **0.3.0**, licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
 [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 Headless C11 VASP geometry-to-PNG renderer. This release builds on the
@@ -8,7 +8,7 @@ v0.1.0 reference checkpoint with validated input,
 periodic ball-and-stick geometry, and an orthographic software depth-buffer
 renderer with shaded spheres/capped cylinders and a PNG output path.
 
-Unreleased work after the v0.2.0 tag adds M7 streaming `vasprun.xml` input;
+v0.3.0 includes M7 streaming `vasprun.xml` input and M8 periodic context;
 see [XML selection, validation and measurements](docs/m7-xml.md).
 
 Open the [online user handbook](https://ifilot.github.io/qasr/) or its
@@ -271,10 +271,10 @@ The source archive has a SHA-256 file and a per-file manifest. Its explicit
 allowlist includes source, presets, docs, tests and vendor snapshots, excluding
 artifacts, builds, Git metadata and local agent/credential configuration.
 The standalone handbook intentionally bundles selected rendered images, example
-inputs and a validated development-source download under `docs/website/`.
+inputs and a validated release-source download under `docs/website/`.
 The Linux binary archive includes the executable, presets, documentation and
 license notices; matching system runtime libraries must be installed.
 
-See [v0.2.0 release notes and validation](docs/release-v0.2.0.md) for current
+See [v0.3.0 release notes and validation](docs/release-v0.3.0.md) for current
 scope, checks and limitations. The [v0.1.0 notes](docs/release-v0.1.0.md)
 retain the reference checkpoint history.

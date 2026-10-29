@@ -1,6 +1,6 @@
 # Technical Design v0.1 — Headless VASP Geometry-to-PNG Renderer
 
-**Status:** v0.1.0 is the M0–M3 reference checkpoint on 2026-10-29. Published v0.2.0 completes M4–M6. Subsequent unreleased M7 adds validated streaming XML input. The user accepts WSL results for performance selection and deployment validation; native Linux/HPC access is not an acceptance requirement. Sections 16, 18–25 record decisions and validation.
+**Status:** v0.1.0 records M0–M3, v0.2.0 M4–M6, and v0.3.0 completes M7 XML, M8 periodic context and the standalone handbook. M9 follows the detailed next-iteration design. WSL is the approved deployment/performance environment. Historical milestone records remain below.
 
 **Language:** C11. **Platform:** Linux workstations and HPC nodes. **Interface:** standalone CLI. **Default image:** 512 × 512 PNG.
 

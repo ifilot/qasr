@@ -1,13 +1,13 @@
 {
-  "executable_sha256": "58fb8df79148e9a2f043b532d859c9dd95de2556be0c619f68177bc8445190c6",
+  "executable_sha256": "cfa5d0a0dfcde55d5c93f36660c240a8c758bb9f3a254a1b6a532afb0204e6a4",
   "build_info": {
-    "version": "0.2.0",
+    "version": "0.3.0",
     "xml": true,
     "openmp": true,
     "cairo": false,
     "libdeflate": true
   },
-  "availability": "v0.2.0 release plus post-release M7 XML and local M8 periodic context",
+  "availability": "v0.3.0 release including XML and centered periodic context",
   "images": [
     {
       "id": "co-shaded",
@@ -270,9 +270,9 @@
     "illustrated.json": "dad007b81b682194e4ade6147bec18051e9ab670f2109f051c998e582a59242f",
     "inspect-example.json": "1c2d92b71d6020c80d9fd0f0d112e5062c3925550dc33a1f46a0f772b0883518",
     "publication.json": "50f5e7207c0708b0683d5f4482cce801d9451f5c948a0391e5a97b38f5628165",
-    "source-manifest.json": "46dca035512ad06df2b2126814f24a42b518f91430befe1c9fc55a014a8efb47",
-    "vasp-render-development.tar.gz": "64d64a745b32316d66aaf6a042f993d3671a5718436bb2fdb8f887236229299a",
-    "vasp-render-examples.zip": "5e943f72ac462c37e068fd4861ab07e881dd27a50e8fa675b49ec54827d7775e",
+    "source-manifest.json": "fa61d0d9325cd08fddca5612a9f99d77d3b5a9e7f517a8d448487efd1d861820",
+    "vasp-render-examples.zip": "62ac13a857fbaea188de251dcac61fcf4b4a7063f22ce2603c8e8f2f420cf8db",
+    "vasp-render-source.tar.gz": "cfa4540401c6c7e5f658fc02d12f7834fcf1c99170af8fb285a366dad78e91c1",
     "vasprun.example.xml": "07044e51565165a8bad4dd24d5bbe1ecc679d651b6f61268296fa8d61188de6f"
   }
 }

@@ -115,7 +115,7 @@
     parts.push('-o', 'structure.png');
     $('#generated-command').textContent = parts.join(' ');
     $('#builder-note').textContent = input.endsWith('.xml') || periodic
-      ? 'Uses development features. Confirm XML in --build-info and --expand-xy in --help.'
+      ? 'Requires v0.3.0 or newer. Confirm XML in --build-info and --expand-xy in --help.'
       : 'Run from the source checkout after extracting the example kit into examples/.';
   }
   form.addEventListener('change', recipe); form.addEventListener('submit', e => e.preventDefault()); recipe();

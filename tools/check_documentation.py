@@ -79,8 +79,8 @@ def main():
         expected = json.loads(subprocess.check_output([exe, site/'downloads/vasprun.example.xml', '--inspect']))
         assert expected == json.loads((site/'downloads/inspect-example.json').read_text())
     source = json.loads((site/'downloads/source-manifest.json').read_text())
-    assert sha(site/'downloads/vasp-render-development.tar.gz') == source['sha256']
-    with tarfile.open(site/'downloads/vasp-render-development.tar.gz') as archive:
+    assert sha(site/'downloads/vasp-render-source.tar.gz') == source['sha256']
+    with tarfile.open(site/'downloads/vasp-render-source.tar.gz') as archive:
         for member in archive:
             parts = Path(member.name).parts
             assert not Path(member.name).is_absolute() and '..' not in parts and not member.issym() and not member.islnk()

@@ -14,14 +14,17 @@ import tarfile
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output",type=Path,default=Path("artifacts/releases"))
+    parser.add_argument("--without-website",action="store_true",help="omit the embedded website when creating the website's source download, avoiding recursive archives")
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
     cmake=(root/"CMakeLists.txt").read_text()
     version=re.search(r"project\(vasp_render VERSION ([0-9]+\.[0-9]+\.[0-9]+)",cmake).group(1)
     top=[".gitignore",".gitattributes","CMakeLists.txt","README.md","CHANGELOG.md","LICENSE","THIRD_PARTY_NOTICES.md"]
     files=[root/name for name in top]
-    for directory in ["src","presets","docs","tests","tools","vendor"]:
+    for directory in ["src","presets","docs","tests","tools","vendor",".github"]:
         for path in (root/directory).rglob("*"):
+            if args.without_website and path.is_relative_to(root/"docs/website"):
+                continue
             if "__pycache__" in path.parts or path.suffix in [".pyc",".pyo"]:
                 continue
             if path.is_symlink():

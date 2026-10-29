@@ -46,8 +46,8 @@ class InputTests(unittest.TestCase):
         return path
 
     def test_help_and_version(self):
-        self.assertIn("vasp-render 0.2.0", self.run_cli("--help").stdout)
-        self.assertEqual("vasp-render 0.2.0\n", self.run_cli("--version").stdout)
+        self.assertIn("vasp-render 0.3.0", self.run_cli("--help").stdout)
+        self.assertEqual("vasp-render 0.3.0\n", self.run_cli("--version").stdout)
 
     def test_skewed_direct_and_species_order(self):
         result = self.data(self.poscar)

@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('executable', type=Path)
-    parser.add_argument('--source-archive', type=Path, help='validated development source archive to offer for download')
+    parser.add_argument('--source-archive', type=Path, help='validated source archive to offer for download')
     args = parser.parse_args()
     exe = args.executable.resolve()
     site = ROOT/'docs/website'
@@ -115,7 +115,7 @@ See LICENSE. Website images are program-generated examples, not AI illustrations
         records.append({'id': name, 'source': source, 'input_sha256': sha(downloads/source),
                         'image': 'assets/'+output.name, 'png_sha256': sha(output), 'command': shown})
     if args.source_archive:
-        shutil.copyfile(args.source_archive, downloads/'vasp-render-development.tar.gz')
+        shutil.copyfile(args.source_archive, downloads/'vasp-render-source.tar.gz')
         manifest = args.source_archive.parent/(args.source_archive.name.replace('.tar.gz', '-source-manifest.json'))
         if manifest.exists(): shutil.copyfile(manifest, downloads/'source-manifest.json')
     subprocess.run([str(exe), str(downloads/'CONTCAR.co'), '--config', str(downloads/'publication.json'), '--inspect'], capture_output=True, check=True)
@@ -123,7 +123,7 @@ See LICENSE. Website images are program-generated examples, not AI illustrations
     (downloads/'inspect-example.json').write_text(json.dumps(inspection, indent=2)+'\n')
     (site/'examples-manifest.json').write_text(json.dumps({
         'executable_sha256': sha(exe), 'build_info': json.loads(subprocess.check_output([exe, '--build-info'])),
-        'availability': 'v0.2.0 release plus post-release M7 XML and local M8 periodic context',
+        'availability': 'v0.3.0 release including XML and centered periodic context',
         'images': records,
         'downloads': {p.name: sha(p) for p in sorted(downloads.iterdir()) if p.is_file()},
     }, indent=2)+'\n')

@@ -1,10 +1,9 @@
-# M7: streaming vasprun.xml input (unreleased)
+# M7: streaming vasprun.xml input (v0.3.0)
 
-M7 follows the published v0.2.0 M4–M6 checkpoint. It adds a system-libxml2
+M7 is included in v0.3.0, following the v0.2.0 M4–M6 checkpoint. It adds a system-libxml2
 streaming reader without changing the normalized scene or rendering pipeline.
 XML is enabled by default; `-DENABLE_XML=OFF` keeps POSCAR/OUTCAR support and
-removes libxml2 linkage. `--build-info` reports `xml: true|false`. The existing
-v0.2.0 tag excludes these changes; no subsequent release tag is implied.
+removes libxml2 linkage. `--build-info` reports `xml: true|false`. The v0.2.0 tag excludes these changes; v0.3.0 includes them.
 
 ```sh
 cmake -S . -B /tmp/qasr-m7-release -DCMAKE_BUILD_TYPE=Release

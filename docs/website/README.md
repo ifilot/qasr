@@ -11,12 +11,10 @@ python3 -m http.server 8000 --directory docs/website
 # Open http://localhost:8000
 ```
 
-The handbook covers the v0.2.0 release plus M7 XML and M8 periodic-context
-development. Availability is explained on the page. The included development
-source download is the previously validated M8 source archive, renamed for the
-handbook; its bytes and SHA-256 are unchanged. It is not a newly tagged release.
-The nested source snapshot deliberately predates the website so it does not
-recursively package the website into its own download.
+The handbook covers v0.3.0, including M7 XML and M8 periodic context.
+The source download omits this website (`package_source.py --without-website`)
+to avoid recursive embedded archives. The full release archive also includes
+the standalone site. Both source forms retain program tests and licensing.
 
 The illustration manifest records the commands, original input hashes, PNG
 hashes, build capabilities and executable SHA-256. All 12 examples are program
@@ -34,7 +32,7 @@ source archive made before embedding these documentation assets:
 
 ```sh
 python3 tools/build_documentation.py /path/to/build-release/vasp-render \
-  --source-archive artifacts/m8/deployment/archives/vasp-render-0.2.0.tar.gz
+  --source-archive artifacts/v0.3.0/website-source/vasp-render-0.3.0.tar.gz
 ```
 
 Publishing uses GitHub Actions from `master`, through
