@@ -147,7 +147,9 @@ static size_t elements(const Scene *s, size_t counts[119], uint8_t colors[119][4
     size_t total=0;memset(counts,0,119*sizeof *counts);
     for (size_t i=0;i<s->count;++i) if (s->items[i].kind==SPHERE) {
         unsigned z=s->items[i].element<=118 ? s->items[i].element : 0;
-        if (!counts[z]) { ++total;memcpy(colors[z],s->items[i].color,4); }
+        if (!counts[z]) ++total;
+        if (!counts[z] || (!s->items[i].origin[0] && !s->items[i].origin[1] && !s->items[i].origin[2]))
+            memcpy(colors[z],s->items[i].color,4);
         ++counts[z];
     }
     return total;

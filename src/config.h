@@ -7,11 +7,14 @@ typedef enum { STYLE_SHADED, STYLE_ILLUSTRATED } RenderStyle;
 typedef enum { BACKEND_ZBUFFER, BACKEND_CAIRO } RenderBackend;
 typedef enum { ENCODER_LIBPNG, ENCODER_LIBDEFLATE, ENCODER_CAIRO } PngEncoder;
 typedef enum { FILTER_ADAPTIVE, FILTER_NONE, FILTER_SUB, FILTER_UP, FILTER_DEFAULT } PngFilter;
+typedef enum { IMAGES_AUTO, IMAGES_NORMAL, IMAGES_MUTED, IMAGES_GREYSCALE } PeriodicImageStyle;
 /* Compression -1 and FILTER_DEFAULT request automatic settings. */
 typedef struct { PngEncoder encoder; PngFilter filter; int compression; } PngOptions;
 
 typedef struct {
     size_t width, height, repeat[3], threads, aa_scale;
+    size_t expand_xy[2]; /* Additional cells on each side of the primary a/b cell. */
+    PeriodicImageStyle image_colors;
     Vec3 view, up;
     double margin, sphere_scale, bond_radius, depth_fade, outline_width, cell_width;
     char background[10];

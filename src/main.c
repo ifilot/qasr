@@ -38,8 +38,10 @@ static bool inspect(const Config *c, const Structure *s)
     printf("\"camera\":{\"projection\":\"orthographic\",\"view\":");
     if (c->view_top) printf("\"top\""); else print_vector(c->view);
     printf(",\"up\":"); print_vector(c->up); printf(",\"margin\":%.17g},", c->margin);
-    printf("\"geometry\":{\"repeat\":[%zu,%zu,%zu],\"sphere_scale\":%.17g,\"bond_radius_A\":%.17g},",
-           c->repeat[0], c->repeat[1], c->repeat[2], c->sphere_scale, c->bond_radius);
+    printf("\"geometry\":{\"repeat\":[%zu,%zu,%zu],\"expand_xy\":[%zu,%zu],\"image_colors\":\"%s\",\"sphere_scale\":%.17g,\"bond_radius_A\":%.17g},",
+           c->repeat[0], c->repeat[1], c->repeat[2], c->expand_xy[0], c->expand_xy[1],
+           c->image_colors == IMAGES_MUTED ? "muted" : c->image_colors == IMAGES_GREYSCALE ? "greyscale" : "normal",
+           c->sphere_scale, c->bond_radius);
     printf("\"overlays\":{\"cell\":%s,\"cell_width\":%.17g,\"labels\":\"%s\",\"axes\":%s,\"legend\":%s,\"scale_bar\":%s},",
            c->cell ? "true" : "false",c->cell_width, c->labels == 0 ? "none" : c->labels == 1 ? "element" : "index",
            c->axes ? "true" : "false", c->legend ? "true" : "false", c->scale_bar ? "true" : "false");
@@ -75,6 +77,8 @@ static void help(void)
          "  --species Si,O              Explicit ordered species for unlabeled input\n"
          "  --config FILE               Strict JSON config; CLI overrides it\n"
          "  --width N --height N --repeat NX,NY,NZ\n"
+         "  --expand-xy NX,NY           Neighbor cells on each side along a/b (0..511)\n"
+         "  --image-colors normal|muted|greyscale  Color copies outside primary cell\n"
          "  --view top|X,Y,Z --up X,Y,Z --background '#RRGGBB[AA]'\n"
          "  --style shaded|illustrated  Smooth lighting or layered flat-color atoms\n"
          "  --aa native|2x|4x|adaptive Sample grid; default 2x, 4x quality reference\n"
@@ -116,7 +120,8 @@ static bool inspect_scene(const Config *c, const Scene *s, const Camera *camera)
         printf(",\"radius\":%.17g,\"rgba\":[%u,%u,%u,%u],\"source\":[%zu,%zu],\"image\":[%d,%d,%d],\"origin\":[%d,%d,%d],\"distance\":%.17g",
                p->kind==CELL_EDGE ? 0.5*c->cell_width/camera->scale : p->radius,(unsigned)p->color[0],(unsigned)p->color[1],(unsigned)p->color[2],(unsigned)p->color[3],
                p->source_a,p->source_b,p->image[0],p->image[1],p->image[2],p->origin[0],p->origin[1],p->origin[2],p->distance);
-        if (p->kind==SPHERE) printf(",\"element\":\"%s\",\"instance_index\":%zu",element_symbol(p->element),i);
+        if (p->kind==SPHERE) printf(",\"element\":\"%s\",\"instance_index\":%zu,\"primary_cell\":%s",element_symbol(p->element),i,
+                                  !p->origin[0] && !p->origin[1] && !p->origin[2] ? "true" : "false");
         printf("}");
     }
     puts("]}"); return fflush(stdout)==0 && !ferror(stdout);

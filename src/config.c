@@ -90,6 +90,25 @@ static bool repeat_text(const char *text, size_t out[3])
     return true;
 }
 
+static bool expand_text(const char *text, size_t out[2])
+{
+    if (strlen(text) >= 128) return false;
+    char copy[128]; strcpy(copy, text);
+    char *comma = strchr(copy, ',');
+    if (!comma || strchr(comma+1, ',')) return false;
+    *comma = '\0';
+    return integer(copy, 511, &out[0]) && integer(comma+1, 511, &out[1]);
+}
+
+static bool image_style(const char *text, PeriodicImageStyle *out)
+{
+    if (!strcmp(text, "normal")) *out = IMAGES_NORMAL;
+    else if (!strcmp(text, "muted")) *out = IMAGES_MUTED;
+    else if (!strcmp(text, "greyscale")) *out = IMAGES_GREYSCALE;
+    else return false;
+    return true;
+}
+
 static bool toggle(const char *s, bool *v)
 {
     if (!strcmp(s, "on")) *v = true;
@@ -256,6 +275,16 @@ static bool settings_group(const cJSON *group, const char *name, Config *c, Erro
         } else if (!strcmp(name, "geometry")) {
             if (!strcmp(k, "sphere_scale")) valid = positive_json(j, &c->sphere_scale);
             else if (!strcmp(k, "bond_radius_A")) valid = positive_json(j, &c->bond_radius);
+            else if (!strcmp(k, "image_colors")) valid = cJSON_IsString(j) && image_style(j->valuestring, &c->image_colors);
+            else if (!strcmp(k, "expand_xy") && cJSON_IsArray(j) && cJSON_GetArraySize(j) == 2) {
+                valid = true;
+                for (int i = 0; i < 2; ++i) {
+                    const cJSON *v = cJSON_GetArrayItem(j, i);
+                    if (!cJSON_IsNumber(v) || !isfinite(v->valuedouble) || v->valuedouble < 0 ||
+                        v->valuedouble > 511 || floor(v->valuedouble) != v->valuedouble) valid = false;
+                    else c->expand_xy[i] = (size_t)v->valuedouble;
+                }
+            }
             else if (!strcmp(k, "repeat") && cJSON_IsArray(j) && cJSON_GetArraySize(j) == 3) {
                 valid = true;
                 for (int i = 0; i < 3; ++i) if (!size_json(cJSON_GetArrayItem(j, i), 1024, &c->repeat[i])) valid = false;
@@ -357,6 +386,14 @@ static bool read_config(const char *path, Config *c, Error *e)
 
 static bool validate(Config *c, Error *e)
 {
+    bool expanded = c->expand_xy[0] || c->expand_xy[1];
+    if (expanded) {
+        if (c->repeat[0] != 1 || c->repeat[1] != 1 || c->repeat[2] != 1)
+            return fail(e, 2, "--expand-xy cannot be combined with nontrivial --repeat; select one expansion");
+        c->repeat[0] = 2*c->expand_xy[0]+1;
+        c->repeat[1] = 2*c->expand_xy[1]+1;
+    }
+    if (c->image_colors == IMAGES_AUTO) c->image_colors = expanded ? IMAGES_MUTED : IMAGES_NORMAL;
     if (c->png.filter==FILTER_DEFAULT)
         c->png.filter=c->png.encoder==ENCODER_LIBDEFLATE ? FILTER_NONE : FILTER_ADAPTIVE;
     if (c->png.compression==-1 && c->png.encoder!=ENCODER_LIBDEFLATE) c->png.compression=1;
@@ -433,6 +470,8 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
         else if (!strcmp(k, "--width")) ok = integer(v, 16384, &c->width) && c->width;
         else if (!strcmp(k, "--height")) ok = integer(v, 16384, &c->height) && c->height;
         else if (!strcmp(k, "--repeat")) ok = repeat_text(v, c->repeat);
+        else if (!strcmp(k, "--expand-xy")) ok = expand_text(v, c->expand_xy);
+        else if (!strcmp(k, "--image-colors")) ok = image_style(v, &c->image_colors);
         else if (!strcmp(k,"--style")) ok=style(v,&c->style);
         else if (!strcmp(k,"--aa")) ok=antialias(v,c);
         else if (!strcmp(k,"--backend")) ok=backend(v,&c->backend);

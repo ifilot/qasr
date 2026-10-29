@@ -23,14 +23,16 @@ static bool append(Scene *s, Primitive p, size_t scratch, Error *e)
 }
 
 /* Liang-Barsky clipping in fractional coordinates handles any skewed basis. */
-static bool clip(Vec3 a, Vec3 b, const size_t repeat[3], double *low, double *high)
+static bool clip(Vec3 a, Vec3 b, const Config *c, double *low, double *high)
 {
     *low = 0; *high = 1;
     for (int d = 0; d < 3; ++d) {
+        double lower = d < 2 ? -(double)c->expand_xy[d] : 0;
+        double upper = lower + (double)c->repeat[d];
         double delta = b.x[d] - a.x[d];
-        if (delta == 0) { if (a.x[d] < 0 || a.x[d] >= (double)repeat[d]) return false; }
+        if (delta == 0) { if (a.x[d] < lower || a.x[d] >= upper) return false; }
         else {
-            double x = -a.x[d] / delta, y = ((double)repeat[d] - a.x[d]) / delta;
+            double x = (lower-a.x[d]) / delta, y = (upper-a.x[d]) / delta;
             if (x > y) { double temp = x; x = y; y = temp; }
             *low = fmax(*low, x); *high = fmin(*high, y);
             if (*low >= *high) return false;
@@ -65,8 +67,9 @@ static bool expand_bond(const Config *c, const Structure *s, Scene *scene, Vec3 
     int lo[3], hi[3];
     size_t product = 1;
     for (int d = 0; d < 3; ++d) {
-        lo[d] = (int)ceil(-fmax(fa.x[d], fb.x[d]));
-        hi[d] = (int)floor((double)c->repeat[d] - fmin(fa.x[d], fb.x[d]));
+        double lower = d < 2 ? -(double)c->expand_xy[d] : 0;
+        lo[d] = (int)ceil(lower-fmax(fa.x[d], fb.x[d]));
+        hi[d] = (int)floor(lower+(double)c->repeat[d] - fmin(fa.x[d], fb.x[d]));
         size_t n = (size_t)(hi[d] - lo[d] + 1);
         if (product > VR_MAX_CANDIDATES / n) return fail(e, 6, "bond expansion work limit exceeded");
         product *= n;
@@ -76,7 +79,7 @@ static bool expand_bond(const Config *c, const Structure *s, Scene *scene, Vec3 
     for (int x = lo[0]; x <= hi[0]; ++x) for (int y = lo[1]; y <= hi[1]; ++y) for (int z = lo[2]; z <= hi[2]; ++z) {
         Vec3 origin = {{x,y,z}}, a = vadd(fa,origin), b = vadd(fb,origin);
         double low, high;
-        if (!clip(a, b, c->repeat, &low, &high)) continue;
+        if (!clip(a, b, c, &low, &high)) continue;
         Vec3 delta = vsub(b,a);
         Primitive p = {0};
         p.a = cartesian(s->lattice, vadd(a,vmul(delta,low)));
@@ -92,6 +95,18 @@ static bool expand_bond(const Config *c, const Structure *s, Scene *scene, Vec3 
         ++scene->bond_count;
     }
     return true;
+}
+
+/* Transform only RGB: periodic context stays an opaque depth-tested surface,
+ * with the element's original alpha rather than artificial transparency. */
+static void image_color(PeriodicImageStyle style, const uint8_t base[4], uint8_t out[4])
+{
+    memcpy(out, base, 4);
+    unsigned grey = (54u*base[0]+183u*base[1]+19u*base[2]+128u)/256u;
+    for (size_t d = 0; d < 3; ++d) {
+        if (style == IMAGES_MUTED) out[d] = (uint8_t)(((unsigned)base[d]+3u*grey+4u*255u+4u)/8u);
+        else if (style == IMAGES_GREYSCALE) out[d] = (uint8_t)((3u*grey+255u+2u)/4u);
+    }
 }
 
 bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
@@ -119,11 +134,13 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
         p.kind = SPHERE; p.element=s->atoms[i].element;
         p.radius = element_radius(c,s->atoms[i].element); p.source_a = i;
         if (!isfinite(p.radius) || p.radius < 1e-9 || p.radius > 1e6) { fail(e,5,"sphere radius must be within [1e-9,1e6] angstroms"); goto done; }
-        element_color(c,s->atoms[i].element,p.color);
-        for (size_t x = 0; x < c->repeat[0]; ++x) for (size_t y = 0; y < c->repeat[1]; ++y) for (size_t z = 0; z < c->repeat[2]; ++z) {
+        uint8_t base[4]; element_color(c,s->atoms[i].element,base);
+        int lx = -(int)c->expand_xy[0], ly = -(int)c->expand_xy[1];
+        for (int x = lx; x < lx+(int)c->repeat[0]; ++x) for (int y = ly; y < ly+(int)c->repeat[1]; ++y) for (int z = 0; z < (int)c->repeat[2]; ++z) {
             Vec3 f = vadd(fractional[i],(Vec3){{(double)x,(double)y,(double)z}});
             p.a = p.b = cartesian(s->lattice,f);
             p.origin[0]=(int)x; p.origin[1]=(int)y; p.origin[2]=(int)z;
+            image_color(x || y || z ? c->image_colors : IMAGES_NORMAL, base, p.color);
             if (!append(scene,p,scratch,e)) goto done;
             ++scene->atom_count;
         }
@@ -151,14 +168,16 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
         }
     }
     if (c->cell) {
+        bool primary = c->expand_xy[0] || c->expand_xy[1] ||
+                       c->image_colors == IMAGES_MUTED || c->image_colors == IMAGES_GREYSCALE;
         for (int axis = 0; axis < 3; ++axis) for (int mask = 0; mask < 4; ++mask) {
             Vec3 a = {{0,0,0}};
             int bit = 0;
             for (int d = 0; d < 3; ++d) if (d != axis) {
-                if (mask & (1 << bit)) a = vadd(a,scene->supercell[d]);
+                if (mask & (1 << bit)) a = vadd(a,primary ? s->lattice[d] : scene->supercell[d]);
                 ++bit;
             }
-            Primitive p = {0}; p.kind = CELL_EDGE; p.a = a; p.b = vadd(a,scene->supercell[axis]);
+            Primitive p = {0}; p.kind = CELL_EDGE; p.a = a; p.b = vadd(a,primary ? s->lattice[axis] : scene->supercell[axis]);
             p.color[0] = p.color[1] = p.color[2] = 70; p.color[3] = 255;
             if (!append(scene,p,scratch,e)) goto done;
         }
