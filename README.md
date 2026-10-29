@@ -1,6 +1,6 @@
 # QASR: Quick Atomic Structure Renderer
 
-Development version **0.3.0** (master after the release tag), licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
+Version **0.4.0**, licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
 [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 Headless C11 VASP geometry-to-PNG renderer. The current implementation builds on the
@@ -280,13 +280,13 @@ inputs and a validated release-source download under `docs/website/`.
 The Linux binary archive includes the executable, presets, documentation and
 license notices; matching system runtime libraries must be installed.
 
-See [v0.3.0 release notes and validation](docs/release-v0.3.0.md) for current
+See [v0.4.0 release notes and validation](docs/release-v0.4.0.md) for current
 scope, checks and limitations. The [v0.1.0 notes](docs/release-v0.1.0.md)
 retain the reference checkpoint history.
 
-## Configuration and automation on master (M9)
+## Configuration and automation (M9)
 
-The development branch after v0.3.0 adds built-in → user → job → CLI defaults,
+v0.4.0 adds built-in → user → job → CLI defaults,
 per-source/per-cell atom styles, JSON Schema discovery, validation, JSON errors
 and compact render reports. Read [the configuration guide](docs/configuration.md)
 for the exact interface. Check `--build-info` capabilities: these additions are
@@ -300,5 +300,5 @@ trajectories without external data or Python packages. A baseline runner validat
 known geometries and exercises repeated views/styles, frame changes, failures and
 same-path input replacement. See [the workload guide](docs/synthetic-workloads.md).
 The [M10 worker](docs/batch-worker.md) accepts sequential JSONL requests with
-bounded input/scene reuse. M11 investigates measured OpenMP improvements and
+bounded input/scene reuse. M11 delivers measured OpenMP improvements and
 worker/thread policies; see [the validation notes](docs/m10-m11-validation.md).

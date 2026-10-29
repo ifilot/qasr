@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-"""Build post-v0.3.0 M9 examples; keep the stable release download unchanged."""
+"""Build QASR styling examples and schemas; retain the legacy v0.3.0 archive."""
 import argparse
 import hashlib
 import json
@@ -36,8 +36,8 @@ def main():
     source_manifest=args.source_archive.with_name(args.source_archive.name.replace('.tar.gz','-source-manifest.json'))
     shutil.copyfile(source_manifest,downloads/'source-manifest.json')
     files=[site/'batch.html',downloads/'worker-requests.jsonl',*schemas.glob('*.json'),*[downloads/n for n in ['source-highlight.json','cell-highlight.json','highlight-job.json','qasr-source.tar.gz','source-manifest.json']],*[site/r['image'] for r in records]]
-    (site/'configuration-manifest.json').write_text(json.dumps({'availability':'QASR development after v0.3.0, including M9–M11; executable qasr','executable_sha256':sha(exe),'build_info':json.loads(subprocess.check_output([exe,'--build-info'])),'files':{str(p.relative_to(site)):sha(p) for p in files},'images':records},indent=2)+'\n')
-    print('Built two M9 styling examples, schemas and separate development source download')
+    (site/'configuration-manifest.json').write_text(json.dumps({'availability':'QASR v0.4.0 release including M9–M11; executable qasr','executable_sha256':sha(exe),'build_info':json.loads(subprocess.check_output([exe,'--build-info'])),'files':{str(p.relative_to(site)):sha(p) for p in files},'images':records},indent=2)+'\n')
+    print('Built two M9 styling examples, schemas and release source download')
 
 
 if __name__=='__main__':main()

@@ -12,7 +12,7 @@ python3 -m http.server 8000 --directory docs/website
 # Open http://localhost:8000
 ```
 
-The handbook follows the current development checkout, including M7–M11. Its
+The handbook documents QASR **v0.4.0**, including completed M7–M11. Its
 `qasr-source.tar.gz` download builds `qasr`. The separately labeled immutable
 v0.3.0 archive, `vasp-render-source.tar.gz`, builds the provisional old command;
 it is preserved unchanged for historical use. Source downloads omit the website
@@ -24,9 +24,9 @@ To regenerate source downloads, 14 actual rendered images and the example kit:
 ```sh
 python3 tools/package_source.py --without-website --output artifacts/website-source
 python3 tools/build_documentation.py /path/to/build-release/qasr \
-  --source-archive artifacts/website-source/qasr-0.3.0.tar.gz
+  --source-archive artifacts/website-source/qasr-0.4.0.tar.gz
 python3 tools/build_configuration_documentation.py /path/to/build-release/qasr \
-  --source-archive artifacts/website-source/qasr-0.3.0.tar.gz
+  --source-archive artifacts/website-source/qasr-0.4.0.tar.gz
 python3 tools/check_documentation.py /path/to/build-release/qasr
 ```
 

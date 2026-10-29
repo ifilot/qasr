@@ -1,8 +1,8 @@
 {
-  "availability": "QASR development after v0.3.0, including M9\u2013M11; executable qasr",
-  "executable_sha256": "39c1cc12ffa4a13da7241f1e8e542a10a816ff6a1a8f124b0eb0b2af4fc5318b",
+  "availability": "QASR v0.4.0 release including M9\u2013M11; executable qasr",
+  "executable_sha256": "e2c8af164b242a4e42ca046b4bf1778a0effff3558fc58613afe6eb788e599ef",
   "build_info": {
-    "version": "0.3.0",
+    "version": "0.4.0",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
@@ -14,7 +14,7 @@
     "libdeflate": true
   },
   "files": {
-    "batch.html": "603765eca4d567ee54ad8efd7c39160eda9876c1dad395fe2e75eafb45c67f25",
+    "batch.html": "49f723d3e9a7fd26cd0d035679adcb79ae7efb5f63420e278f620747f0e14478",
     "downloads/worker-requests.jsonl": "5fcc29a169efde676dab7af98b234ddcdc1a7b07339e33756510442006e18266",
     "schemas/config.schema.json": "d195fe0ebba7bdcaf30dd96f1df72d2a5631af4ce9fdad51c1e6eeba10aa6b68",
     "schemas/job.schema.json": "1f4701621b77a83ea7c8e5a6c8a35e8eb2023507eda80b365e49308630129872",
@@ -23,8 +23,8 @@
     "downloads/source-highlight.json": "3633baa106a669d188529789a09fb9acf6624bfa4b9250fcdf7ace6a3bf06764",
     "downloads/cell-highlight.json": "d455de2b095a470aca2406c0d18c2318a2c6ec5931c4ec2c55e48f1fa57190c0",
     "downloads/highlight-job.json": "322b24a99259992b109b0cdc675bfb30c16a04b558eef9533aae3306a197301c",
-    "downloads/qasr-source.tar.gz": "680a6993588fd26b212d17d4b80d6347d38f27be4446238404fd96d5db20bc77",
-    "downloads/source-manifest.json": "2269216b77cdc1bc9ddd2f28790ec26c5546b2ca18e1ffdf2a8462b6929155c0",
+    "downloads/qasr-source.tar.gz": "e50ce03f02ce5957c4bb521de563d37b72530ecd635f1eb36c96d8a3629a7fcf",
+    "downloads/source-manifest.json": "a7a382d9ab5a118611be0c99dc91449eb022c46d4bc3206c422684d97ad56909",
     "assets/source-highlight.png": "c33b9a74d2f1b827a034d12e1a42f3d82ce7c8c5805278dec838aaadad3842dc",
     "assets/cell-highlight.png": "441111fee064bde4b45a9585abdf9ea68ccce69f5d72b6600bbbfd63cf5b13cd"
   },

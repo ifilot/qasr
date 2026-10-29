@@ -24,7 +24,7 @@
     <p class="nav-label">Reference</p>
     <a href="#output-formats">Output formats</a><a href="#cli-reference">CLI reference</a><a href="#troubleshooting">Troubleshooting</a><a href="#gallery">Example gallery</a><a href="#downloads">Downloads &amp; provenance</a>
   </nav>
-  <div class="sidebar-bottom"><span class="status-dot"></span> Offline-ready documentation<small>v0.3.0<br>XML · periodic context</small></div>
+  <div class="sidebar-bottom"><span class="status-dot"></span> Offline-ready documentation<small>v0.4.0<br>Atom styles · batch rendering</small></div>
 </aside>
 <div class="nav-backdrop" hidden></div>
 <main id="main">
@@ -35,14 +35,14 @@
     <figure class="hero-figure"><img src="assets/co-illustrated.png" width="768" height="768" alt="Illustrated top view of a clean cobalt surface, with teal atom disks, gray bonds and an outlined unit cell" fetchpriority="high"><figcaption><span>Co(0001) · clean surface</span><span>63 source atoms / top view</span></figcaption></figure>
   </section>
   <div class="feature-strip"><span><b>01</b> Read a structure</span><span aria-hidden="true">→</span><span><b>02</b> Choose a view</span><span aria-hidden="true">→</span><span><b>03</b> Render a PNG</span></div>
-  <div class="callout version-note"><strong>QASR: Quick Atomic Structure Renderer</strong><p>This handbook uses the current development checkout and its <code>qasr</code> executable, including M7–M11. Download the <a href="downloads/qasr-source.tar.gz" download>QASR source</a> and example kit. For built-in defaults independent of your preferences, add <code>--no-user-config</code>. The historical v0.3.0 tag used the provisional executable name <code>vasp-render</code>; its <a href="downloads/vasp-render-source.tar.gz" download>unchanged legacy source archive</a> builds that older command.</p></div>
+  <div class="callout version-note"><strong>QASR: Quick Atomic Structure Renderer</strong><p>This handbook documents <strong>QASR v0.4.0</strong> and its <code>qasr</code> executable, including completed M7–M11. Download the <a href="downloads/qasr-source.tar.gz" download>QASR source</a> and example kit. For built-in defaults independent of your preferences, add <code>--no-user-config</code>. The historical v0.3.0 tag used the provisional executable name <code>vasp-render</code>; its <a href="downloads/vasp-render-source.tar.gz" download>unchanged legacy source archive</a> builds that older command.</p></div>
 
   <section id="quick-start" class="doc-section searchable" data-title="Quick start: first image">
     <div class="section-heading"><p class="eyebrow">01 / FIRST IMAGE</p><h2>A reproducible first render</h2><p>Run commands from your source checkout. No VASP installation or pseudopotential files are required to render an existing structure.</p></div>
     <ol class="steps">
       <li><div><h3>Get the source and examples</h3><p>Download the <a href="downloads/qasr-source.tar.gz" download>current QASR source</a> and <a href="downloads/qasr-examples.zip" download>example kit</a> into the same directory. The kit contains the exact structures and preset used throughout this handbook.</p><pre><code>tar -xzf qasr-source.tar.gz
-python3 -m zipfile -e qasr-examples.zip qasr-0.3.0/examples
-cd qasr-0.3.0</code></pre><p class="small">Already using a checkout containing the current features? Extract the example kit into its <code>examples/</code> directory and continue.</p></div></li>
+python3 -m zipfile -e qasr-examples.zip qasr-0.4.0/examples
+cd qasr-0.4.0</code></pre><p class="small">Already using a checkout containing the current features? Extract the example kit into its <code>examples/</code> directory and continue.</p></div></li>
       <li><div><h3>Build an optimized executable</h3><p>Install the <a href="#installation">system dependencies</a> first, then build. The renderer is <code>build-release/qasr</code>.</p><pre><code>cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --parallel
 build-release/qasr --build-info</code></pre></div></li>
@@ -222,7 +222,7 @@ build-release/qasr CONTCAR -o reference.png \
       <tr><td><code>--batch</code></td><td>Run as first argument</td><td>M10 sequential JSONL worker; <a href="batch.html">protocol and benchmarks</a>.</td></tr>
       <tr><td><code>--cache-mib</code></td><td>0..512; default 64; batch only</td><td>Bound retained input/scene allocations; zero disables caching.</td></tr>
       <tr><td><code>--max-jobs</code></td><td>1..1000000; batch only</td><td>Stop the worker after this many nonblank request lines.</td></tr>
-      <tr><td colspan="3"><strong>M9 development additions (after v0.3.0):</strong> <a href="configuration.html">full guide and availability</a></td></tr>
+      <tr><td colspan="3"><strong>Configuration and automation (v0.4.0):</strong> <a href="configuration.html">full guide and availability</a></td></tr>
       <tr><td><code>--no-user-config</code></td><td>No value</td><td>Skip optional user preferences.</td></tr>
       <tr><td><code>--init-config</code></td><td>Run alone</td><td>Create starter user preferences without overwriting.</td></tr>
       <tr><td><code>--dump-config</code></td><td>No value</td><td>Resolved settings, runtime and provenance JSON.</td></tr>
@@ -259,11 +259,11 @@ build-release/qasr CONTCAR -o reference.png \
 
   <section id="downloads" class="doc-section searchable" data-title="Downloads, example kit, source archive, licensing and provenance">
     <div class="section-heading"><p class="eyebrow">13 / TAKE IT WITH YOU</p><h2>Everything needed to reproduce a figure</h2><p>This website is a static handbook. Download its examples, use your own inputs, or open the entire site locally without an application server.</p></div>
-    <div class="download-grid"><a class="download-card" href="downloads/qasr-examples.zip" download><span class="file-label">ZIP / INPUTS + PRESETS</span><strong>Example kit <span>↓</span></strong><p>Co and Pd/ceria cells, synthetic POSCAR/OUTCAR/XML, illustrated and publication JSON, provenance and license.</p></a><a class="download-card" href="downloads/qasr-source.tar.gz" download><span class="file-label">TAR.GZ / CURRENT QASR SOURCE</span><strong>QASR source <span>↓</span></strong><p>Current C source and tests, including configuration, batch rendering and OpenMP improvements. Builds qasr; not a prebuilt binary.</p></a></div>
+    <div class="download-grid"><a class="download-card" href="downloads/qasr-examples.zip" download><span class="file-label">ZIP / INPUTS + PRESETS</span><strong>Example kit <span>↓</span></strong><p>Co and Pd/ceria cells, synthetic POSCAR/OUTCAR/XML, illustrated and publication JSON, provenance and license.</p></a><a class="download-card" href="downloads/qasr-source.tar.gz" download><span class="file-label">TAR.GZ / V0.4.0 SOURCE</span><strong>QASR source <span>↓</span></strong><p>v0.4.0 C source and tests, including configuration, batch rendering and OpenMP improvements. Builds qasr; not a prebuilt binary.</p></a></div>
     <p class="download-links"><a href="downloads/illustrated.json" download>Illustrated preset</a><a href="downloads/publication.json" download>Publication recipe</a><a href="downloads/vasprun.example.xml" download>Complete XML input</a><a href="downloads/source-manifest.json" download>Source checksums</a><a href="examples-manifest.json" download>Example-image manifest</a></p>
     <h3>Licensing and provenance</h3><p>Original code, documentation, website assets, presets, synthetic fixtures and the user-provided slab examples are GPL-3.0-only. The source archive includes third-party notices for vendored/reference materials and separately licensed fixtures. The example-kit slab snapshots retain their <a href="downloads/SLAB-PROVENANCE.md" download>original provenance</a> and <a href="downloads/SLAB-MANIFEST.json" download>collection manifest</a>. No POTCAR datasets are included. <a href="downloads/LICENSE" download>Read the project license</a>.</p><p>Images are renderer output, not AI-generated molecular illustrations. Display radii, colors and bond cutoffs are visualization policy. The program does not determine bond order, verify a transition state, or establish that a calculation converged.</p>
   </section>
-  <footer><a class="footer-brand" href="#overview">qasr<span>Geometry to image, reproducibly.</span></a><p>GPL-3.0-only · Handbook for v0.3.0<br>Prepared 29 October 2026 · <a href="https://github.com/ifilot/qasr">Project source ↗</a></p><button class="print-button" type="button">Print / save PDF</button></footer>
+  <footer><a class="footer-brand" href="#overview">qasr<span>Geometry to image, reproducibly.</span></a><p>GPL-3.0-only · Handbook for v0.4.0<br>Prepared 29 October 2026 · <a href="https://github.com/ifilot/qasr">Project source ↗</a></p><button class="print-button" type="button">Print / save PDF</button></footer>
 </main>
 <dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-heading"><h2 id="search-title">Search the handbook</h2><button data-close-dialog aria-label="Close search">×</button></div><label class="sr-only" for="search-input">Search terms</label><input id="search-input" type="search" placeholder="Try “frame”, “greyscale” or “transparency”…" autocomplete="off"><p class="small" id="search-status" aria-live="polite">Search runs locally. No data leaves your browser.</p><div id="search-results"></div></dialog>
 <dialog id="image-dialog" aria-labelledby="image-title"><div class="dialog-heading"><h2 id="image-title">Example image</h2><button data-close-dialog aria-label="Close image">×</button></div><div class="lightbox-canvas checker"><img width="768" height="768" alt=""></div><a id="image-download" download>Download PNG ↓</a></dialog>

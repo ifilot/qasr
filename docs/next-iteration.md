@@ -1,6 +1,6 @@
-# Next iteration: configuration, atom selection and automation
+# Completed design: configuration, atom selection and automation
 
-Status: **M9a–M9c implemented on master after v0.3.0**. The v0.3.0 tag
+Status: **M9–M11 closed in v0.4.0**. The v0.3.0 tag
 remains the release boundary for M7/M8 and the original handbook. The design
 rationale below is retained; see [the implemented interface](configuration.md)
 for exact flags, limits, precedence and examples. M10 implements the [persistent worker](batch-worker.md) and
@@ -210,7 +210,7 @@ Prioritize:
    should not accidentally become persistent user defaults. Keep the existing
    CLI as a wrapper over the same validated request.
 
-These flags/modes are available in the post-v0.3.0 development build. Check
+These flags/modes are available in the v0.4.0 release. Check
 --build-info capabilities before using them with an older executable.
 
 ## Batch/server/MCP tradeoff
@@ -283,3 +283,10 @@ accepted scope and criteria were:
 
 The synthetic M10 workloads provide reproducible inputs for this investigation;
 real fixtures remain necessary to check that conclusions generalize.
+
+## v0.4.0 closeout — 2026-10-29
+
+M9a–M9c, M10 and M11 are complete and included in v0.4.0, together with the
+canonical QASR name and `qasr` executable. The broader M0–M11 design is closed.
+See [release notes and validation](release-v0.4.0.md). No mandatory design tasks
+remain; MCP/HTTP remain optional integrations when a concrete client needs them.

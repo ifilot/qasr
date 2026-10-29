@@ -1,6 +1,6 @@
 # Layered configuration and automation (M9)
 
-Available on `master` after v0.3.0. The immutable v0.3.0 tag contains XML input,
+Available in **v0.4.0**. The immutable v0.3.0 tag contains XML input,
 periodic context and the original handbook; it does not contain M9 flags.
 Check `--build-info` for `user_config`, `atom_overrides`, `job_requests` and
 `config_schema_version: 1` before using this interface.

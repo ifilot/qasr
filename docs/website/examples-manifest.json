@@ -1,7 +1,7 @@
 {
-  "executable_sha256": "39c1cc12ffa4a13da7241f1e8e542a10a816ff6a1a8f124b0eb0b2af4fc5318b",
+  "executable_sha256": "e2c8af164b242a4e42ca046b4bf1778a0effff3558fc58613afe6eb788e599ef",
   "build_info": {
-    "version": "0.3.0",
+    "version": "0.4.0",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
@@ -12,7 +12,7 @@
     "cairo": false,
     "libdeflate": true
   },
-  "availability": "QASR development after v0.3.0, including M7\u2013M11; executable qasr",
+  "availability": "QASR v0.4.0 release including M7\u2013M11; executable qasr",
   "images": [
     {
       "id": "co-shaded",
@@ -288,9 +288,9 @@
     "inspect-example.json": "d51e1b971e119a1ce3003fcbfcd29a3b673ff3e9cc7932cc4ac43ffb310c8256",
     "legacy-v0.3.0-source-manifest.json": "fa61d0d9325cd08fddca5612a9f99d77d3b5a9e7f517a8d448487efd1d861820",
     "publication.json": "50f5e7207c0708b0683d5f4482cce801d9451f5c948a0391e5a97b38f5628165",
-    "qasr-examples.zip": "f02fcc28bb808517dab41b2bea7d562a90a3a052b3538ba56f075900d5873f0a",
-    "qasr-source.tar.gz": "680a6993588fd26b212d17d4b80d6347d38f27be4446238404fd96d5db20bc77",
-    "source-manifest.json": "2269216b77cdc1bc9ddd2f28790ec26c5546b2ca18e1ffdf2a8462b6929155c0",
+    "qasr-examples.zip": "6bc31c04afe72ae11cc8bf8df2e645238d678315f74d8202b08c6924bbede42e",
+    "qasr-source.tar.gz": "e50ce03f02ce5957c4bb521de563d37b72530ecd635f1eb36c96d8a3629a7fcf",
+    "source-manifest.json": "a7a382d9ab5a118611be0c99dc91449eb022c46d4bc3206c422684d97ad56909",
     "vasp-render-source.tar.gz": "cfa4540401c6c7e5f658fc02d12f7834fcf1c99170af8fb285a366dad78e91c1",
     "vasprun.example.xml": "07044e51565165a8bad4dd24d5bbe1ecc679d651b6f61268296fa8d61188de6f"
   }

@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased — QASR naming
+## [0.4.0] - 2026-10-29
+
+Close M9–M11 and establish QASR: Quick Atomic Structure Renderer, executable
+`qasr`. This release includes all completed work since v0.3.0.
+
+### Application naming
 
 - Name the application QASR (Quick Atomic Structure Renderer) and its native
   executable, CMake target/project and source/binary packages `qasr`.
@@ -8,7 +13,7 @@
 - Update current guides, schemas, examples and the standalone handbook; retain
   the immutable historical v0.3.0 source archive with its provisional name.
 
-## Unreleased — M10/M11
+### Batch processing and OpenMP (M10/M11)
 
 - Add original seeded POSCAR/XML datasets and seven workload families, including
   same-path, same-size, timestamp-preserving cache invalidation scenarios.
@@ -22,7 +27,7 @@
 - Document measured latency/CPU/memory tradeoffs, rejected scheduling candidates,
   the worker interface and reproducible synthetic/native-WSL benchmarks.
 
-## Unreleased — M9
+### Configuration and atom styling (M9)
 
 - Load optional XDG user defaults, support explicit initialization/opt-out and
   dump resolved settings with per-field provenance.
@@ -32,8 +37,8 @@
   rule precedence, inspection metadata and stable element legend colors.
 - Embed/install strict config, user and job JSON Schemas; add validation,
   structured errors, stdin/file jobs and compact hashed render reports.
-- Document the development interface with real highlight images and a separate
-  development source download, retaining the v0.3.0 release archive.
+- Document the development interface with real highlight images and a verified
+  release source download, retaining the v0.3.0 release archive.
 
 ## [0.3.0] - 2026-10-29
 

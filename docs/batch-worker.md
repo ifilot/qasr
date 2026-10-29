@@ -1,6 +1,6 @@
 # M10 — Sequential JSONL worker
 
-Available on master after v0.3.0. `--build-info` reports `batch_worker: true`.
+Available in **v0.4.0**. `--build-info` reports `batch_worker: true`.
 The original single-job CLI remains supported and shares its rendering path with
 the worker. No additional runtime package, network listener or HTTP service is
 required. MCP remains an optional integration adapter when a client needs it;
@@ -47,7 +47,7 @@ success. IDs need to distinguish outstanding work; the worker does not retain
 an ever-growing history of IDs.
 
 ```json
-{"id":"view-1","ok":true,"result":{"ok":true,"version":"0.3.0","input":{"path":"CONTCAR","sha256":"…"},"output":{"path":"view-1.png","sha256":"…"},"cache":{"source_hit":false,"scene_hit":false,"retained_bytes":12345,"limit_bytes":67108864},"render_threads":4}}
+{"id":"view-1","ok":true,"result":{"ok":true,"version":"0.4.0","input":{"path":"CONTCAR","sha256":"…"},"output":{"path":"view-1.png","sha256":"…"},"cache":{"source_hit":false,"scene_hit":false,"retained_bytes":12345,"limit_bytes":67108864},"render_threads":4}}
 {"id":"bad-selection","ok":false,"error":{"code":"invalid_atom_index","exit_code":2,"path":"atom_overrides[0].select.source_indices[0]","message":"…"}}
 ```
 
