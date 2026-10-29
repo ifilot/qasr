@@ -287,3 +287,13 @@ and compact render reports. Read [the configuration guide](docs/configuration.md
 for the exact interface. Check `--build-info` capabilities: these additions are
 not included in the immutable v0.3.0 tag. JSON remains the canonical format;
 no YAML parser or server is required.
+
+## Synthetic M10/M11 workloads
+
+Generate seeded bulk/slab/skewed cells, periodic-boundary cases and XML
+trajectories without external data or Python packages. A baseline runner validates
+known geometries and exercises repeated views/styles, frame changes, failures and
+same-path input replacement. See [the workload guide](docs/synthetic-workloads.md).
+The [M10 worker](docs/batch-worker.md) accepts sequential JSONL requests with
+bounded input/scene reuse. M11 investigates measured OpenMP improvements and
+worker/thread policies; see [the validation notes](docs/m10-m11-validation.md).

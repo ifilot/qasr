@@ -3,6 +3,7 @@
 #define VR_COMMON_H
 
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdio.h>
 
@@ -15,6 +16,9 @@
 #define VR_MAX_SPECIES 118u
 
 typedef struct { int code; char message[512], name[64], path[256]; } Error;
+extern _Atomic int vr_cancel_requested;
+bool check_cancel(Error *e);
+
 typedef struct {
     FILE *file;
     const char *path;

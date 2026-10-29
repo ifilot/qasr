@@ -41,7 +41,7 @@ class Document(HTMLParser):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('executable', type=Path, nargs='?')
-    parser.add_argument('--development-executable', type=Path, help='also verify post-release M9 schemas and source against this executable/worktree')
+    parser.add_argument('--development-executable', type=Path, help='also verify post-release development schemas and source against this executable/worktree')
     parser.add_argument('--static-only', action='store_true', help='check standalone site assets without compiling or invoking the renderer')
     parser.add_argument('--output', type=Path, default=ROOT/'artifacts/website-validation/static-report.json')
     args = parser.parse_args()
@@ -52,14 +52,15 @@ def main():
     document = Document(); document.feed((site/'index.html').read_text())
     assert len(document.ids) == len(set(document.ids)), 'duplicate HTML IDs'
     guide = Document(); guide.feed((site/'configuration.html').read_text())
+    batch = Document(); batch.feed((site/'batch.html').read_text())
     checked = 0
-    for value in document.links + guide.links:
+    for value in document.links + guide.links + batch.links:
         url = urlsplit(value)
         if url.scheme or url.netloc: continue
         if url.path:
             path = (site/unquote(url.path)).resolve()
             assert path.is_relative_to(site.resolve()) and path.is_file(), value
-        if url.fragment and not url.path: assert unquote(url.fragment) in document.ids + guide.ids, value
+        if url.fragment and not url.path: assert unquote(url.fragment) in document.ids + guide.ids + batch.ids, value
         checked += 1
     for path in ['app.js', 'styles.css']:
         text = (site/path).read_text()
@@ -94,9 +95,9 @@ def main():
                     assert sha(ROOT/relative) == source['files'][relative], 'source download differs from current renderer: '+relative
     development = json.loads((site/'configuration-manifest.json').read_text())
     for name,digest in development['files'].items(): assert sha(site/name) == digest, name
-    dev_source = json.loads((site/'downloads/m9-source-manifest.json').read_text())
-    assert sha(site/'downloads/vasp-render-m9-source.tar.gz') == dev_source['sha256']
-    with tarfile.open(site/'downloads/vasp-render-m9-source.tar.gz') as archive:
+    dev_source = json.loads((site/'downloads/development-source-manifest.json').read_text())
+    assert sha(site/'downloads/vasp-render-development-source.tar.gz') == dev_source['sha256']
+    with tarfile.open(site/'downloads/vasp-render-development-source.tar.gz') as archive:
         for member in archive:
             parts = Path(member.name).parts
             assert not Path(member.name).is_absolute() and '..' not in parts and not member.issym() and not member.islnk()
@@ -108,7 +109,7 @@ def main():
     if args.development_executable:
         dev = args.development_executable.resolve()
         assert sha(dev) == development['executable_sha256']
-        for kind in ['config','user','job']:
+        for kind in ['config','user','job','worker']:
             assert json.loads(subprocess.check_output([dev,'--schema',kind])) == json.loads((site/'schemas'/f'{kind}.schema.json').read_text())
         reference = ''.join(document.reference)
         assert all(flag in reference for flag in re.findall(r'--[a-z][a-z-]*',subprocess.check_output([dev,'--help'],text=True)))

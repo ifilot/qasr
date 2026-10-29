@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased — M10/M11
+
+- Add original seeded POSCAR/XML datasets and seven workload families, including
+  same-path, same-size, timestamp-preserving cache invalidation scenarios.
+- Share the CLI render path with a sequential JSONL worker; add bounded
+  content-sensitive input/scene caching, cache controls, request schemas,
+  structured responses and cooperative cancellation/recovery.
+- Compare persistent requests with the CLI and benchmark worker/thread pools.
+- Parallelize sufficiently large sample initialization, primitive projection and
+  AA resolution with OpenMP; preserve pixels, dynamic tile scheduling and the
+  conservative automatic thread policy. Report actual render threads.
+- Document measured latency/CPU/memory tradeoffs, rejected scheduling candidates,
+  the worker interface and reproducible synthetic/native-WSL benchmarks.
+
 ## Unreleased — M9
 
 - Load optional XDG user defaults, support explicit initialization/opt-out and

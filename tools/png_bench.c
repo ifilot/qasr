@@ -23,7 +23,7 @@ int main(int argc, char **argv)
         fprintf(stderr,"invalid encoder benchmark configuration: %s\n",e.message);config_free(&c);return 2;
     }
     size_t bytes=c.width*c.height*4;
-    Image image={c.width,c.height,malloc(bytes)};
+    Image image={.width=c.width,.height=c.height,.pixels=malloc(bytes)};
     double *elapsed=malloc(samples*sizeof *elapsed), *cpu=malloc(samples*sizeof *cpu);
     if (!image.pixels || !elapsed || !cpu) { fail(&e,6,"benchmark allocation failed");goto error; }
     FILE *input=fopen(argv[3],"rb");

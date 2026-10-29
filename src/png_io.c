@@ -219,6 +219,7 @@ bool png_write_options_atomic(const char *path, const Image *image, const PngOpt
     default:break;
     }
     if (fclose(file)) ok=fail(e,7,"%s: failed closing temporary PNG",path);
+    if (ok) ok=check_cancel(e);
     if (ok && rename(temp,path)) ok=fail(e,7,"%s: failed replacing output: %s",path,strerror(errno));
     if (!ok) unlink(temp);
     free(temp);return ok;

@@ -380,10 +380,18 @@ static cJSON *read_json(const char *path, bool optional, Error *e)
         free(text);fail_at(e,io ? 7 : 2,"invalid_json_file",path,"%s: read failure, size limit or embedded NUL",path);return NULL;
     }
     text[n]='\0';
-    cJSON *root=json_lexical(text) ? cJSON_ParseWithOpts(text,NULL,1) : NULL;free(text);
-    if (!root) {fail_at(e,2,"invalid_json",path,"%s: invalid JSON (depth limit 32)",path);return NULL;}
+    cJSON *root=config_json_text(text,e);free(text);
+    if (!root && !e->path[0]) snprintf(e->path,sizeof e->path,"%s",path);
+    return root;
+}
+
+cJSON *config_json_text(const char *text, Error *e)
+{
+    if (strlen(text)>VR_MAX_CONFIG_BYTES) {fail(e,2,"JSON exceeds 1 MiB");return NULL;}
+    cJSON *root=json_lexical(text) ? cJSON_ParseWithOpts(text,NULL,1) : NULL;
+    if (!root) {fail_at(e,2,"invalid_json",NULL,"invalid JSON (depth limit 32)");return NULL;}
     if (!cJSON_IsObject(root) || !unique_keys(root,e)) {
-        cJSON_Delete(root);if (!e->code) fail_at(e,2,"invalid_configuration",path,"%s: JSON root must be an object",path);return NULL;
+        cJSON_Delete(root);if (!e->code) fail(e,2,"JSON root must be an object");return NULL;
     }
     return root;
 }
@@ -591,7 +599,7 @@ static bool validate(Config *c, Error *e)
     return true;
 }
 
-bool config_parse(int argc, char **argv, Config *c, Error *e)
+static bool parse_config(int argc, char **argv, const cJSON *request, Config *c, Error *e)
 {
     memset(c, 0, sizeof *c);
     c->width = c->height = 512;
@@ -608,7 +616,7 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
     strcpy(c->background, "#ffffff"); c->cell = true; c->final_frame = true;
     c->provenance=cJSON_CreateObject();c->sources=cJSON_CreateArray();
     if (!c->provenance || !c->sources || !source(c,"built-in",NULL,e)) return fail(e,6,"cannot allocate configuration metadata");
-    const char *config_path=NULL,*job_path=NULL;
+    const char *config_path=NULL,*job_path=request ? "-" : NULL;
     for (int i=1;i<argc;++i) {
         const char *k=argv[i];if (!strcmp(k,"--")) break;
         if (flag_option(k)) {
@@ -623,7 +631,7 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
     }
     if (config_path && job_path) return fail_at(e,2,"conflicting_job_config","job","use --job with embedded config or --config, not both");
     if (job_path) {
-        c->job_json=read_json(job_path,false,e);
+        c->job_json=request ? cJSON_Duplicate(request,1) : read_json(job_path,false,e);
         if (!c->job_json || !job_runtime(c,job_path,e)) return false;
     }
     c->user_path=user_path(e);if (e->code) return false;
@@ -721,4 +729,11 @@ bool config_parse(int argc, char **argv, Config *c, Error *e)
     if (!source(c,"cli",NULL,e)) return false;
     if (config_memory_bytes(c)>VR_CONFIG_MEMORY_LIMIT) return fail(e,6,"configuration exceeds 64 MiB owned allocation limit");
     return validate(c,e);
+}
+
+bool config_parse(int argc, char **argv, Config *c, Error *e) {return parse_config(argc,argv,NULL,c,e);}
+bool config_request(const cJSON *job, bool validation, Config *c, Error *e)
+{
+    char *argv[]={"vasp-render","--no-user-config","--json-errors","--validate-config"};
+    return parse_config(validation ? 4 : 3,argv,job,c,e);
 }

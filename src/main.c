@@ -4,6 +4,7 @@
 #include "render.h"
 #include "version.h"
 #include "automation.h"
+#include "job.h"
 #include "schema.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,6 +54,7 @@ static void help(void)
          "  --frame final|N             Zero-based ionic geometry index\n"
          "  --recover                   Accept unfinished OUTCAR with complete geometry\n"
          "  --species Si,O              Explicit ordered species for unlabeled input\n"
+         "  --batch [--cache-mib N] [--max-jobs N]  Sequential JSONL worker\n"
          "  --config FILE|-             Strict job settings; CLI overrides them\n"
          "  --job FILE|-                Invocation JSON with embedded config\n"
          "  --no-user-config            Ignore automatic XDG personal defaults\n"
@@ -61,7 +63,7 @@ static void help(void)
          "  --validate-config           Validate settings/selectors without rendering\n"
          "  --json-errors               Structured errors on stderr\n"
          "  --report FILE|-             Compact successful render manifest\n"
-         "  --schema [config|user|job]   Print JSON Schema; run alone\n"
+         "  --schema [config|user|job|worker]   Print JSON Schema; run alone\n"
          "  --width N --height N --repeat NX,NY,NZ\n"
          "  --expand-xy NX,NY           Neighbor cells on each side along a/b (0..511)\n"
          "  --image-colors normal|muted|greyscale  Color copies outside primary cell\n"
@@ -128,17 +130,19 @@ static double elapsed_ms(struct timespec a, struct timespec b)
 
 int main(int argc, char **argv)
 {
+    if (argc>=2 && !strcmp(argv[1],"--batch")) return worker_run(argc,argv,VR_VERSION);
     if ((argc==2 || argc==3) && !strcmp(argv[1],"--schema")) {
         const unsigned char *schema=config_schema;
         if (argc==3 && !strcmp(argv[2],"job")) schema=job_schema;
+        else if (argc==3 && !strcmp(argv[2],"worker")) schema=worker_schema;
         else if (argc==3 && !strcmp(argv[2],"user")) schema=user_schema;
-        else if (argc==3 && strcmp(argv[2],"config")) {fputs("unknown schema; use config, user or job\n",stderr);return 2;}
+        else if (argc==3 && strcmp(argv[2],"config")) {fputs("unknown schema; use config, user, job or worker\n",stderr);return 2;}
         return fputs((const char *)schema,stdout)==EOF || fflush(stdout) ? 7 : 0;
     }
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
     if (argc == 2 && !strcmp(argv[1], "--version")) { puts("vasp-render " VR_VERSION); return 0; }
     if (argc == 2 && !strcmp(argv[1],"--build-info")) {
-        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
+        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
 #ifdef VR_HAVE_XML
                "true",
 #else
@@ -175,7 +179,14 @@ int main(int argc, char **argv)
         if (!ok) goto failure;
         config_free(&c);return 0;
     }
-    if (!c.validate_config && !c.inspect && !report_preflight(&c,&e)) goto failure;
+    if (!c.inspect && !c.validate_config) {
+        cJSON *result=job_render(&c,NULL,c.report!=NULL,VR_VERSION,elapsed_ms(begin,configured),&e);
+        if (!result) goto failure;
+        bool ok=!c.report || json_write(c.report,result,false,&e);cJSON_Delete(result);
+        if (!ok) goto failure;
+        config_free(&c);return 0;
+    }
+
     if (c.input && !parse_structure(&c, &s, &e)) goto failure;
     if (c.validate_config) {
         AtomStyle *styles=NULL;
@@ -187,8 +198,6 @@ int main(int argc, char **argv)
         bool ok=json_write("-",result,false,&e);cJSON_Delete(result);if (!ok) goto failure;
         structure_free(&s);config_free(&c);return 0;
     }
-    char input_hash[65]={0};PngOptions resolved_png=c.png;
-    if (c.report && !c.inspect && !sha256_file(c.input,input_hash,&e)) goto failure;
     clock_gettime(CLOCK_MONOTONIC, &parsed);
     if (s.recovered) fprintf(stderr, "%s: warning: recovered complete ionic frame %zu from unfinished OUTCAR\n", c.input, s.frame);
     built=rendered=written=parsed;
@@ -200,26 +209,10 @@ int main(int argc, char **argv)
         if (!(c.inspect_scene ? inspect_scene(&c,&scene,&camera) : inspect(&c,&s))) {
             fail(&e,7,"failed to write inspection JSON to stdout");goto failure;
         }
-    } else {
-        if (!render_image(&c,&scene,&camera,s.count*sizeof(Atom)+config_memory_bytes(&c),&image,&e)) goto failure;
-        clock_gettime(CLOCK_MONOTONIC,&rendered);
-        PngOptions png=png_resolve_options(c.output,c.png);resolved_png=png;
-        if (c.benchmark) {
-            if (png.encoder==ENCODER_CAIRO) fprintf(stderr,"png_encoder_internal=1\n");
-            else fprintf(stderr,"png_compression_resolved=%d\n",png.compression);
-        }
-        if (!png_write_options_atomic(c.output,&image,&png,
-            scene_memory_bytes(&scene)+s.count*sizeof(Atom)+config_memory_bytes(&c),&e)) goto failure;
-        clock_gettime(CLOCK_MONOTONIC,&written);
     }
     if (c.benchmark) {
         fprintf(stderr,"stages_ms: config=%.3f parse=%.3f scene=%.3f render=%.3f png=%.3f (excludes process startup and JSON output)\n",
                 elapsed_ms(begin,configured),elapsed_ms(configured,parsed),elapsed_ms(parsed,built),elapsed_ms(built,rendered),elapsed_ms(rendered,written));
-    }
-    if (c.report && !c.inspect) {
-        double stages[5]={elapsed_ms(begin,configured),elapsed_ms(configured,parsed),elapsed_ms(parsed,built),elapsed_ms(built,rendered),elapsed_ms(rendered,written)};
-        cJSON *report=render_report(&c,&s,&scene,&camera,&resolved_png,VR_VERSION,input_hash,stages,&e);
-        bool ok=report && json_write(c.report,report,false,&e);cJSON_Delete(report);if (!ok) goto failure;
     }
     image_free(&image);scene_free(&scene);structure_free(&s);config_free(&c); return 0;
 failure:

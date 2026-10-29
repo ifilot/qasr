@@ -6,7 +6,7 @@
 int main(void)
 {
     uint8_t pixels[4]={0,0,0,255};
-    Image image={1,1,pixels};Error e={0};
+    Image image={.width=1,.height=1,.pixels=pixels};Error e={0};
     for (int codec=ENCODER_LIBPNG;codec<=ENCODER_CAIRO;++codec) {
 #ifndef VR_HAVE_LIBDEFLATE
         if (codec==ENCODER_LIBDEFLATE) continue;

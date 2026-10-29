@@ -290,6 +290,7 @@ bool parse_xml(FILE *file, const Config *c, Structure *s, Error *e)
     xmlTextReaderSetParserProp(x->reader, XML_PARSER_VALIDATE, 0);
     int rc;
     while ((rc = xmlTextReaderRead(x->reader)) == 1) {
+        if (!check_cancel(e)) goto done;
         if (e->code) goto done;
         if (++x->nodes > XML_NODE_LIMIT) { problem(x, 6, "XML node/work limit exceeded"); goto done; }
         int depth = xmlTextReaderDepth(x->reader), type = xmlTextReaderNodeType(x->reader);

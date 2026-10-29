@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+_Atomic int vr_cancel_requested=0;
+bool check_cancel(Error *e) {return !atomic_load_explicit(&vr_cancel_requested,memory_order_relaxed) || fail_at(e,8,"cancelled",NULL,"request cancelled");}
+
 bool fail(Error *e, int code, const char *format, ...)
 {
     va_list args;
@@ -31,6 +34,7 @@ bool fail_at(Error *e, int code, const char *name, const char *path, const char 
 
 int read_line(Reader *r, Error *e)
 {
+    if (!check_cancel(e)) return -1;
     size_t n = 0;
     int c;
     while ((c = fgetc(r->file)) != EOF) {

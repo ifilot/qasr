@@ -59,6 +59,7 @@ bool sha256_file(const char *path, char hex[65], Error *e)
     FILE *f=fopen(path,"rb");if (!f) return fail_at(e,7,"hash_read_error",path,"cannot open %s for provenance hashing",path);
     Hash s=initial();uint8_t buffer[65536];size_t n;bool ok=true;
     while ((n=fread(buffer,1,sizeof buffer,f))>0) {
+        if (!check_cancel(e)) {ok=false;break;}
         if (s.bytes>VR_MAX_INPUT_BYTES-n) {ok=fail(e,6,"hash input byte limit exceeded");break;}update(&s,buffer,n);
     }
     if (ferror(f)) ok=fail(e,7,"failed reading provenance hash input");

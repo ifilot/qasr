@@ -64,6 +64,8 @@ typedef struct {
  * @param[out] e Error diagnostic on failure.
  * @return true on valid input; false on CLI/config failure.
  */
+struct cJSON *config_json_text(const char *text, Error *e);
+bool config_request(const struct cJSON *job, bool validation, Config *c, Error *e);
 bool config_parse(int argc, char **argv, Config *c, Error *e);
 /** Release metadata, request strings and rule indices; safe for a zero config. */
 void config_free(Config *c);

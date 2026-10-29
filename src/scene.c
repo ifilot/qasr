@@ -134,6 +134,7 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
     }
     for (int d = 0; d < 3; ++d) scene->supercell[d] = vmul(s->lattice[d],(double)c->repeat[d]);
     for (size_t i = 0; i < s->count; ++i) {
+        if (!check_cancel(e)) goto done;
         for (int d = 0; d < 3; ++d) {
             double f = dot(s->atoms[i].position,reciprocal[d]);
             if (!isfinite(f) || fabs(f) > 1e12) { fail(e,5,"fractional position exceeds precision limit"); goto done; }
@@ -163,6 +164,7 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
     size_t work = 0, expansion_work = 0;
     for (size_t i = 0; i < s->count; ++i) for (size_t j = i; j < s->count; ++j) {
         /* Account for pairs even when reciprocal bounds contain no integer image. */
+        if (!(work%4096) && !check_cancel(e)) goto done;
         if (++work > VR_MAX_CANDIDATES) { fail(e,6,"pair search work budget exceeded"); goto done; }
         double cutoff = bond_cutoff(c,s->atoms[i].element,s->atoms[j].element);
         if (!isfinite(cutoff) || cutoff > 1e6) { fail(e,5,"bond cutoff exceeds 1e6 angstroms"); goto done; }

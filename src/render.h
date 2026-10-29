@@ -2,7 +2,7 @@
 #ifndef VR_RENDER_H
 #define VR_RENDER_H
 #include "scene.h"
-typedef struct { size_t width, height; uint8_t *pixels; } Image;
+typedef struct { size_t width, height; uint8_t *pixels; size_t threads_used; } Image;
 /** @brief Rasterize opaque sphere/capped-cylinder surfaces with per-sample depth.
  * @param[in] c Validated rendering, sampling and threading configuration.
  * @param[in] s Complete immutable scene.

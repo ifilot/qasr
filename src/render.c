@@ -250,6 +250,14 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     if (c->adaptive_aa && !native_tiles) { free(depth);free(rgba);free(pixels);free(projected);free(visible);return false; }
     const size_t tile_columns=(c->width+AA_TILE-1)/AA_TILE;
     uint8_t background[4]; decode_color(c->background,background);
+#ifdef _OPENMP
+    int automatic=omp_get_max_threads();
+    if (automatic>omp_get_num_procs()) automatic=omp_get_num_procs();
+    if (automatic>8) automatic=8;
+    if (count<512u*512u) automatic=1;
+    int workers=c->threads ? (int)c->threads : automatic;
+#pragma omp parallel for schedule(static) num_threads(workers) if(workers>1 && samples>=1048576)
+#endif
     for (size_t i=0;i<samples;++i) { depth[i]=-DBL_MAX; memcpy(rgba+4*i,background,4); }
     const size_t width=c->width*factor, height=c->height*factor;
     Vec3 light=unit((Vec3){{-1,-1,2}});
@@ -258,6 +266,9 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
         double z=dot(s->items[i].a,camera->view);
         near=fmax(near,z); far=fmin(far,z);
     }
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static) num_threads(workers) if(workers>1 && s->count>=4096)
+#endif
     for (size_t i=0;i<s->count;++i) {
         const Primitive *p=&s->items[i];
         RasterPrimitive *rp=&projected[i];rp->primitive=p;
@@ -283,14 +294,10 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     const size_t raster_columns=(c->width+31)/32, raster_rows=(c->height+31)/32;
     size_t used_threads=1;
 #ifdef _OPENMP
-    int automatic=omp_get_max_threads();
-    if (automatic>omp_get_num_procs()) automatic=omp_get_num_procs();
-    if (automatic>8) automatic=8;
-    if (count<512u*512u) automatic=1;
-    int workers=c->threads ? (int)c->threads : automatic;
 #pragma omp parallel for schedule(dynamic,1) num_threads(workers) if(workers>1)
 #endif
     for (size_t tile=0;tile<raster_columns*raster_rows;++tile) {
+        if (atomic_load_explicit(&vr_cancel_requested,memory_order_relaxed)) continue;
 #ifdef _OPENMP
         if (tile==0) used_threads=(size_t)omp_get_num_threads();
 #endif
@@ -356,6 +363,9 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     }
     if (c->benchmark) fprintf(stderr,"render_threads=%zu raster_tiles=%zu\n",used_threads,raster_columns*raster_rows);
     /* Average premultiplied colors to avoid white/dark halos on alpha edges. */
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static) num_threads(workers) if(workers>1 && count>=262144)
+#endif
     for (size_t y=0;y<c->height;++y) for (size_t x=0;x<c->width;++x) {
         if (native_tiles && native_tiles[((c->height-1-y)/AA_TILE)*tile_columns+x/AA_TILE]) {
             memcpy(pixels+4*(y*c->width+x),rgba+4*((2*y+1)*width+2*x),4);
@@ -374,7 +384,7 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     if (c->labels) for (size_t i=0;i<s->count;++i)
         if (s->items[i].kind==SPHERE) visible[i]=label_anchor(projected,s->count,i,factor,c->height);
     free(projected);free(native_tiles);free(depth); free(rgba);
-    out->width=c->width; out->height=c->height; out->pixels=pixels;
+    out->width=c->width; out->height=c->height; out->pixels=pixels;out->threads_used=used_threads;
     bool ok=overlay_render(c,s,camera,visible,out,e);
     free(visible);
     if (!ok) image_free(out);

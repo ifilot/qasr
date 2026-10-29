@@ -3,7 +3,10 @@
 Status: **M9a–M9c implemented on master after v0.3.0**. The v0.3.0 tag
 remains the release boundary for M7/M8 and the original handbook. The design
 rationale below is retained; see [the implemented interface](configuration.md)
-for exact flags, limits, precedence and examples. M10 remains conditional.
+for exact flags, limits, precedence and examples. M10 implements the [persistent worker](batch-worker.md) and
+[synthetic workload comparisons](synthetic-workloads.md). M11 completes the measured
+OpenMP review; see [implementation/validation](m10-m11-validation.md).
+MCP/HTTP remain optional integration branches when a client requires them.
 
 ## Recommended decisions
 
@@ -257,3 +260,26 @@ Those are additional product requirements, not prerequisites for LLM use.
 
 All stages preserve the existing CLI for simple jobs. Do not make a new DSL,
 YAML dependency or server mandatory just to change one atom's appearance.
+
+## M11 — Review OpenMP opportunities and thread policy
+
+Requested and completed on 2026-10-29 after M10. The investigation and retained
+changes are documented in [the validation report](m10-m11-validation.md). The
+accepted scope and criteria were:
+
+- Profile representative synthetic and retained real workloads, separating
+  parsing, selector/style resolution, scene/bond construction, rendering and PNG
+  encoding. Identify substantial parallel work before changing implementation.
+- Compare serial execution, existing tile parallelism and candidate OpenMP
+  regions across small/large structures, image sizes and repeated-input jobs.
+- Sweep thread counts and scheduling/granularity choices. Measure latency,
+  throughput, CPU time, peak memory and run-to-run variability; assess affinity
+  and the interaction between concurrent batch workers and render threads.
+- Preserve deterministic output, resource limits, failure handling and the
+  OpenMP-disabled build. Check races and reductions/order dependence where
+  applicable. Account for setup/synchronization overhead and oversubscription.
+- Retain changes only when representative measurements justify them; document
+  unhelpful candidates and update automatic thread policy if evidence warrants it.
+
+The synthetic M10 workloads provide reproducible inputs for this investigation;
+real fixtures remain necessary to check that conclusions generalize.
