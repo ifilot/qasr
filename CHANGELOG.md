@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+- Separate physical cell vectors, per-axis PBC and source metadata; support
+  cell-free molecules, wires, slabs and nonperiodic display cells.
+- Add input-only reader options and shared validation, native XYZ/Extended XYZ,
+  Gaussian Cartesian input/orientation output, and AMS text System readers.
+  No ASE or additional runtime library dependency is introduced.
+- Respect PBC in wrapping, image bonds and clipping; draw only supplied cell
+  vectors and reject replication along nonperiodic axes.
+- Report cell/PBC metadata through inspection and render reports, extend CLI/job/
+  worker format selection and schemas, and add source-independent regression tests.
+- Document supported format subsets and unsupported Gaussian/AMS variants in
+  `docs/input-formats.md`. Existing VASP behavior remains covered by regressions.
+
 ## [0.4.0] - 2026-10-29
 
 Close M9–M11 and establish QASR: Quick Atomic Structure Renderer, executable

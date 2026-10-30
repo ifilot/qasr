@@ -19,9 +19,11 @@ static void print_vector(Vec3 v)
 static bool inspect(const Config *c, const Structure *s)
 {
     printf("{\"format\":\"%s\",\"frame\":%zu,\"frame_count\":%zu,\"recovered\":%s,\"atom_count\":%zu,\"lattice_A\":[",
-           s->format == FORMAT_POSCAR ? "poscar" : s->format == FORMAT_XML ? "xml" : "outcar", s->frame, s->frame_count, s->recovered ? "true" : "false", s->count);
+           format_name(s->source.format), s->source.frame, s->source.frame_count, s->source.recovered ? "true" : "false", s->count);
     for (size_t i = 0; i < 3; ++i) { if (i) putchar(','); print_vector(s->lattice[i]); }
-    printf("],\"atoms\":[");
+    printf("],\"cell_present\":[%s,%s,%s],\"pbc\":[%s,%s,%s],\"atoms\":[",
+           s->cell_present[0]?"true":"false",s->cell_present[1]?"true":"false",s->cell_present[2]?"true":"false",
+           s->pbc[0]?"true":"false",s->pbc[1]?"true":"false",s->pbc[2]?"true":"false");
     for (size_t i = 0; i < s->count; ++i) {
         if (i) putchar(',');
         printf("{\"index\":%zu,\"element\":\"%s\",\"position_A\":", i, element_symbol(s->atoms[i].element));
@@ -51,8 +53,9 @@ static void help(void)
          "Usage: qasr INPUT -o OUTPUT.png [options]\n"
          "  --inspect                   Normalized input JSON, without scene building\n"
          "  --inspect-scene             Wrapped instances, clipped bonds and camera JSON\n"
-         "  --format auto|poscar|contcar|outcar|xml\n"
-         "  --frame final|N             Zero-based ionic geometry index\n"
+         "  --format auto|poscar|contcar|outcar|xml|xyz|extxyz\n"
+         "           gaussian-input|gaussian-output|ams\n"
+         "  --frame final|N             Zero-based geometry frame index\n"
          "  --recover                   Accept unfinished OUTCAR with complete geometry\n"
          "  --species Si,O              Explicit ordered species for unlabeled input\n"
          "  --batch [--cache-mib N] [--max-jobs N]  Sequential JSONL worker\n"
@@ -100,7 +103,9 @@ static bool inspect_scene(const Config *c, const Scene *s, const Camera *camera)
         if (c->scale_bar) printf(",\"scale_bar\":{\"angstrom\":%.17g,\"pixels\":%.17g,\"label\":\"%s\",\"x\":12,\"y\":%zu}",
             camera->scale_bar_A,camera->scale_bar_pixels,camera->scale_bar_label,camera->height-20);
     }
-    printf("},\"primitives\":[");
+    printf("},\"cell_present\":[%s,%s,%s],\"pbc\":[%s,%s,%s],\"primitives\":[",
+           s->cell_present[0]?"true":"false",s->cell_present[1]?"true":"false",s->cell_present[2]?"true":"false",
+           s->pbc[0]?"true":"false",s->pbc[1]?"true":"false",s->pbc[2]?"true":"false");
     for (size_t i=0;i<s->count;++i) {
         const Primitive *p=&s->items[i];
         if (i) putchar(',');
@@ -143,7 +148,7 @@ int main(int argc, char **argv)
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
     if (argc == 2 && !strcmp(argv[1], "--version")) { puts("qasr " VR_VERSION); return 0; }
     if (argc == 2 && !strcmp(argv[1],"--build-info")) {
-        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
+        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"nonperiodic\":true,\"partial_pbc\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
 #ifdef VR_HAVE_XML
                "true",
 #else
@@ -200,7 +205,7 @@ int main(int argc, char **argv)
         structure_free(&s);config_free(&c);return 0;
     }
     clock_gettime(CLOCK_MONOTONIC, &parsed);
-    if (s.recovered) fprintf(stderr, "%s: warning: recovered complete ionic frame %zu from unfinished OUTCAR\n", c.input, s.frame);
+    if (s.source.recovered) fprintf(stderr, "%s: warning: recovered complete ionic frame %zu from unfinished OUTCAR\n", c.input, s.source.frame);
     built=rendered=written=parsed;
     if (!c.inspect || c.inspect_scene) {
         if (!scene_build(&c,&s,&scene,&e) || !camera_fit(&c,&scene,&camera,&e)) goto failure;

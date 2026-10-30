@@ -105,7 +105,7 @@ cJSON *config_dump_json(const Config *c)
     ok &= put(runtime,"output",c->output ? cJSON_CreateString(c->output) : cJSON_CreateNull());
     ok &= put(runtime,"report",c->report ? cJSON_CreateString(c->report) : cJSON_CreateNull());
     ok &= put(runtime,"frame",c->final_frame ? cJSON_CreateString("final") : cJSON_CreateNumber((double)c->frame));
-    ok &= put(runtime,"format",cJSON_CreateString(c->format==FORMAT_XML ? "xml" : c->format==FORMAT_OUTCAR ? "outcar" : c->format==FORMAT_POSCAR ? "poscar" : "auto"));
+    ok &= put(runtime,"format",cJSON_CreateString(format_name(c->format)));
     ok &= put(runtime,"threads",c->threads ? cJSON_CreateNumber((double)c->threads) : cJSON_CreateString("auto"));
     ok &= put(runtime,"recover",cJSON_CreateBool(c->recover));
     ok &= put(user,"path",c->user_path ? cJSON_CreateString(c->user_path) : cJSON_CreateNull());

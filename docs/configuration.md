@@ -171,3 +171,11 @@ See [M9 validation evidence](m9-validation.md) for correctness and performance c
 A network server is not required. Optional M10 batch/stdio caching or an MCP
 adapter remains conditional on a repeated-input/integration workflow and measured
 benefit. This iteration adds no service dependency.
+
+## Development input formats
+
+Builds with `nonperiodic: true` also accept job `format` values `xyz`, `extxyz`,
+`gaussian-input`, `gaussian-output`, `ams` and aliases `gjf`/`com`. The CLI and
+worker use the same input layer. Inspection and report `input` include
+`cell_present`, `pbc` and `lattice_A`; a cell does not imply periodicity.
+See [format subsets and geometry rules](input-formats.md).
