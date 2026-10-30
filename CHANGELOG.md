@@ -12,6 +12,22 @@
 - Expose both styles through CLI, layered configuration, jobs and batch requests;
   update embedded/served schemas, presets, handbook examples and render tests.
 - Explicitly reject the new styles with the experimental Cairo painter.
+- Separate physical cell vectors, per-axis PBC and source metadata; support
+  cell-free molecules, wires, slabs and nonperiodic display cells.
+- Add input-only reader options and shared validation, native XYZ/Extended XYZ,
+  Gaussian Cartesian input/orientation output, and AMS text System readers.
+  No ASE or additional runtime library dependency is introduced.
+- Respect PBC in wrapping, image bonds and clipping; draw only supplied cell
+  vectors and reject replication along nonperiodic axes.
+- Report cell/PBC metadata through inspection and render reports, extend CLI/job/
+  worker format selection and schemas, and add source-independent regression tests.
+- Document supported format subsets and unsupported Gaussian/AMS variants in
+  `docs/input-formats.md`. Existing VASP behavior remains covered by regressions.
+- Add independently optional system libjpeg and libwebp output via
+  `ENABLE_JPEG` and `ENABLE_WEBP`. Output suffixes select JPEG (quality 90,
+  opaque only) or lossless RGBA WebP across CLI, job and worker renders.
+- Report image format and codec capabilities; preserve atomic output and
+  validate codec dimensions and memory allowances.
 
 ## [0.4.0] - 2026-10-29
 

@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="QASR: Quick Atomic Structure Renderer. The user handbook: install, understand VASP input formats, render PNGs, expand periodic cells, configure styles and reproduce real examples.">
+  <meta name="description" content="QASR: Quick Atomic Structure Renderer. The user handbook: install, understand atomic input formats, render PNGs, expand periodic cells, configure styles and reproduce real examples.">
   <meta name="theme-color" content="#173c38">
   <title>QASR — User handbook</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -73,12 +73,13 @@ cmake --build build-minimal --parallel</code></pre><p>This still needs a C11 com
     <p class="small">The XML network-denial test uses a localhost HTTP sentinel. Restricted test environments must allow local socket binding. LeakSanitizer also needs process inspection outside ptrace-restricted sandboxes.</p>
   </section>
 
-  <section id="input-formats" class="doc-section searchable" data-title="Input formats: POSCAR CONTCAR OUTCAR vasprun.xml frames species units">
+  <section id="input-formats" class="doc-section searchable" data-title="Input formats: POSCAR CONTCAR OUTCAR vasprun.xml XYZ Extended XYZ Gaussian AMS molecules PBC frames species units">
     <div class="section-heading"><p class="eyebrow">03 / INPUT</p><h2>Understand your input</h2><p>One input file, one selected geometry. The renderer reads geometry only; it does not run a VASP calculation or assess convergence.</p></div>
     <div class="table-wrap"><table><caption>Accepted input formats</caption><thead><tr><th>Input</th><th>Geometry selection</th><th>Important rules</th></tr></thead><tbody>
       <tr><td><a href="#poscar"><b>POSCAR / CONTCAR</b></a></td><td><code>final</code> or <code>0</code></td><td>One shared parser. Direct/Cartesian coordinates, scaling and selective-dynamics flags.</td></tr><tr><td><a href="#outcar"><b>OUTCAR</b></a></td><td><code>final</code> or zero-based <code>N</code></td><td>Complete ionic POSITION snapshots with their applicable lattice. Recovery is opt-in.</td></tr><tr><td><a href="#xml"><b>vasprun.xml</b></a><span class="badge">v0.3.0</span></td><td><code>final</code> or zero-based <code>N</code></td><td>Optional libxml2 support; complete documents only. Final-position semantics are described below.</td></tr>
     </tbody></table></div>
-    <p>Auto detection uses content, not the extension. Override it with <code>--format poscar|contcar|outcar|xml</code>. All files must be uncompressed and are passed as local paths. Decompress an archive first:</p><pre><code>gzip -dc OUTCAR.gz &gt; OUTCAR
+    <div class="callout"><strong>Development input expansion (after v0.4.0)</strong><p>Builds reporting <code>nonperiodic: true</code> in <code>--build-info</code> accept cell-free molecules, explicit per-axis periodicity, XYZ/Extended XYZ, Gaussian Cartesian input (<code>gaussian-input</code>) and orientation output (<code>gaussian-output</code>), and AMS text System input (<code>ams</code>). No ASE dependency is required. The v0.4.0 source download below retains its original VASP-only readers.</p><p>XYZ defaults to nonperiodic geometry. Extended XYZ supports <code>Properties</code>, <code>Lattice</code> and explicit <code>pbc="T T F"</code>. Gaussian input supports Å/Bohr units and optional TV vectors; Z-matrices, ONIOM and checkpoint files are unsupported. Gaussian output uses one orientation-table family. AMS supports one unnamed System, Atoms/Lattice in Å or Bohr, and FractionalCoords; AMS/ADF output and RKF files are unsupported. Full supported subsets are documented in the repository's <code>docs/input-formats.md</code>.</p><p><code>--inspect</code> and reports expose <code>cell_present</code> and <code>pbc</code>. Only periodic axes wrap or generate image bonds. Replication requires periodic axes; <code>--view top</code> requires independent a/b cell vectors. Cell-free structures use the default oblique view or an explicit direction.</p></div>
+    <p>Auto detection uses content, not the extension. Override it with <code>--format poscar|contcar|outcar|xml|xyz|extxyz|gaussian-input|gaussian-output|ams</code>. All files must be uncompressed and are passed as local paths. Decompress an archive first:</p><pre><code>gzip -dc OUTCAR.gz &gt; OUTCAR
 build-release/qasr OUTCAR -o final.png
 
 # Paths containing spaces must be quoted.

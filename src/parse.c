@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 static char *trim(char *s)
 {
@@ -53,7 +54,7 @@ static bool allocate_atoms(Structure *s, size_t count, const unsigned *species, 
     return true;
 }
 
-static bool parse_poscar(Reader *r, const Config *c, Structure *s, Error *e)
+static bool parse_poscar(Reader *r, const InputOptions *c, Structure *s, Error *e)
 {
     if (!required(r, e) || !required(r, e)) return false; /* title, scale */
     double scale[3] = {0};
@@ -136,7 +137,7 @@ static bool parse_poscar(Reader *r, const Config *c, Structure *s, Error *e)
     if (rc < 0) return false;
     if (!c->final_frame && c->frame != 0) return fail(e, 4, "%s: POSCAR has only frame 0", r->path);
     if (c->recover) return fail(e, 2, "--recover is only meaningful for OUTCAR");
-    s->format = FORMAT_POSCAR; s->frame_count = 1;
+    s->source.format = FORMAT_POSCAR; s->source.frame_count = 1;
     return true;
 }
 
@@ -197,7 +198,7 @@ static bool partial_row(Reader *r, const char *original)
     return true;
 }
 
-static bool parse_outcar(Reader *r, const Config *c, Structure *s, Error *e)
+static bool parse_outcar(Reader *r, const InputOptions *c, Structure *s, Error *e)
 {
     SpeciesMetadata titel = {0}, vrhfin = {0}, potcar = {0};
     size_t counts[VR_MAX_SPECIES] = {0}, ns = 0, total = 0, nions = 0;
@@ -317,7 +318,7 @@ static bool parse_outcar(Reader *r, const Config *c, Structure *s, Error *e)
                 if (!s->atoms && !allocate_atoms(s, total, species, counts, ns, e)) goto done;
                 memcpy(s->atoms, candidate.atoms, total * sizeof *s->atoms);
                 memcpy(s->lattice, candidate.lattice, sizeof s->lattice);
-                s->frame = frames;
+                s->source.frame = frames;
             }
             ++frames;
         }
@@ -328,10 +329,10 @@ end_of_stream:
     if (!s->atoms) { fail(e, 4, "%s: requested ionic frame not found (%zu complete frames)", r->path, frames); goto done; }
     if (!completed || incomplete) {
         if (!c->recover) { fail(e, 4, "%s: unfinished OUTCAR; %zu complete ionic frames; use --recover to accept a complete snapshot", r->path, frames); goto done; }
-        s->recovered = true;
+        s->source.recovered = true;
         e->code = 0; e->message[0] = '\0';
     }
-    s->frame_count = frames; s->format = FORMAT_OUTCAR;
+    s->source.frame_count = frames; s->source.format = FORMAT_OUTCAR;
     ok = true;
 done:
     structure_free(&candidate);
@@ -349,6 +350,26 @@ static bool detect_format(Reader *r, Format *format, Error *e)
     while (at < nread && isspace(prefix[at])) ++at;
     bool xml = at < nread && prefix[at] == '<';
     if (fseek(r->file, 0, SEEK_SET)) return fail(e, 7, "%s: input must be seekable for auto detection; use --format", r->path);
+    Format extra=FORMAT_AUTO;
+    bool ams_system=false;
+    for (size_t i=0;i<64;++i) {
+        int rc=read_line(r,e);
+        if (rc<0) return false;
+        if (!rc) break;
+        char *line=trim(r->text);
+        size_t atoms;
+        if (i==0 && integer(line,VR_MAX_ATOMS,&atoms) && atoms) { extra=FORMAT_XYZ; break; }
+        if (*line=='#' && extra==FORMAT_AUTO) extra=FORMAT_GAUSSIAN_INPUT;
+        if (strstr(line,"Entering Gaussian") || strstr(line,"Gaussian, Inc.") ||
+            strstr(line,"Standard orientation:") || strstr(line,"Input orientation:")) {
+            extra=FORMAT_GAUSSIAN_OUTPUT; break;
+        }
+        if (!strncasecmp(line,"System",6) && (!line[6] || isspace((unsigned char)line[6]))) ams_system=true;
+        if (ams_system && ((!strncasecmp(line,"Atoms",5) && (!line[5] || isspace((unsigned char)line[5]))) ||
+            (!strncasecmp(line,"Lattice",7) && (!line[7] || isspace((unsigned char)line[7]))))) { extra=FORMAT_AMS; break; }
+    }
+    if (fseek(r->file,0,SEEK_SET)) return fail(e,7,"input must be seekable for detection; use --format");
+    r->line=0; r->bytes=0;
     bool poscar = true, outcar = false;
     for (size_t i = 0; i < 64; ++i) {
         int rc = read_line(r, e);
@@ -372,13 +393,14 @@ static bool detect_format(Reader *r, Format *format, Error *e)
     if (poscar) *format = FORMAT_POSCAR;
     else if (outcar) *format = FORMAT_OUTCAR;
     else if (xml) *format = FORMAT_XML;
-    else return fail(e, 3, "%s: unrecognized format; use --format poscar|contcar|outcar|xml for headerless inputs", r->path);
+    else if (extra!=FORMAT_AUTO) *format=extra;
+    else return fail(e, 3, "%s: unrecognized format; use --format for headerless inputs", r->path);
     if (fseek(r->file, 0, SEEK_SET)) return fail(e, 7, "%s: input must be seekable for auto detection; use --format", r->path);
     r->line = 0; r->bytes = 0;
     return true;
 }
 
-bool parse_structure(const Config *c, Structure *s, Error *e)
+bool input_read(const InputOptions *c, Structure *s, Error *e)
 {
     Reader r = {0}; r.path = c->input;
     r.file = fopen(r.path, "rb");
@@ -391,15 +413,43 @@ bool parse_structure(const Config *c, Structure *s, Error *e)
 #else
         ok = fail(e, 3, "%s: XML input requires a build with ENABLE_XML=ON", r.path);
 #endif
-    } else if (ok) ok = format == FORMAT_POSCAR ? parse_poscar(&r, c, s, e) : parse_outcar(&r, c, s, e);
-    if (fclose(r.file) && ok) ok = fail(e, 7, "%s: failed to close input", r.path);
-    if (ok) {
-        size_t count = s->count;
-        for (size_t i = 0; i < 3; ++i) {
-            if (count > VR_MAX_INSTANCES / c->repeat[i]) { ok = fail(e, 6, "repeated structure exceeds %u instances", VR_MAX_INSTANCES); break; }
-            count *= c->repeat[i];
-        }
+    } else if (ok) {
+        typedef bool (*ReadFn)(Reader *, const InputOptions *, Structure *, Error *);
+        static const struct { Format format; ReadFn read; } readers[] = {
+            {FORMAT_POSCAR,parse_poscar}, {FORMAT_OUTCAR,parse_outcar},
+            {FORMAT_XYZ,read_xyz}, {FORMAT_EXTXYZ,read_xyz},
+            {FORMAT_GAUSSIAN_INPUT,read_gaussian_input},
+            {FORMAT_GAUSSIAN_OUTPUT,read_gaussian_output}, {FORMAT_AMS,read_ams}
+        };
+        ok=false;
+        InputOptions resolved=*c; resolved.format=format;
+        for (size_t i=0;i<sizeof readers/sizeof *readers;++i)
+            if (readers[i].format==format) { ok=readers[i].read(&r,&resolved,s,e); break; }
+        if (!ok && !e->code) fail(e,3,"unsupported input format");
     }
+    if (fclose(r.file) && ok) ok = fail(e, 7, "%s: failed to close input", r.path);
+    if (ok && (format==FORMAT_POSCAR || format==FORMAT_OUTCAR || format==FORMAT_XML))
+        for (int d=0;d<3;++d) s->cell_present[d]=s->pbc[d]=true;
+    if (ok) ok=structure_validate(s,e);
     if (!ok) structure_free(s);
     return ok;
+}
+
+/* Invocation-level limits belong outside the format readers. */
+bool parse_structure(const Config *c, Structure *s, Error *e)
+{
+    InputOptions input={.input=c->input,.format=c->format,.final_frame=c->final_frame,
+        .recover=c->recover,.frame=c->frame,.species_count=c->species_count,.species=c->species};
+    if (!input_read(&input,s,e)) return false;
+    size_t count=s->count;
+    for (int d=0;d<3;++d) {
+        if (!s->pbc[d] && (c->repeat[d]!=1 || (d<2 && c->expand_xy[d]))) {
+            structure_free(s); return fail(e,2,"replication requires periodic direction %d",d);
+        }
+        if (count>VR_MAX_INSTANCES/c->repeat[d]) {
+            structure_free(s); return fail(e,6,"repeated structure exceeds %u instances",VR_MAX_INSTANCES);
+        }
+        count*=c->repeat[d];
+    }
+    return true;
 }

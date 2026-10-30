@@ -564,12 +564,7 @@ static bool job_runtime(Config *c, const char *path, Error *e)
                 else c->no_user_config=c->no_user_config || cJSON_IsTrue(j);
             }
         } else if (!strcmp(k,"format") && cJSON_IsString(j)) {
-            ok=true;const char *v=j->valuestring;
-            if (!strcmp(v,"auto")) c->format=FORMAT_AUTO;
-            else if (!strcmp(v,"poscar") || !strcmp(v,"contcar")) c->format=FORMAT_POSCAR;
-            else if (!strcmp(v,"outcar")) c->format=FORMAT_OUTCAR;
-            else if (!strcmp(v,"xml")) c->format=FORMAT_XML;
-            else ok=false;
+            ok=format_parse(j->valuestring,&c->format);
         }
         if (!ok) return fail_at(e,2,"invalid_job",k,"job.%s: unknown key or invalid value",k);
         if (strcmp(k,"config")) {char field[128];snprintf(field,sizeof field,"runtime.%s",k);if (!mark(c,field,"job",path,e)) return false;}
@@ -727,12 +722,7 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
             ok = c->final_frame || integer(v, VR_MAX_FRAMES - 1, &c->frame);
         } else if (!strcmp(k, "--threads")) {if (!strcmp(v,"auto")) {c->threads=0;ok=true;} else ok=integer(v,256,&c->threads) && c->threads;}
         else if (!strcmp(k, "--format")) {
-            ok = true;
-            if (!strcmp(v, "auto")) c->format = FORMAT_AUTO;
-            else if (!strcmp(v, "poscar") || !strcmp(v, "contcar")) c->format = FORMAT_POSCAR;
-            else if (!strcmp(v, "outcar")) c->format = FORMAT_OUTCAR;
-            else if (!strcmp(v, "xml")) c->format = FORMAT_XML;
-            else ok = false;
+            ok = format_parse(v,&c->format);
         }
         if (!ok) return fail_at(e, 2,"invalid_option",k, "unknown option or invalid value: %s %s", k, v);
         const char *field=cli_path(k);if (field && !mark(c,field,"cli",NULL,e)) return false;

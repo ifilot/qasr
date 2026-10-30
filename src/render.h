@@ -33,4 +33,12 @@ bool png_write_options_atomic(const char *path, const Image *image, const PngOpt
                               size_t retained_bytes, Error *e);
 /** Resolve automatic PNG settings for the destination filesystem. */
 PngOptions png_resolve_options(const char *path, PngOptions options);
+/** Case insensitive .jpg/.jpeg and .webp suffixes select optional codecs;
+ * other paths retain legacy PNG behavior. */
+const char *image_format_name(const char *path);
+bool image_output_validate(const char *path, Error *e);
+/** Atomic selected-format output; PNG options affect PNG only.
+ * JPEG quality 90, 4:4:4, opaque pixels required; WebP preserves RGBA losslessly. */
+bool image_write_atomic(const char *path, const Image *image, const PngOptions *png,
+                        size_t retained_bytes, Error *e);
 #endif

@@ -2,6 +2,7 @@
 #define _POSIX_C_SOURCE 200809L
 #define _XOPEN_SOURCE 700
 #include "automation.h"
+#include "render.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,7 +77,7 @@ bool report_preflight(const Config *c, Error *e)
 {
     if (!c->report || !strcmp(c->report,"-")) return true;
     if (same_target(c->report,c->input) || same_target(c->report,c->output))
-        return fail_at(e,2,"report_path_conflict","runtime.report","report path must differ from input and PNG output");
+        return fail_at(e,2,"report_path_conflict","runtime.report","report path must differ from input and image output");
     struct stat target;
     if (!stat(c->report,&target) && S_ISDIR(target.st_mode))
         return fail_at(e,7,"report_write_error","runtime.report","report target is a directory");
@@ -113,9 +114,16 @@ cJSON *render_report(const Config *c, const Structure *s, const Scene *scene, co
     }
     cJSON_AddBoolToObject(root,"ok",1);cJSON_AddNumberToObject(root,"schema_version",1);cJSON_AddStringToObject(root,"version",version);
     cJSON_AddStringToObject(input,"path",c->input);cJSON_AddStringToObject(input,"sha256",input_hash);
-    cJSON_AddStringToObject(input,"format",s->format==FORMAT_XML ? "xml" : s->format==FORMAT_OUTCAR ? "outcar" : "poscar");
-    cJSON_AddNumberToObject(input,"frame",(double)s->frame);cJSON_AddNumberToObject(input,"frame_count",(double)s->frame_count);
-    cJSON_AddBoolToObject(input,"recovered",s->recovered);cJSON_AddNumberToObject(input,"atoms",(double)s->count);
+    cJSON_AddStringToObject(input,"format",format_name(s->source.format));
+    cJSON_AddNumberToObject(input,"frame",(double)s->source.frame);cJSON_AddNumberToObject(input,"frame_count",(double)s->source.frame_count);
+    cJSON *pbc=cJSON_AddArrayToObject(input,"pbc"), *present=cJSON_AddArrayToObject(input,"cell_present"), *cell=cJSON_AddArrayToObject(input,"lattice_A");
+    for (int d=0;d<3;++d) {
+        cJSON_AddItemToArray(pbc,cJSON_CreateBool(s->pbc[d]));
+        cJSON_AddItemToArray(present,cJSON_CreateBool(s->cell_present[d]));
+        cJSON_AddItemToArray(cell,cJSON_CreateDoubleArray(s->lattice[d].x,3));
+    }
+    cJSON_AddBoolToObject(input,"recovered",s->source.recovered);cJSON_AddNumberToObject(input,"atoms",(double)s->count);
+    cJSON_AddStringToObject(output,"format",image_format_name(c->output));
     cJSON_AddStringToObject(output,"path",c->output);cJSON_AddStringToObject(output,"sha256",output_hash);
     cJSON_AddNumberToObject(output,"width",(double)camera->width);cJSON_AddNumberToObject(output,"height",(double)camera->height);
     struct stat info;if (!stat(c->output,&info)) cJSON_AddNumberToObject(output,"bytes",(double)info.st_size);
@@ -127,7 +135,12 @@ cJSON *render_report(const Config *c, const Structure *s, const Scene *scene, co
     cJSON_AddNumberToObject(options,"threads_requested",(double)c->threads);
     cJSON *resolved=cJSON_GetObjectItemCaseSensitive(options,"image");
     cJSON_ReplaceItemInObjectCaseSensitive(resolved,"png_compression",cJSON_CreateNumber(png->compression));
-    const char *names[]={"config","parse","scene","render","png"};
+    if (strcmp(image_format_name(c->output),"png")) {
+        cJSON_DeleteItemFromObjectCaseSensitive(resolved,"png_encoder");
+        cJSON_DeleteItemFromObjectCaseSensitive(resolved,"png_filter");
+        cJSON_DeleteItemFromObjectCaseSensitive(resolved,"png_compression");
+    }
+    const char *names[]={"config","parse","scene","render",!strcmp(image_format_name(c->output),"png") ? "png" : "encode"};
     for (size_t i=0;i<5;++i) cJSON_AddNumberToObject(times,names[i],stages[i]);
     cJSON_AddItemToObject(root,"input",input);cJSON_AddItemToObject(root,"output",output);cJSON_AddItemToObject(root,"counts",counts);
     cJSON_AddItemToObject(root,"settings",options);cJSON_AddItemToObject(root,"stages_ms",times);
