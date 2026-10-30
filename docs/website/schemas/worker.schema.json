@@ -115,7 +115,9 @@
                   "type": "string",
                   "enum": [
                     "shaded",
-                    "illustrated"
+                    "illustrated",
+                    "ortep",
+                    "balsac"
                   ]
                 },
                 "aa": {
@@ -831,3 +833,4 @@
     }
   ]
 }
+

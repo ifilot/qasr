@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased] - v0.5.0
+
+- Add `ortep` spherical drawing with visible great-circle arcs, white atoms and
+  black bonds, and `balsac` drawing with smooth highlights, element colors,
+  pale bonds and black contours. Both use accurate depth-buffer visibility.
+- Expose both styles through CLI, layered configuration, jobs and batch requests;
+  update embedded/served schemas, presets, handbook examples and render tests.
+- Explicitly reject the new styles with the experimental Cairo painter.
+
 ## [0.4.0] - 2026-10-29
 
 Close M9–M11 and establish QASR: Quick Atomic Structure Renderer, executable

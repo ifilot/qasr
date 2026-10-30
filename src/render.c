@@ -78,6 +78,24 @@ static bool cylinder_outline(const Cylinder *cylinder, double x, double y, doubl
 
 #define AA_TILE 4u
 
+/* Principal sections of a sphere are three world-axis great circles. Use only
+ * the front surface normal, so back arcs are never drawn. The plane residual
+ * divided by its projected gradient approximates distance in screen pixels;
+ * unlike an angular band, this keeps the line thin through foreshortening. */
+static bool sphere_sections(Vec3 normal, double radius, const Vec3 axes[3], double width)
+{
+    if (width<=0) return false;
+    for (size_t k=0;k<3;++k) {
+        Vec3 axis=axes[k];
+        double gx=axis.x[0]*normal.x[2]-axis.x[2]*normal.x[0];
+        double gy=axis.x[1]*normal.x[2]-axis.x[2]*normal.x[1];
+        double gradient=hypot(gx,gy);
+        if (gradient>1e-12 && fabs(dot(axis,normal))*radius*normal.x[2]<=0.5*width*gradient)
+            return true;
+    }
+    return false;
+}
+
 /* A circle intersects the closed tile rectangle's interior/exterior boundary.
  * This conservative interval test includes small circles missed by a center ray. */
 static bool circle_crosses(double x, double y, double r, double x0, double y0, double x1, double y1)
@@ -138,6 +156,9 @@ static uint8_t *adaptive_tiles(const Config *c, const Scene *s, const Camera *ca
         if (owner[k]>=s->count) continue;
         const Primitive *p=&s->items[owner[k]];
         if (p->kind!=SPHERE) continue;
+        /* Fine arcs and smooth highlights need all supersamples. Adaptive mode
+         * conservatively falls back to ordinary 2x sampling for these styles. */
+        if (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC) continue;
         Vec3 a=camera_project(camera,p->a);
         double r=p->radius*camera->scale;
         double x0=(double)(x*AA_TILE), x1=fmin((double)c->width,x0+AA_TILE);
@@ -217,6 +238,8 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     if (c->threads>1) return fail(e,3,"multiple threads require ENABLE_OPENMP");
 #endif
     if (c->backend==BACKEND_CAIRO) {
+        if (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC)
+            return fail(e,3,"ortep and balsac styles require the accurate Z-buffer backend");
         if (c->axes || c->legend || c->scale_bar || c->labels)
             return fail(e,3,"annotations require the accurate Z-buffer backend");
         if (c->threads>1) return fail(e,3,"the experimental Cairo painter supports one thread");
@@ -261,6 +284,10 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     for (size_t i=0;i<samples;++i) { depth[i]=-DBL_MAX; memcpy(rgba+4*i,background,4); }
     const size_t width=c->width*factor, height=c->height*factor;
     Vec3 light=unit((Vec3){{-1,-1,2}});
+    Vec3 balsac_light=unit((Vec3){{1,1,2}});
+    Vec3 section_axes[3];
+    for (size_t k=0;k<3;++k)
+        section_axes[k]=(Vec3){{camera->right.x[k],camera->up.x[k],camera->view.x[k]}};
     double near=-DBL_MAX, far=DBL_MAX;
     for (size_t i=0;i<s->count;++i) if (s->items[i].kind==SPHERE) {
         double z=dot(s->items[i].a,camera->view);
@@ -349,6 +376,25 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
                     } else if (p->kind==CYLINDER) {
                         shade=0.64;
                         ink=c->outline_width>0 && cylinder_outline(cylinder,sx,sy,scale*c->outline_width);
+                    }
+                }
+                if (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC) {
+                    if (p->kind==SPHERE) {
+                        double inner=fmax(0,1-scale*c->outline_width/r);
+                        ink=c->outline_width>0 && normal.x[0]*normal.x[0]+normal.x[1]*normal.x[1]>=inner*inner;
+                        if (c->style==STYLE_ORTEP) {
+                            shade=0;white=1;
+                            ink=ink || sphere_sections(normal,r,section_axes,scale*c->outline_width);
+                        } else {
+                            /* Broad white highlight over smoothly lit element color. */
+                            double diffuse=fmax(0,dot(normal,balsac_light));
+                            double highlight=pow(diffuse,5)*0.75;
+                            shade=(0.78+0.22*diffuse)*(1-highlight);white=highlight;
+                        }
+                    } else if (p->kind==CYLINDER) {
+                        ink=c->outline_width>0 && cylinder_outline(cylinder,sx,sy,scale*c->outline_width);
+                        if (c->style==STYLE_ORTEP) {shade=0;white=0;}
+                        else {shade=0.45;white=0.55;}
                     }
                 }
                 shade*=1-fade; white=white*(1-fade)+fade;

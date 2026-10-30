@@ -134,6 +134,8 @@ static bool style(const char *s, RenderStyle *v)
 {
     if (!strcmp(s,"shaded")) *v=STYLE_SHADED;
     else if (!strcmp(s,"illustrated")) *v=STYLE_ILLUSTRATED;
+    else if (!strcmp(s,"ortep")) *v=STYLE_ORTEP;
+    else if (!strcmp(s,"balsac")) *v=STYLE_BALSAC;
     else return false;
     return true;
 }
@@ -566,6 +568,8 @@ static bool job_runtime(Config *c, const char *path, Error *e)
 
 static bool validate(Config *c, Error *e)
 {
+    if (c->backend==BACKEND_CAIRO && (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC))
+        return fail_at(e,3,"unsupported_backend","image.backend","ortep and balsac styles require the accurate Z-buffer backend");
     memcpy(c->requested_repeat,c->repeat,sizeof c->repeat);
     bool expanded = c->expand_xy[0] || c->expand_xy[1];
     if (expanded) {
