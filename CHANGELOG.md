@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add independently optional system libjpeg and libwebp output via
+  `ENABLE_JPEG` and `ENABLE_WEBP`. Output suffixes select JPEG (quality 90,
+  opaque only) or lossless RGBA WebP across CLI, job and worker renders.
+- Report image format and codec capabilities; preserve atomic output and
+  validate codec dimensions and memory allowances.
+
 ## [0.4.0] - 2026-10-29
 
 Close M9–M11 and establish QASR: Quick Atomic Structure Renderer, executable

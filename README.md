@@ -3,7 +3,7 @@
 Version **0.4.0**, licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
 [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
-Headless C11 VASP geometry-to-PNG renderer. The current implementation builds on the
+Headless C11 VASP geometry-to-image renderer. The current implementation builds on the
 v0.1.0 reference checkpoint with validated input,
 periodic ball-and-stick geometry, and an orthographic software depth-buffer
 renderer with shaded spheres/capped cylinders and a PNG output path.
@@ -44,6 +44,25 @@ Build without test/Python requirements with `-DBUILD_TESTING=OFF`.
 For a libpng-only, single-thread build, use
 `-DENABLE_LIBDEFLATE=OFF -DENABLE_OPENMP=OFF`. `--build-info` reports compiled
 capabilities. Cairo is an optional experiment and is disabled by default.
+
+JPEG and WebP are independent opt-in features using distribution libraries.
+They encode the common RGBA image from either the default Z-buffer renderer or
+the optional Cairo 2 backend (`-DENABLE_CAIRO_EXPERIMENTS=ON`, `--backend cairo`);
+Cairo remains responsible for drawing, while libjpeg/libwebp handle file encoding:
+
+```sh
+# Debian/Ubuntu (in addition to the base build requirements):
+sudo apt install libjpeg-dev libwebp-dev
+# Fedora: sudo dnf install libjpeg-turbo-devel libwebp-devel
+cmake -S . -B build-images -DENABLE_JPEG=ON -DENABLE_WEBP=ON
+cmake --build build-images
+ctest --test-dir build-images --output-on-failure
+```
+
+Both options default to `OFF`; enabling one requires its development package
+at configure time. JPEG uses the standard libjpeg API (including libjpeg-turbo);
+WebP uses libwebp via pkg-config. No codecs are downloaded or vendored.
+`--build-info` exposes independent `jpeg` and `webp` capability booleans.
 
 For an optimized build and installation:
 
@@ -103,6 +122,34 @@ and repeated sphere instances, periodic bonds clipped to the supercell,
 cell edges, effective colors/radii, and fitted camera. Output goes to stdout;
 diagnostics and optional `--benchmark-stages` timings go to stderr. Stage
 timings exclude process startup and inspection output.
+
+## Image formats
+
+The output filename selects the format, case insensitively: `.jpg`/`.jpeg` use
+JPEG, `.webp` uses WebP, and `.png` uses PNG. Other suffixes and extensionless
+paths keep the existing PNG behavior. The same selection applies to `--job`
+and `--batch` output paths; no configuration schema changes are needed.
+Requesting a codec omitted from the build fails with exit code 3 before rendering.
+
+```sh
+build-images/qasr POSCAR -o structure.jpg --background '#ffffff'
+build-images/qasr POSCAR -o structure.webp --background '#ffffff00'
+```
+
+JPEG uses quality 90 and 4:4:4 sampling. It cannot store alpha: any nonopaque
+rendered pixel causes exit code 2 with the destination preserved. Choose an
+opaque background for JPEG. WebP is lossless and preserves straight RGBA,
+including RGB values under fully transparent pixels. PNG tuning options apply
+only to PNG encoding. All formats use a temporary file in the output directory
+and replace the destination only after successful encoding, close and cancellation
+checks. Failed writes remove their temporary files.
+
+The existing 16384-per-axis / 67108864-pixel limits still apply. WebP additionally
+limits each dimension to 16383 and uses a conservative codec workspace allowance
+(128 bytes per pixel plus 64 MiB, including the image) within the 1 GiB budget;
+large renders may therefore require PNG or JPEG. Reports include `output.format`;
+JPEG/WebP reports use `stages_ms.encode` and omit PNG tuning fields from resolved
+image settings. PNG retains `stages_ms.png`.
 
 ## Render PNG
 

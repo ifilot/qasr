@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: GPL-3.0-only
+name: Image libraries
+on:
+  pull_request:
+  push:
+    branches: [master, image-libs]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - jpeg: 'OFF'
+            webp: 'OFF'
+            cairo: 'OFF'
+          - jpeg: 'ON'
+            webp: 'OFF'
+            cairo: 'OFF'
+          - jpeg: 'OFF'
+            webp: 'ON'
+            cairo: 'OFF'
+          - jpeg: 'ON'
+            webp: 'ON'
+            cairo: 'ON'
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install base dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake pkg-config libpng-dev libdeflate-dev libxml2-dev
+      - name: Install JPEG
+        if: matrix.jpeg == 'ON'
+        run: sudo apt-get install -y libjpeg-dev
+      - name: Install WebP
+        if: matrix.webp == 'ON'
+        run: sudo apt-get install -y libwebp-dev
+      - name: Install Cairo
+        if: matrix.cairo == 'ON'
+        run: sudo apt-get install -y libcairo2-dev
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_JPEG=${{ matrix.jpeg }} -DENABLE_WEBP=${{ matrix.webp }} -DENABLE_CAIRO_EXPERIMENTS=${{ matrix.cairo }}
+      - name: Build
+        run: cmake --build build -j2
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -j2

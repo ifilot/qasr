@@ -36,3 +36,10 @@ at runtime; they are not copied into binary archives.
 The supplied slab CONTCAR snapshots are original user-provided fixture data
 included under the project's GPL-3.0-only license. Their original byte content
 and calculation provenance remain preserved in `tests/fixtures/slabs`.
+
+Optional `ENABLE_JPEG` builds link the system libjpeg API implementation,
+commonly libjpeg-turbo (IJG, BSD-style and zlib licenses; consult the distribution's
+package notices for the selected implementation). Optional `ENABLE_WEBP` builds
+link system libwebp (BSD-3-Clause). Neither library nor its transitive shared
+libraries are vendored or copied into binary archives; install the corresponding
+runtime packages when distributing a build with these options enabled.
