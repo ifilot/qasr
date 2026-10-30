@@ -1,7 +1,10 @@
 # ORTEP spherical and BALSAC-inspired drawing
 
 Use `--style ortep` or `--style balsac`, or set JSON `image.style`.
-See the README for behavior, presets and backend limitations.
+Available in **v0.5.0**. See the [handbook](https://ifilot.github.io/qasr/#rendering)
+for behavior, presets and backend limitations. Both styles use the Z-buffer
+renderer; the experimental Cairo backend rejects them. ORTEP draws spheres
+with great-circle sections, not thermal displacement ellipsoids.
 
 Add `--tone monocolor` for black/white dithering or `--tone dualtone` for
 navy/gold dithering. The shared atom/bond palette ignores element RGB and retains
@@ -32,6 +35,11 @@ done
 ![BALSAC-inspired drawing](website/assets/co-balsac.png)
 
 ## Validation
+
+The v0.5.0 release runs full CMake/CTest builds with XML, libdeflate and OpenMP,
+with optional codecs and Cairo enabled as well as the default configuration.
+See [release validation](release-v0.5.0.md). The following records describe the
+earlier PR environment.
 
 - Three additional test groups cover dither palette endpoints, directional
   shading, alpha, element-color independence, dot retention under supersampling,

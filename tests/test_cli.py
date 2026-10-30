@@ -46,9 +46,9 @@ class InputTests(unittest.TestCase):
         return path
 
     def test_help_and_version(self):
-        self.assertIn("qasr 0.4.0", self.run_cli("--help").stdout)
+        self.assertIn("qasr 0.5.0", self.run_cli("--help").stdout)
         self.assertIn("QASR: Quick Atomic Structure Renderer", self.run_cli("--help").stdout)
-        self.assertEqual("qasr 0.4.0\n", self.run_cli("--version").stdout)
+        self.assertEqual("qasr 0.5.0\n", self.run_cli("--version").stdout)
 
     def test_skewed_direct_and_species_order(self):
         result = self.data(self.poscar)

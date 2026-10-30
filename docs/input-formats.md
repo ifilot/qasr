@@ -1,8 +1,7 @@
 # Source-independent geometry input
 
-This is a development addition after v0.4.0. Check `--build-info` for
-`nonperiodic: true` and `partial_pbc: true`; the immutable v0.4.0 release and its
-bundled source download do not contain these readers. No ASE, Python runtime,
+Available in **v0.5.0**. Check `--build-info` for `nonperiodic: true` and
+`partial_pbc: true`. Earlier releases support VASP input only. No ASE, Python runtime,
 Gaussian installation, AMS installation or new library is required by the readers.
 Python remains a test/tooling dependency only.
 

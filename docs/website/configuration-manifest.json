@@ -1,20 +1,24 @@
 {
-  "availability": "QASR v0.4.0 release including M9\u2013M11; executable qasr",
-  "executable_sha256": "e2c8af164b242a4e42ca046b4bf1778a0effff3558fc58613afe6eb788e599ef",
+  "availability": "qasr 0.5.0 release",
+  "executable_sha256": "6726dcae67b9d34928d2c5e13c22cb879aaae1065f4deeef469a8685dca21dcb",
   "build_info": {
-    "version": "0.4.0",
+    "version": "0.5.0",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
     "job_requests": true,
     "batch_worker": true,
+    "nonperiodic": true,
+    "partial_pbc": true,
     "xml": true,
     "openmp": true,
     "cairo": false,
-    "libdeflate": true
+    "libdeflate": true,
+    "jpeg": false,
+    "webp": false
   },
   "files": {
-    "batch.html": "49f723d3e9a7fd26cd0d035679adcb79ae7efb5f63420e278f620747f0e14478",
+    "batch.html": "2870cb162d5161622c8ea6e505db1ed65754cba6d7f27dd94a930019d9fccb01",
     "downloads/worker-requests.jsonl": "5fcc29a169efde676dab7af98b234ddcdc1a7b07339e33756510442006e18266",
     "schemas/config.schema.json": "5998da6d15ae72f16a9062cc30fca2638ce02c668aa274761bf225b8b55f7471",
     "schemas/job.schema.json": "4cd98fbc42925b9b18a41cc7f81fc676715b3775cc3d49d67e06b32e74341abb",
@@ -23,8 +27,8 @@
     "downloads/source-highlight.json": "3633baa106a669d188529789a09fb9acf6624bfa4b9250fcdf7ace6a3bf06764",
     "downloads/cell-highlight.json": "d455de2b095a470aca2406c0d18c2318a2c6ec5931c4ec2c55e48f1fa57190c0",
     "downloads/highlight-job.json": "322b24a99259992b109b0cdc675bfb30c16a04b558eef9533aae3306a197301c",
-    "downloads/qasr-source.tar.gz": "e50ce03f02ce5957c4bb521de563d37b72530ecd635f1eb36c96d8a3629a7fcf",
-    "downloads/source-manifest.json": "a7a382d9ab5a118611be0c99dc91449eb022c46d4bc3206c422684d97ad56909",
+    "downloads/qasr-source.tar.gz": "43025bf568c5da788dc03e53e1c47c6c48e3d426df819dd1d9d431dd655d6e0c",
+    "downloads/source-manifest.json": "96e62ce0d24d4f4af220f96240bd08827d85ccce666d4ba8b2a4780f81f1b8e1",
     "assets/source-highlight.png": "c33b9a74d2f1b827a034d12e1a42f3d82ce7c8c5805278dec838aaadad3842dc",
     "assets/cell-highlight.png": "441111fee064bde4b45a9585abdf9ea68ccce69f5d72b6600bbbfd63cf5b13cd"
   },

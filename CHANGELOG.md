@@ -1,11 +1,10 @@
 # Changelog
 
-## [Unreleased] - v0.5.0
+## [0.5.0] - 2026-10-30
 
 - Add monocolor and dualtone dithered variants for ORTEP and BALSAC via
   `--tone` / `image.tone`, with output-pixel Bayer shading, matching presets
   and side-by-side sample renders.
-
 - Add `ortep` spherical drawing with visible great-circle arcs, white atoms and
   black bonds, and `balsac` drawing with smooth highlights, element colors,
   pale bonds and black contours. Both use accurate depth-buffer visibility.
@@ -28,6 +27,8 @@
   opaque only) or lossless RGBA WebP across CLI, job and worker renders.
 - Report image format and codec capabilities; preserve atomic output and
   validate codec dimensions and memory allowances.
+- Simplify the README into a user quick start and refresh the standalone
+  handbook, examples and source download for v0.5.0.
 
 ## [0.4.0] - 2026-10-29
 

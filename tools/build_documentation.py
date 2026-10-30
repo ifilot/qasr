@@ -123,7 +123,7 @@ See LICENSE. Website images are program-generated examples, not AI illustrations
     (downloads/'inspect-example.json').write_text(json.dumps(inspection, indent=2)+'\n')
     (site/'examples-manifest.json').write_text(json.dumps({
         'executable_sha256': sha(exe), 'build_info': json.loads(subprocess.check_output([exe, '--build-info'])),
-        'availability': 'QASR v0.4.0 release including M7–M11; executable qasr',
+        'availability': subprocess.check_output([exe, '--version'], text=True).strip()+' release',
         'images': records,
         'downloads': {name: sha(downloads/name) for name in sorted(set(kit + ['qasr-examples.zip','inspect-example.json','qasr-source.tar.gz','source-manifest.json','vasp-render-source.tar.gz','legacy-v0.3.0-source-manifest.json']))},
     }, indent=2)+'\n')

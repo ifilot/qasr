@@ -1,18 +1,22 @@
 {
-  "executable_sha256": "e2c8af164b242a4e42ca046b4bf1778a0effff3558fc58613afe6eb788e599ef",
+  "executable_sha256": "6726dcae67b9d34928d2c5e13c22cb879aaae1065f4deeef469a8685dca21dcb",
   "build_info": {
-    "version": "0.4.0",
+    "version": "0.5.0",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
     "job_requests": true,
     "batch_worker": true,
+    "nonperiodic": true,
+    "partial_pbc": true,
     "xml": true,
     "openmp": true,
     "cairo": false,
-    "libdeflate": true
+    "libdeflate": true,
+    "jpeg": false,
+    "webp": false
   },
-  "availability": "QASR v0.4.0 release including M7\u2013M11; executable qasr",
+  "availability": "qasr 0.5.0 release",
   "images": [
     {
       "id": "co-shaded",
@@ -285,12 +289,12 @@
     "SLAB-MANIFEST.json": "76272de5ceaefcad8db4101fec634f4431b1248270689382a01b1207562a862c",
     "SLAB-PROVENANCE.md": "1a93a7759a7d33f47e4d92670d1f4c3c6ab12baf3521daac85f15fb70a10aaa7",
     "illustrated.json": "dad007b81b682194e4ade6147bec18051e9ab670f2109f051c998e582a59242f",
-    "inspect-example.json": "d51e1b971e119a1ce3003fcbfcd29a3b673ff3e9cc7932cc4ac43ffb310c8256",
+    "inspect-example.json": "4e8081839769b01bfb38efc4601ebbcf501ad3b507b587cce6b545b657405d57",
     "legacy-v0.3.0-source-manifest.json": "fa61d0d9325cd08fddca5612a9f99d77d3b5a9e7f517a8d448487efd1d861820",
     "publication.json": "50f5e7207c0708b0683d5f4482cce801d9451f5c948a0391e5a97b38f5628165",
-    "qasr-examples.zip": "6bc31c04afe72ae11cc8bf8df2e645238d678315f74d8202b08c6924bbede42e",
-    "qasr-source.tar.gz": "e50ce03f02ce5957c4bb521de563d37b72530ecd635f1eb36c96d8a3629a7fcf",
-    "source-manifest.json": "a7a382d9ab5a118611be0c99dc91449eb022c46d4bc3206c422684d97ad56909",
+    "qasr-examples.zip": "a039ba2f08826207b1d5a75df05cdc07545600f5b5fa6de12480a6fc1cf34006",
+    "qasr-source.tar.gz": "43025bf568c5da788dc03e53e1c47c6c48e3d426df819dd1d9d431dd655d6e0c",
+    "source-manifest.json": "96e62ce0d24d4f4af220f96240bd08827d85ccce666d4ba8b2a4780f81f1b8e1",
     "vasp-render-source.tar.gz": "cfa4540401c6c7e5f658fc02d12f7834fcf1c99170af8fb285a366dad78e91c1",
     "vasprun.example.xml": "07044e51565165a8bad4dd24d5bbe1ecc679d651b6f61268296fa8d61188de6f"
   }

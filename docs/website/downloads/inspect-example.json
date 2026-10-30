@@ -21,6 +21,16 @@
       2
     ]
   ],
+  "cell_present": [
+    true,
+    true,
+    true
+  ],
+  "pbc": [
+    true,
+    true,
+    true
+  ],
   "atoms": [
     {
       "index": 0,
@@ -48,6 +58,7 @@
       "height": 512,
       "background": "#ffffff",
       "style": "shaded",
+      "tone": "color",
       "aa": "2x",
       "backend": "zbuffer",
       "depth_fade": 0,
