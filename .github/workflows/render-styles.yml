@@ -1,0 +1,16 @@
+name: Render styles
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cairo: ["OFF", "ON"]
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libpng-dev libdeflate-dev libxml2-dev libcairo2-dev
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_CAIRO_EXPERIMENTS=${{ matrix.cairo }}
+      - run: cmake --build build --parallel 2
+      - run: ctest --test-dir build --output-on-failure

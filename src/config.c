@@ -134,6 +134,17 @@ static bool style(const char *s, RenderStyle *v)
 {
     if (!strcmp(s,"shaded")) *v=STYLE_SHADED;
     else if (!strcmp(s,"illustrated")) *v=STYLE_ILLUSTRATED;
+    else if (!strcmp(s,"ortep")) *v=STYLE_ORTEP;
+    else if (!strcmp(s,"balsac")) *v=STYLE_BALSAC;
+    else return false;
+    return true;
+}
+
+static bool tone(const char *s, RenderTone *v)
+{
+    if (!strcmp(s,"color")) *v=TONE_COLOR;
+    else if (!strcmp(s,"monocolor")) *v=TONE_MONOCOLOR;
+    else if (!strcmp(s,"dualtone")) *v=TONE_DUALTONE;
     else return false;
     return true;
 }
@@ -255,6 +266,7 @@ static bool settings_group(const cJSON *group, const char *name, Config *c, Erro
         bool valid = false;
         if (!strcmp(name, "image")) {
             if (!strcmp(k,"style")) valid=cJSON_IsString(j) && style(j->valuestring,&c->style);
+            else if (!strcmp(k,"tone")) valid=cJSON_IsString(j) && tone(j->valuestring,&c->tone);
             else if (!strcmp(k,"aa")) valid=cJSON_IsString(j) && antialias(j->valuestring,c);
             else if (!strcmp(k,"backend")) valid=cJSON_IsString(j) && backend(j->valuestring,&c->backend);
             else if (!strcmp(k,"png_encoder")) valid=cJSON_IsString(j) && encoder(j->valuestring,&c->png.encoder);
@@ -498,6 +510,7 @@ static const char *cli_path(const char *k)
     static const char *pairs[][2]={
         {"--width","image.width"},{"--height","image.height"},{"--background","image.background"},
         {"--style","image.style"},{"--aa","image.aa"},{"--backend","image.backend"},
+        {"--tone","image.tone"},
         {"--png-encoder","image.png_encoder"},{"--png-filter","image.png_filter"},{"--png-compression","image.png_compression"},
         {"--outline-width","image.outline_width"},{"--view","camera.view"},{"--up","camera.up"},
         {"--repeat","geometry.repeat"},{"--expand-xy","geometry.expand_xy"},{"--image-colors","geometry.image_colors"},
@@ -561,6 +574,10 @@ static bool job_runtime(Config *c, const char *path, Error *e)
 
 static bool validate(Config *c, Error *e)
 {
+    if (c->tone!=TONE_COLOR && c->style!=STYLE_ORTEP && c->style!=STYLE_BALSAC)
+        return fail_at(e,2,"unsupported_tone","image.tone","monocolor and dualtone require ortep or balsac style");
+    if (c->backend==BACKEND_CAIRO && (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC))
+        return fail_at(e,3,"unsupported_backend","image.backend","ortep and balsac styles require the accurate Z-buffer backend");
     memcpy(c->requested_repeat,c->repeat,sizeof c->repeat);
     bool expanded = c->expand_xy[0] || c->expand_xy[1];
     if (expanded) {
@@ -673,6 +690,7 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
         else if (!strcmp(k, "--expand-xy")) ok = expand_text(v, c->expand_xy);
         else if (!strcmp(k, "--image-colors")) ok = image_style(v, &c->image_colors);
         else if (!strcmp(k,"--style")) ok=style(v,&c->style);
+        else if (!strcmp(k,"--tone")) ok=tone(v,&c->tone);
         else if (!strcmp(k,"--aa")) ok=antialias(v,c);
         else if (!strcmp(k,"--backend")) ok=backend(v,&c->backend);
         else if (!strcmp(k,"--png-encoder")) ok=encoder(v,&c->png.encoder);

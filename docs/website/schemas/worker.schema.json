@@ -122,8 +122,15 @@
                   "type": "string",
                   "enum": [
                     "shaded",
-                    "illustrated"
+                    "illustrated",
+                    "ortep",
+                    "balsac"
                   ]
+                },
+                "tone": {
+                  "type": "string",
+                  "enum": ["color", "monocolor", "dualtone"],
+                  "description": "Dithered atom/bond tones for ortep and balsac; color preserves the style palette."
                 },
                 "aa": {
                   "type": "string",

@@ -1,7 +1,17 @@
 # Changelog
 
-## [Unreleased]
+## [Unreleased] - v0.5.0
 
+- Add monocolor and dualtone dithered variants for ORTEP and BALSAC via
+  `--tone` / `image.tone`, with output-pixel Bayer shading, matching presets
+  and side-by-side sample renders.
+
+- Add `ortep` spherical drawing with visible great-circle arcs, white atoms and
+  black bonds, and `balsac` drawing with smooth highlights, element colors,
+  pale bonds and black contours. Both use accurate depth-buffer visibility.
+- Expose both styles through CLI, layered configuration, jobs and batch requests;
+  update embedded/served schemas, presets, handbook examples and render tests.
+- Explicitly reject the new styles with the experimental Cairo painter.
 - Separate physical cell vectors, per-axis PBC and source metadata; support
   cell-free molecules, wires, slabs and nonperiodic display cells.
 - Add input-only reader options and shared validation, native XYZ/Extended XYZ,

@@ -198,6 +198,60 @@ occlusion use the same depth intersections in both styles. `--outline-width`
 sets the illustrated contour width in output pixels, from 0 (off) to 8; the
 default is 1 pixel. The illustrated slab preset uses 1.5 pixels.
 
+Two additional drawing styles are available for the v0.5.0 development cycle:
+
+- `--style ortep`: white spherical atoms with black silhouettes and the visible
+  halves of three perpendicular great circles, plus solid black bonds.
+  The circles follow the world Cartesian axes and rotate with the camera.
+  They are visual depth cues; no thermal displacement data or ellipsoids are used.
+  Element RGB colors are ignored for atom/bond drawing; atom alpha is preserved.
+- `--style balsac`: BALSAC-inspired ball-and-stick drawing with smoothly lit
+  element-colored spheres, broad white highlights, pale gray bonds and black
+  sphere/bond silhouettes. This is an interpretation of the classic appearance,
+  not an emulation of the BALSAC program. Element palettes remain configurable.
+
+Both use the accurate Z-buffer backend, including surface intersections, hidden
+arcs, periodic copies, labels and transparent backgrounds. The experimental Cairo
+painter rejects these styles explicitly. `--outline-width` controls their ink
+width in output pixels (0–8, default 1); zero removes both ORTEP arcs and contours.
+Depth fade softens fills toward white while keeping ink black. Adaptive AA
+conservatively uses all 2× samples for both styles; native, 2× and 4× are supported.
+The styles also work as JSON `image.style` values in configs, jobs and batch requests.
+
+```sh
+build/qasr CONTCAR --style ortep --cell off -o ortep.png
+build/qasr CONTCAR --style balsac --cell off -o balsac.png
+build/qasr CONTCAR --config presets/ortep.json -o ortep.png
+build/qasr CONTCAR --config presets/balsac.json -o balsac.png
+```
+
+The ORTEP preset selects a white canvas without cell edges. The BALSAC preset
+also provides an example orange Co / gray C / blue H palette; other elements use
+the usual defaults. Both leave camera direction and geometry at their defaults.
+
+Use `--tone monocolor` or `--tone dualtone` with either style for ordered-dithered
+shading. Monocolor uses black and white; dualtone uses navy (`#203050`) and warm
+gold (`#f4bd69`). Both use one shared palette for all atoms, preserving atom alpha.
+ORTEP gains stippled spherical shading while retaining its section curves.
+Tone defaults to `color`, which preserves the original appearance.
+
+```sh
+build/qasr CONTCAR --style ortep --tone monocolor --cell off -o ortep-mono.png
+build/qasr CONTCAR --style balsac --tone dualtone --cell off -o balsac-dual.png
+build/qasr CONTCAR --config presets/balsac-monocolor.json -o balsac-mono.png
+```
+
+JSON uses `image.tone: "color" | "monocolor" | "dualtone"`, including user defaults,
+jobs and batch requests. Non-color tones require ORTEP or BALSAC. Each has
+`presets/STYLE-monocolor.json` and `presets/STYLE-dualtone.json` variants.
+An 8×8 Bayer pattern is anchored to output pixels, so supersampling preserves
+the dots and thread counts produce identical results. Antialiasing and partial
+alpha blend palette colors at edges; they are not a strict two-color file format.
+Tones apply to atom and bond surfaces; backgrounds, cell edges and annotations
+keep their configured appearance. Depth fade moves stipple coverage toward
+the light palette color, while outlines and section curves retain the dark ink.
+See the [six-way sample comparison](docs/render-styles.md).
+
 `--view top` looks down the surface normal `a × b`, choosing its sign toward
 the third lattice vector. The first lattice vector points right in the image;
 an explicit `--up` overrides that alignment. This works for tilted and skewed
