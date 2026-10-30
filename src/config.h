@@ -16,7 +16,8 @@ typedef struct {
     uint8_t color[4];
 } AtomRule;
 
-typedef enum { STYLE_SHADED, STYLE_ILLUSTRATED } RenderStyle;
+typedef enum { STYLE_SHADED, STYLE_ILLUSTRATED, STYLE_ORTEP, STYLE_BALSAC } RenderStyle;
+typedef enum { TONE_COLOR, TONE_MONOCOLOR, TONE_DUALTONE } RenderTone;
 typedef enum { BACKEND_ZBUFFER, BACKEND_CAIRO } RenderBackend;
 typedef enum { ENCODER_LIBPNG, ENCODER_LIBDEFLATE, ENCODER_CAIRO } PngEncoder;
 typedef enum { FILTER_ADAPTIVE, FILTER_NONE, FILTER_SUB, FILTER_UP, FILTER_DEFAULT } PngFilter;
@@ -32,6 +33,7 @@ typedef struct {
     double margin, sphere_scale, bond_radius, depth_fade, outline_width, cell_width;
     char background[10];
     RenderStyle style;
+    RenderTone tone;
     RenderBackend backend;
     PngOptions png;
     bool adaptive_aa;

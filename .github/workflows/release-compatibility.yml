@@ -1,0 +1,31 @@
+name: v0.5.0 compatibility
+on:
+  push:
+    branches: [codex/v050-compatibility]
+permissions:
+  contents: read
+jobs:
+  combined:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - jpeg: "OFF"
+            webp: "OFF"
+            cairo: "OFF"
+          - jpeg: "ON"
+            webp: "OFF"
+            cairo: "OFF"
+          - jpeg: "OFF"
+            webp: "ON"
+            cairo: "OFF"
+          - jpeg: "ON"
+            webp: "ON"
+            cairo: "ON"
+    steps:
+      - uses: actions/checkout@v6
+      - run: sudo apt-get update && sudo apt-get install -y libpng-dev libdeflate-dev libxml2-dev libcairo2-dev libjpeg-dev libwebp-dev python3-pil
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_JPEG=${{ matrix.jpeg }} -DENABLE_WEBP=${{ matrix.webp }} -DENABLE_CAIRO_EXPERIMENTS=${{ matrix.cairo }}
+      - run: cmake --build build --parallel 2
+      - run: ctest --test-dir build --output-on-failure

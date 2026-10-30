@@ -3,7 +3,7 @@
 Version **0.4.0**, licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
 [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
-Headless C11 VASP geometry-to-image renderer. The current implementation builds on the
+Headless C11 atomic geometry-to-image renderer. The current implementation builds on the
 v0.1.0 reference checkpoint with validated input,
 periodic ball-and-stick geometry, and an orthographic software depth-buffer
 renderer with shaded spheres/capped cylinders and a PNG output path.
@@ -24,6 +24,15 @@ the provisional name `vasp-render`; those tags and archived binaries are unchang
 User preferences now live under `qasr/config.json` in the XDG configuration
 directory. To retain existing preferences, move the old `vasp-render/config.json`
 there; rendering never moves or rewrites user files automatically.
+
+## Source-independent input (development)
+
+Development builds after v0.4.0 add cell-free molecules, explicit per-axis PBC,
+native XYZ/Extended XYZ, Gaussian Cartesian inputs/orientation outputs, and AMS
+text System inputs. There is no ASE dependency. See [supported formats and
+limitations](docs/input-formats.md); check `--build-info` for `nonperiodic: true`.
+The immutable v0.4.0 release and its bundled source archive retain VASP-only input.
+See [input validation and coverage limits](docs/input-validation.md).
 
 ## Build and test
 
@@ -103,7 +112,7 @@ build/qasr POSCAR --inspect-scene --repeat 2,2,1
 build/qasr CONTCAR --expand-xy 1,1 --image-colors greyscale --view top -o context.png
 ```
 
-Input is detected by content; `--format poscar|contcar|outcar` overrides it.
+Input is detected by content; `--format poscar|contcar|outcar|xml|xyz|extxyz|gaussian-input|gaussian-output|ams` overrides it.
 Compressed files must be decompressed before parsing. Frames are zero-based
 ionic snapshots; the default is `final`. An unfinished OUTCAR requires
 `--recover`, which warns on stderr. Malformed geometry is always an error.
@@ -117,7 +126,7 @@ VASP 4-style POSCAR needs an explicit ordered `--species` mapping or JSON
 `--inspect` reports lattice rows and Cartesian coordinates in angstroms,
 source atom indices, complete frame count, recovery status, and requested
 render settings (element/pair entries contain explicit overrides).
-It preserves unwrapped source positions. `--inspect-scene` reports the wrapped
+It preserves unwrapped source positions and reports `cell_present` and `pbc`. `--inspect-scene` reports the wrapped
 and repeated sphere instances, periodic bonds clipped to the supercell,
 cell edges, effective colors/radii, and fitted camera. Output goes to stdout;
 diagnostics and optional `--benchmark-stages` timings go to stderr. Stage
@@ -188,6 +197,60 @@ lighting remains available as `--style shaded` (the default). Geometry and
 occlusion use the same depth intersections in both styles. `--outline-width`
 sets the illustrated contour width in output pixels, from 0 (off) to 8; the
 default is 1 pixel. The illustrated slab preset uses 1.5 pixels.
+
+Two additional drawing styles are available for the v0.5.0 development cycle:
+
+- `--style ortep`: white spherical atoms with black silhouettes and the visible
+  halves of three perpendicular great circles, plus solid black bonds.
+  The circles follow the world Cartesian axes and rotate with the camera.
+  They are visual depth cues; no thermal displacement data or ellipsoids are used.
+  Element RGB colors are ignored for atom/bond drawing; atom alpha is preserved.
+- `--style balsac`: BALSAC-inspired ball-and-stick drawing with smoothly lit
+  element-colored spheres, broad white highlights, pale gray bonds and black
+  sphere/bond silhouettes. This is an interpretation of the classic appearance,
+  not an emulation of the BALSAC program. Element palettes remain configurable.
+
+Both use the accurate Z-buffer backend, including surface intersections, hidden
+arcs, periodic copies, labels and transparent backgrounds. The experimental Cairo
+painter rejects these styles explicitly. `--outline-width` controls their ink
+width in output pixels (0–8, default 1); zero removes both ORTEP arcs and contours.
+Depth fade softens fills toward white while keeping ink black. Adaptive AA
+conservatively uses all 2× samples for both styles; native, 2× and 4× are supported.
+The styles also work as JSON `image.style` values in configs, jobs and batch requests.
+
+```sh
+build/qasr CONTCAR --style ortep --cell off -o ortep.png
+build/qasr CONTCAR --style balsac --cell off -o balsac.png
+build/qasr CONTCAR --config presets/ortep.json -o ortep.png
+build/qasr CONTCAR --config presets/balsac.json -o balsac.png
+```
+
+The ORTEP preset selects a white canvas without cell edges. The BALSAC preset
+also provides an example orange Co / gray C / blue H palette; other elements use
+the usual defaults. Both leave camera direction and geometry at their defaults.
+
+Use `--tone monocolor` or `--tone dualtone` with either style for ordered-dithered
+shading. Monocolor uses black and white; dualtone uses navy (`#203050`) and warm
+gold (`#f4bd69`). Both use one shared palette for all atoms, preserving atom alpha.
+ORTEP gains stippled spherical shading while retaining its section curves.
+Tone defaults to `color`, which preserves the original appearance.
+
+```sh
+build/qasr CONTCAR --style ortep --tone monocolor --cell off -o ortep-mono.png
+build/qasr CONTCAR --style balsac --tone dualtone --cell off -o balsac-dual.png
+build/qasr CONTCAR --config presets/balsac-monocolor.json -o balsac-mono.png
+```
+
+JSON uses `image.tone: "color" | "monocolor" | "dualtone"`, including user defaults,
+jobs and batch requests. Non-color tones require ORTEP or BALSAC. Each has
+`presets/STYLE-monocolor.json` and `presets/STYLE-dualtone.json` variants.
+An 8×8 Bayer pattern is anchored to output pixels, so supersampling preserves
+the dots and thread counts produce identical results. Antialiasing and partial
+alpha blend palette colors at edges; they are not a strict two-color file format.
+Tones apply to atom and bond surfaces; backgrounds, cell edges and annotations
+keep their configured appearance. Depth fade moves stipple coverage toward
+the light palette color, while outlines and section curves retain the dark ink.
+See the [six-way sample comparison](docs/render-styles.md).
 
 `--view top` looks down the surface normal `a × b`, choosing its sign toward
 the third lattice vector. The first lattice vector points right in the image;

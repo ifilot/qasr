@@ -78,6 +78,37 @@ static bool cylinder_outline(const Cylinder *cylinder, double x, double y, doubl
 
 #define AA_TILE 4u
 
+/* Output-pixel ordered dithering: every supersample of one output pixel shares
+ * a threshold. This retains dots after AA and is independent of tile/thread
+ * scheduling, primitive order, and camera scale. Full/empty coverage are exact. */
+static double dither_threshold(size_t x, size_t y)
+{
+    static const unsigned char bayer[8][8]={
+        {0,48,12,60,3,51,15,63},{32,16,44,28,35,19,47,31},
+        {8,56,4,52,11,59,7,55},{40,24,36,20,43,27,39,23},
+        {2,50,14,62,1,49,13,61},{34,18,46,30,33,17,45,29},
+        {10,58,6,54,9,57,5,53},{42,26,38,22,41,25,37,21}};
+    return ((double)bayer[y%8][x%8]+0.5)/64;
+}
+
+/* Principal sections of a sphere are three world-axis great circles. Use only
+ * the front surface normal, so back arcs are never drawn. The plane residual
+ * divided by its projected gradient approximates distance in screen pixels;
+ * unlike an angular band, this keeps the line thin through foreshortening. */
+static bool sphere_sections(Vec3 normal, double radius, const Vec3 axes[3], double width)
+{
+    if (width<=0) return false;
+    for (size_t k=0;k<3;++k) {
+        Vec3 axis=axes[k];
+        double gx=axis.x[0]*normal.x[2]-axis.x[2]*normal.x[0];
+        double gy=axis.x[1]*normal.x[2]-axis.x[2]*normal.x[1];
+        double gradient=hypot(gx,gy);
+        if (gradient>1e-12 && fabs(dot(axis,normal))*radius*normal.x[2]<=0.5*width*gradient)
+            return true;
+    }
+    return false;
+}
+
 /* A circle intersects the closed tile rectangle's interior/exterior boundary.
  * This conservative interval test includes small circles missed by a center ray. */
 static bool circle_crosses(double x, double y, double r, double x0, double y0, double x1, double y1)
@@ -138,6 +169,9 @@ static uint8_t *adaptive_tiles(const Config *c, const Scene *s, const Camera *ca
         if (owner[k]>=s->count) continue;
         const Primitive *p=&s->items[owner[k]];
         if (p->kind!=SPHERE) continue;
+        /* Fine arcs and smooth highlights need all supersamples. Adaptive mode
+         * conservatively falls back to ordinary 2x sampling for these styles. */
+        if (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC) continue;
         Vec3 a=camera_project(camera,p->a);
         double r=p->radius*camera->scale;
         double x0=(double)(x*AA_TILE), x1=fmin((double)c->width,x0+AA_TILE);
@@ -217,6 +251,8 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     if (c->threads>1) return fail(e,3,"multiple threads require ENABLE_OPENMP");
 #endif
     if (c->backend==BACKEND_CAIRO) {
+        if (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC)
+            return fail(e,3,"ortep and balsac styles require the accurate Z-buffer backend");
         if (c->axes || c->legend || c->scale_bar || c->labels)
             return fail(e,3,"annotations require the accurate Z-buffer backend");
         if (c->threads>1) return fail(e,3,"the experimental Cairo painter supports one thread");
@@ -261,6 +297,10 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     for (size_t i=0;i<samples;++i) { depth[i]=-DBL_MAX; memcpy(rgba+4*i,background,4); }
     const size_t width=c->width*factor, height=c->height*factor;
     Vec3 light=unit((Vec3){{-1,-1,2}});
+    Vec3 balsac_light=unit((Vec3){{1,1,2}});
+    Vec3 section_axes[3];
+    for (size_t k=0;k<3;++k)
+        section_axes[k]=(Vec3){{camera->right.x[k],camera->up.x[k],camera->view.x[k]}};
     double near=-DBL_MAX, far=DBL_MAX;
     for (size_t i=0;i<s->count;++i) if (s->items[i].kind==SPHERE) {
         double z=dot(s->items[i].a,camera->view);
@@ -331,6 +371,7 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
                 depth[index]=z;
                 double shade=p->kind==CELL_EDGE ? 1 : 0.25+0.75*fmax(0,dot(normal,light));
                 double white=0;
+                double tone_level=0;
                 bool ink=false;
                 if (c->style==STYLE_ILLUSTRATED) {
                     if (p->kind==SPHERE) {
@@ -351,12 +392,42 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
                         ink=c->outline_width>0 && cylinder_outline(cylinder,sx,sy,scale*c->outline_width);
                     }
                 }
+                if (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC) {
+                    if (p->kind==SPHERE) {
+                        double inner=fmax(0,1-scale*c->outline_width/r);
+                        ink=c->outline_width>0 && normal.x[0]*normal.x[0]+normal.x[1]*normal.x[1]>=inner*inner;
+                        if (c->style==STYLE_ORTEP) {
+                            shade=0;white=1;
+                            tone_level=0.45+0.50*fmax(0,dot(normal,balsac_light));
+                            ink=ink || sphere_sections(normal,r,section_axes,scale*c->outline_width);
+                        } else {
+                            /* Broad white highlight over smoothly lit element color. */
+                            double diffuse=fmax(0,dot(normal,balsac_light));
+                            double highlight=pow(diffuse,5)*0.75;
+                            shade=(0.78+0.22*diffuse)*(1-highlight);white=highlight;
+                            tone_level=0.28+0.50*diffuse+0.22*pow(diffuse,5);
+                        }
+                    } else if (p->kind==CYLINDER) {
+                        ink=c->outline_width>0 && cylinder_outline(cylinder,sx,sy,scale*c->outline_width);
+                        if (c->style==STYLE_ORTEP) {shade=0;white=0;}
+                        else {shade=0.45;white=0.55;tone_level=0.80;}
+                    }
+                }
                 shade*=1-fade; white=white*(1-fade)+fade;
                 if (ink) { shade=0; white=0; }
+                uint8_t tone_rgb[3];
+                bool toned=c->tone!=TONE_COLOR && p->kind!=CELL_EDGE;
+                if (toned) {
+                    static const uint8_t dark[3]={32,48,80}, pale[3]={244,189,105};
+                    double level=ink ? 0 : tone_level*(1-fade)+fade;
+                    bool light_pixel=level>dither_threshold(x/factor,(height-1-y)/factor);
+                    for (size_t d=0;d<3;++d)
+                        tone_rgb[d]=c->tone==TONE_MONOCOLOR ? (light_pixel ? 255 : 0) : (light_pixel ? pale[d] : dark[d]);
+                }
                 double alpha=(double)p->color[3]/255, bg_alpha=(double)background[3]/255;
                 double result_alpha=alpha+bg_alpha*(1-alpha);
                 for (int d=0;d<3;++d) rgba[4*index+(size_t)d]=result_alpha > 0 ?
-                    channel((alpha*((double)p->color[d]*shade+255*white)+(1-alpha)*bg_alpha*(double)background[d])/result_alpha) : 0;
+                    channel((alpha*(toned ? (double)tone_rgb[d] : (double)p->color[d]*shade+255*white)+(1-alpha)*bg_alpha*(double)background[d])/result_alpha) : 0;
                 rgba[4*index+3]=channel(255*result_alpha);
             }
         }

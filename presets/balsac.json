@@ -1,0 +1,9 @@
+{
+  "image": {"style": "balsac", "width": 768, "height": 768, "aa": "2x", "background": "#ffffff", "outline_width": 1},
+  "overlays": {"cell": false},
+  "elements": {
+    "Co": {"color": "#ffa500"},
+    "C": {"color": "#808080"},
+    "H": {"color": "#6666ff"}
+  }
+}

@@ -87,7 +87,7 @@ cJSON *job_render(const Config *c, JobCache *cache, bool report, const char *ver
         }
     }
     clock_gettime(CLOCK_MONOTONIC,&parsed);
-    if (s->recovered) fprintf(stderr,"%s: warning: recovered complete ionic frame %zu from unfinished OUTCAR\n",c->input,s->frame);
+    if (s->source.recovered) fprintf(stderr,"%s: warning: recovered complete ionic frame %zu from unfinished OUTCAR\n",c->input,s->source.frame);
     if (caching && !scene_key(c,sk,gk,e)) goto done;
     if (caching && source_hit && !strcmp(cache->scene_key,gk)) {scene=&cache->scene;scene_hit=true;++cache->scene_hits;}
     else {

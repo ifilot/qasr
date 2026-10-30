@@ -31,7 +31,8 @@ cJSON *config_settings_json(const Config *c)
     ok &= put(image,"width",cJSON_CreateNumber((double)c->width));
     ok &= put(image,"height",cJSON_CreateNumber((double)c->height));
     ok &= put(image,"background",cJSON_CreateString(c->background));
-    ok &= put(image,"style",cJSON_CreateString(c->style==STYLE_ILLUSTRATED ? "illustrated" : "shaded"));
+    ok &= put(image,"style",cJSON_CreateString(c->style==STYLE_ORTEP ? "ortep" : c->style==STYLE_BALSAC ? "balsac" : c->style==STYLE_ILLUSTRATED ? "illustrated" : "shaded"));
+    ok &= put(image,"tone",cJSON_CreateString(c->tone==TONE_MONOCOLOR ? "monocolor" : c->tone==TONE_DUALTONE ? "dualtone" : "color"));
     ok &= put(image,"aa",cJSON_CreateString(c->adaptive_aa ? "adaptive" : c->aa_scale==1 ? "native" : c->aa_scale==4 ? "4x" : "2x"));
     ok &= put(image,"backend",cJSON_CreateString(c->backend==BACKEND_CAIRO ? "cairo" : "zbuffer"));
     ok &= put(image,"depth_fade",cJSON_CreateNumber(c->depth_fade));
@@ -105,7 +106,7 @@ cJSON *config_dump_json(const Config *c)
     ok &= put(runtime,"output",c->output ? cJSON_CreateString(c->output) : cJSON_CreateNull());
     ok &= put(runtime,"report",c->report ? cJSON_CreateString(c->report) : cJSON_CreateNull());
     ok &= put(runtime,"frame",c->final_frame ? cJSON_CreateString("final") : cJSON_CreateNumber((double)c->frame));
-    ok &= put(runtime,"format",cJSON_CreateString(c->format==FORMAT_XML ? "xml" : c->format==FORMAT_OUTCAR ? "outcar" : c->format==FORMAT_POSCAR ? "poscar" : "auto"));
+    ok &= put(runtime,"format",cJSON_CreateString(format_name(c->format)));
     ok &= put(runtime,"threads",c->threads ? cJSON_CreateNumber((double)c->threads) : cJSON_CreateString("auto"));
     ok &= put(runtime,"recover",cJSON_CreateBool(c->recover));
     ok &= put(user,"path",c->user_path ? cJSON_CreateString(c->user_path) : cJSON_CreateNull());
