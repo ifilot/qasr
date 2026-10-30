@@ -15,6 +15,19 @@ See the [user handbook](https://ifilot.github.io/qasr/) for detailed usage,
 [supported input formats](docs/input-formats.md) and [drawing styles](docs/render-styles.md).
 See the [v0.5.0 release notes](docs/release-v0.5.0.md) for changes and limitations.
 
+## Examples
+
+Rendered with QASR. Click an image to view it at full size.
+
+| Illustrated cobalt surface | Palladium on ceria | Periodic surroundings |
+| :---: | :---: | :---: |
+| [![Illustrated top view of a cobalt surface](docs/website/assets/co-illustrated.png)](docs/website/assets/co-illustrated.png) | [![Palladium and adsorbates on a ceria surface](docs/website/assets/pd-ceria.png)](docs/website/assets/pd-ceria.png) | [![Colored cobalt unit cell surrounded by greyscale periodic copies](docs/website/assets/co-periodic-greyscale.png)](docs/website/assets/co-periodic-greyscale.png) |
+| **ORTEP spherical style** | **BALSAC-inspired style** | **Dualtone dithering** |
+| [![Cobalt slab drawn as white spheres with black great-circle sections](docs/website/assets/co-ortep.png)](docs/website/assets/co-ortep.png) | [![Cobalt slab drawn with smoothly shaded spheres and black silhouettes](docs/website/assets/co-balsac.png)](docs/website/assets/co-balsac.png) | [![Cobalt slab with navy and gold ordered-dither shading](docs/website/assets/co-balsac-dualtone.png)](docs/website/assets/co-balsac-dualtone.png) |
+
+Find rendering recipes in the [handbook gallery](https://ifilot.github.io/qasr/#gallery)
+and [style guide](docs/render-styles.md).
+
 ## Installation and compilation
 
 On Debian or Ubuntu, install the build dependencies:
