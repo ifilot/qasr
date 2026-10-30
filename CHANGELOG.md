@@ -13,6 +13,11 @@
   worker format selection and schemas, and add source-independent regression tests.
 - Document supported format subsets and unsupported Gaussian/AMS variants in
   `docs/input-formats.md`. Existing VASP behavior remains covered by regressions.
+- Add independently optional system libjpeg and libwebp output via
+  `ENABLE_JPEG` and `ENABLE_WEBP`. Output suffixes select JPEG (quality 90,
+  opaque only) or lossless RGBA WebP across CLI, job and worker renders.
+- Report image format and codec capabilities; preserve atomic output and
+  validate codec dimensions and memory allowances.
 
 ## [0.4.0] - 2026-10-29
 

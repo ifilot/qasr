@@ -50,7 +50,7 @@ static void help(void)
 {
     puts("QASR: Quick Atomic Structure Renderer\n"
          "qasr " VR_VERSION "\n"
-         "Usage: qasr INPUT -o OUTPUT.png [options]\n"
+         "Usage: qasr INPUT -o OUTPUT.png|jpg|webp [options]\n"
          "  --inspect                   Normalized input JSON, without scene building\n"
          "  --inspect-scene             Wrapped instances, clipped bonds and camera JSON\n"
          "  --format auto|poscar|contcar|outcar|xml|xyz|extxyz\n"
@@ -75,7 +75,8 @@ static void help(void)
          "  --style shaded|illustrated  Smooth lighting or layered flat-color atoms\n"
          "  --aa native|2x|4x|adaptive Sample grid; default 2x, 4x quality reference\n"
          "  --backend zbuffer|cairo    Cairo requires an experimental build\n"
-         "  --png-encoder libpng|libdeflate|cairo\n"
+         "  Output .jpg/.jpeg and .webp require optional system codecs.\n"
+         "  --png-encoder libpng|libdeflate|cairo (PNG output only)\n"
          "  --png-compression auto|0..9 --png-filter adaptive|none|sub|up\n"
          "  --outline-width PIXELS      Illustrated atom/bond contours; 0 disables\n"
          "  --cell-width PIXELS         Unit-cell line width (default 2, maximum 32)\n"
@@ -148,7 +149,7 @@ int main(int argc, char **argv)
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
     if (argc == 2 && !strcmp(argv[1], "--version")) { puts("qasr " VR_VERSION); return 0; }
     if (argc == 2 && !strcmp(argv[1],"--build-info")) {
-        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"nonperiodic\":true,\"partial_pbc\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s}\n",VR_VERSION,
+        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"nonperiodic\":true,\"partial_pbc\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s,\"jpeg\":%s,\"webp\":%s}\n",VR_VERSION,
 #ifdef VR_HAVE_XML
                "true",
 #else
@@ -165,6 +166,16 @@ int main(int argc, char **argv)
                "false",
 #endif
 #ifdef VR_HAVE_LIBDEFLATE
+               "true",
+#else
+               "false",
+#endif
+#ifdef VR_HAVE_JPEG
+               "true",
+#else
+               "false",
+#endif
+#ifdef VR_HAVE_WEBP
                "true"
 #else
                "false"
