@@ -1,0 +1,14 @@
+{
+  "image": {
+    "style": "balsac",
+    "width": 768,
+    "height": 768,
+    "aa": "2x",
+    "background": "#ffffff",
+    "outline_width": 1,
+    "tone": "dualtone"
+  },
+  "overlays": {
+    "cell": false
+  }
+}

@@ -70,6 +70,7 @@ static void help(void)
          "  --image-colors normal|muted|greyscale  Color copies outside primary cell\n"
          "  --view top|X,Y,Z --up X,Y,Z --background '#RRGGBB[AA]'\n"
          "  --style shaded|illustrated|ortep|balsac  Atom/bond drawing style\n"
+         "  --tone color|monocolor|dualtone  Dithered ORTEP/BALSAC variants\n"
          "  --aa native|2x|4x|adaptive Sample grid; default 2x, 4x quality reference\n"
          "  --backend zbuffer|cairo    Cairo requires an experimental build\n"
          "  --png-encoder libpng|libdeflate|cairo\n"

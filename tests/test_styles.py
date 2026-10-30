@@ -186,6 +186,87 @@ class StyleTests(unittest.TestCase):
             if i:self.assertTrue(response["result"]["cache"]["scene_hit"])
             self.assertEqual(support.decode_png(Path(request["job"]["output"]))[2],expected[i])
 
+    def test_dither_palettes_shading_and_alpha(self):
+        text=self.sphere()
+        palettes={"monocolor":(bytes([0,0,0,255]),bytes([255,255,255,255])),
+                  "dualtone":(bytes([32,48,80,255]),bytes([244,189,105,255]))}
+        for style in ["ortep","balsac"]:
+            for tone,(dark,light) in palettes.items():
+                cfg=self.config(style);cfg["image"].update(tone=tone,outline_width=0)
+                pixels=self.render(text,cfg)[2]
+                colors={pixels[k:k+4] for k in range(0,len(pixels),4)}
+                self.assertEqual(colors,{bytes(4),dark,light},(style,tone))
+                # The upper-right lit quadrant needs fewer dark dots. This
+                # checks the conveyed lighting without copying the Bayer table.
+                def dark_count(cx,cy):
+                    return sum(pixels[4*(y*128+x):4*(y*128+x)+4]==dark
+                               for y in range(cy-8,cy+8) for x in range(cx-8,cx+8))
+                self.assertLess(dark_count(84,44),dark_count(44,84))
+                cfg["elements"]["C"]["color"]="#0000ff"
+                self.assertEqual(self.render(text,cfg)[2],pixels)  # single shared palette
+                cfg["elements"]["C"]["color"]="#0000ff80"
+                alpha=self.render(text,cfg)[2]
+                self.assertEqual(alpha[4*(64*128+64)+3],128)
+                self.assertEqual(alpha[:4],bytes(4))
+                cfg["elements"]["C"]["color"]="#0000ff00"
+                self.assertEqual(set(self.render(text,cfg)[2]),{0})
+
+    def test_dither_sampling_pattern_and_threads(self):
+        text=self.sphere()
+        openmp=json.loads(subprocess.check_output([EXE,"--build-info"]))["openmp"]
+        for style in ["ortep","balsac"]:
+            for tone in ["monocolor","dualtone"]:
+                cfg=self.config(style);cfg["image"]["tone"]=tone
+                native=self.render(text,cfg,"--aa","native")[2]
+                for aa in ["2x","4x","adaptive"]:
+                    pixels=self.render(text,cfg,"--aa",aa,"--threads","1")[2]
+                    if aa=="2x":two=pixels
+                    if aa=="adaptive":self.assertEqual(pixels,two)
+                    if openmp:self.assertEqual(pixels,self.render(text,cfg,"--aa",aa,"--threads","4")[2])
+                    # AA must preserve most exact interior palette dots, rather
+                    # than averaging the whole halftone back into smooth gray.
+                    matches=sum(native[4*k:4*k+4]==pixels[4*k:4*k+4]
+                                for k in range(128*128) if native[4*k+3])
+                    total=sum(native[4*k+3]>0 for k in range(128*128))
+                    self.assertGreater(matches/total,.80)
+
+    def test_tone_interfaces_and_cached_switching(self):
+        source=self.path/"POSCAR";source.write_text(self.sphere())
+        requests=[];expected=[]
+        for style in ["ortep","balsac"]:
+            for tone in ["color","monocolor","dualtone"]:
+                cfg=self.config(style);cfg["image"]["tone"]=tone
+                expected.append(self.render(self.sphere(),cfg)[2])
+                i=len(requests);job={"input":str(source),"output":str(self.path/("tone-"+str(i)+".png")),
+                                    "no_user_config":True,"config":cfg}
+                requests.append({"id":str(i),"op":"render","job":job})
+                dumped=json.loads(self.invoke(self.sphere(),"--dump-config",config=cfg).stdout)["config"]
+                self.assertEqual(dumped["image"]["tone"],tone)
+                self.assertEqual(expected[-1],self.render(self.sphere(),dumped)[2])
+                self.assertEqual(json.loads(self.invoke(self.sphere(),"--inspect","--tone","color",config=cfg).stdout)["settings"]["image"]["tone"],"color")
+                rejected=self.invoke(self.sphere(),"--inspect","--backend","cairo",config=cfg,code=3)
+                self.assertIn("Z-buffer",rejected.stderr)
+        result=subprocess.run([EXE,"--batch"],input="".join(json.dumps(r)+"\n" for r in requests),text=True,capture_output=True)
+        results=[json.loads(line) for line in result.stdout.splitlines()]
+        self.assertEqual(len(results),len(requests),result.stderr)
+        for i,response in enumerate(results):
+            self.assertTrue(response["ok"],response)
+            if i:self.assertTrue(response["result"]["cache"]["scene_hit"])
+            self.assertEqual(support.decode_png(Path(requests[i]["job"]["output"]))[2],expected[i])
+        self.invoke(self.sphere(),"--inspect","--style","shaded","--tone","monocolor",code=2)
+        self.invoke(self.sphere(),"--inspect","--style","illustrated","--tone","dualtone",code=2)
+        self.invoke(self.sphere(),"--inspect","--tone","unknown",code=2)
+        for name in ["config","user","job","worker"]:
+            schema=json.loads(subprocess.check_output([EXE,"--schema",name]))
+            def tone_enums(node):
+                if isinstance(node,dict):
+                    if "tone" in node.get("properties",{}):
+                        self.assertEqual(node["properties"]["tone"]["enum"],["color","monocolor","dualtone"])
+                        return 1
+                    return sum(tone_enums(v) for v in node.values())
+                return sum(tone_enums(v) for v in node) if isinstance(node,list) else 0
+            self.assertGreater(tone_enums(schema),0)
+
 
 if __name__=="__main__":
     unittest.main(verbosity=2)

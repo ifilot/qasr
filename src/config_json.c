@@ -32,6 +32,7 @@ cJSON *config_settings_json(const Config *c)
     ok &= put(image,"height",cJSON_CreateNumber((double)c->height));
     ok &= put(image,"background",cJSON_CreateString(c->background));
     ok &= put(image,"style",cJSON_CreateString(c->style==STYLE_ORTEP ? "ortep" : c->style==STYLE_BALSAC ? "balsac" : c->style==STYLE_ILLUSTRATED ? "illustrated" : "shaded"));
+    ok &= put(image,"tone",cJSON_CreateString(c->tone==TONE_MONOCOLOR ? "monocolor" : c->tone==TONE_DUALTONE ? "dualtone" : "color"));
     ok &= put(image,"aa",cJSON_CreateString(c->adaptive_aa ? "adaptive" : c->aa_scale==1 ? "native" : c->aa_scale==4 ? "4x" : "2x"));
     ok &= put(image,"backend",cJSON_CreateString(c->backend==BACKEND_CAIRO ? "cairo" : "zbuffer"));
     ok &= put(image,"depth_fade",cJSON_CreateNumber(c->depth_fade));
