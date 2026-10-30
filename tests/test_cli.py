@@ -247,7 +247,7 @@ class InputTests(unittest.TestCase):
         for options in [("--width", "128", "--config", cfg), ("--config", cfg, "--width", "128")]:
             settings = self.data(self.poscar, *options)["settings"]
             capabilities=json.loads(subprocess.check_output([str(EXE),"--build-info"],text=True))
-            self.assertEqual(settings["image"], {"width": 128, "height": 512, "background": "#abcdef80", "style":"shaded", "aa":"2x", "backend":"zbuffer", "depth_fade":0, "outline_width":1,
+            self.assertEqual(settings["image"], {"width": 128, "height": 512, "background": "#abcdef80", "style":"shaded", "tone":"color", "aa":"2x", "backend":"zbuffer", "depth_fade":0, "outline_width":1,
                                                 "png_encoder":"libdeflate" if capabilities["libdeflate"] else "libpng",
                                                 "png_filter":"none" if capabilities["libdeflate"] else "adaptive",
                                                 "png_compression":"auto" if capabilities["libdeflate"] else 1})
