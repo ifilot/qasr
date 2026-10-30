@@ -3,7 +3,7 @@
 Version **0.4.0**, licensed under **GPL-3.0-only**. See [CHANGELOG.md](CHANGELOG.md),
 [LICENSE](LICENSE), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
-Headless C11 VASP geometry-to-image renderer. The current implementation builds on the
+Headless C11 atomic geometry-to-image renderer. The current implementation builds on the
 v0.1.0 reference checkpoint with validated input,
 periodic ball-and-stick geometry, and an orthographic software depth-buffer
 renderer with shaded spheres/capped cylinders and a PNG output path.
@@ -24,6 +24,15 @@ the provisional name `vasp-render`; those tags and archived binaries are unchang
 User preferences now live under `qasr/config.json` in the XDG configuration
 directory. To retain existing preferences, move the old `vasp-render/config.json`
 there; rendering never moves or rewrites user files automatically.
+
+## Source-independent input (development)
+
+Development builds after v0.4.0 add cell-free molecules, explicit per-axis PBC,
+native XYZ/Extended XYZ, Gaussian Cartesian inputs/orientation outputs, and AMS
+text System inputs. There is no ASE dependency. See [supported formats and
+limitations](docs/input-formats.md); check `--build-info` for `nonperiodic: true`.
+The immutable v0.4.0 release and its bundled source archive retain VASP-only input.
+See [input validation and coverage limits](docs/input-validation.md).
 
 ## Build and test
 
@@ -103,7 +112,7 @@ build/qasr POSCAR --inspect-scene --repeat 2,2,1
 build/qasr CONTCAR --expand-xy 1,1 --image-colors greyscale --view top -o context.png
 ```
 
-Input is detected by content; `--format poscar|contcar|outcar` overrides it.
+Input is detected by content; `--format poscar|contcar|outcar|xml|xyz|extxyz|gaussian-input|gaussian-output|ams` overrides it.
 Compressed files must be decompressed before parsing. Frames are zero-based
 ionic snapshots; the default is `final`. An unfinished OUTCAR requires
 `--recover`, which warns on stderr. Malformed geometry is always an error.
@@ -117,7 +126,7 @@ VASP 4-style POSCAR needs an explicit ordered `--species` mapping or JSON
 `--inspect` reports lattice rows and Cartesian coordinates in angstroms,
 source atom indices, complete frame count, recovery status, and requested
 render settings (element/pair entries contain explicit overrides).
-It preserves unwrapped source positions. `--inspect-scene` reports the wrapped
+It preserves unwrapped source positions and reports `cell_present` and `pbc`. `--inspect-scene` reports the wrapped
 and repeated sphere instances, periodic bonds clipped to the supercell,
 cell edges, effective colors/radii, and fitted camera. Output goes to stdout;
 diagnostics and optional `--benchmark-stages` timings go to stderr. Stage

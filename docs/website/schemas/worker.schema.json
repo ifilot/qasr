@@ -61,7 +61,14 @@
             "poscar",
             "contcar",
             "outcar",
-            "xml"
+            "xml",
+            "xyz",
+            "extxyz",
+            "gaussian-input",
+            "gaussian-output",
+            "gjf",
+            "com",
+            "ams"
           ]
         },
         "threads": {

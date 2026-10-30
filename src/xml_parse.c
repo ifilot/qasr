@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-#include "parse.h"
+#include "input.h"
 #include <libxml/xmlreader.h>
 #include <ctype.h>
 #include <math.h>
@@ -17,7 +17,7 @@ typedef enum {
 typedef enum { INITIAL, IONIC, FINAL } SnapshotKind;
 typedef struct {
     FILE *file;
-    const Config *config;
+    const InputOptions *config;
     Error *error;
     xmlTextReaderPtr reader;
     unsigned long long bytes, nodes;
@@ -46,7 +46,7 @@ static bool problem(Xml *x, int code, const char *message)
 
 /* Use an application-owned stream: libxml2 never opens the input as a URI,
  * decompresses it implicitly, or bypasses our byte/physical-line limits. */
-static int input_read(void *context, char *buffer, int length)
+static int xml_input_read(void *context, char *buffer, int length)
 {
     Xml *x = context;
     if (x->error->code) return -1;
@@ -123,7 +123,7 @@ static bool save_snapshot(Xml *x, Structure *s, size_t frame)
     }
     memcpy(s->atoms, x->candidate.atoms, x->candidate.count * sizeof *s->atoms);
     memcpy(s->lattice, x->candidate.lattice, sizeof s->lattice);
-    s->count = x->candidate.count; s->frame = frame;
+    s->count = x->candidate.count; s->source.frame = frame;
     return true;
 }
 
@@ -273,7 +273,7 @@ static bool finish(Xml *x, int depth, Structure *s)
     return true;
 }
 
-bool parse_xml(FILE *file, const Config *c, Structure *s, Error *e)
+bool parse_xml(FILE *file, const InputOptions *c, Structure *s, Error *e)
 {
     if (c->recover) return fail(e, 2, "--recover is only meaningful for OUTCAR; XML requires a complete document");
     Xml *x = calloc(1, sizeof *x);
@@ -281,7 +281,7 @@ bool parse_xml(FILE *file, const Config *c, Structure *s, Error *e)
     x->file = file; x->config = c; x->error = e; x->line = 1; x->capture_depth = -1;
     /* No NOENT, DTDLOAD, DTDATTR, XINCLUDE, HUGE or RECOVER. In particular,
      * NONET alone is not the protection against local-file entity loading. */
-    x->reader = xmlReaderForIO(input_read, NULL, x, NULL, NULL, XML_PARSE_NONET | XML_PARSE_COMPACT);
+    x->reader = xmlReaderForIO(xml_input_read, NULL, x, NULL, NULL, XML_PARSE_NONET | XML_PARSE_COMPACT);
     bool ok = false;
     if (!x->reader) { if (!e->code) problem(x, 6, "cannot create streaming reader"); goto done; }
     xmlTextReaderSetErrorHandler(x->reader, reader_error, x);
@@ -333,7 +333,7 @@ bool parse_xml(FILE *file, const Config *c, Structure *s, Error *e)
     }
     if (rc < 0 || e->code || !x->root_closed) { if (!e->code) problem(x, 4, "malformed or unfinished document"); goto done; }
     if (!x->metadata_done || !s->atoms) { problem(x, 4, "requested ionic frame not found or no complete geometry"); goto done; }
-    s->format = FORMAT_XML; s->frame_count = x->frames ? x->frames : 1;
+    s->source.format = FORMAT_XML; s->source.frame_count = x->frames ? x->frames : 1;
     ok = true;
 done:
     if (x->reader) xmlFreeTextReader(x->reader);

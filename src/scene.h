@@ -22,6 +22,7 @@ typedef struct {
     Primitive *items;
     size_t count, capacity, atom_count, bond_count, base_bond_count;
     Vec3 supercell[3];
+    bool cell_present[3], pbc[3];
     RuleStamp *style_rules; /* Optional winning per-property IDs, one per sphere. */
 } Scene;
 size_t scene_memory_bytes(const Scene *s);
