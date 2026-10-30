@@ -71,7 +71,7 @@ cJSON *job_render(const Config *c, JobCache *cache, bool report, const char *ver
     struct timespec begin,parsed,built,rendered,written;clock_gettime(CLOCK_MONOTONIC,&begin);
     char input_hash[65]={0},sk[65]={0},gk[65]={0};bool source_hit=false,scene_hit=false;
     bool caching=cache && cache->limit;
-    if (!report_preflight(c,e) || !check_cancel(e)) goto done;
+    if (!image_output_validate(c->output,e) || !report_preflight(c,e) || !check_cancel(e)) goto done;
     if ((report || caching) && !sha256_file(c->input,input_hash,e)) goto done;
     if (caching && !source_key(c,input_hash,sk,e)) goto done;
     if (caching && !strcmp(cache->source_key,sk)) {s=&cache->source;source_hit=true;++cache->source_hits;}
@@ -102,14 +102,14 @@ cJSON *job_render(const Config *c, JobCache *cache, bool report, const char *ver
     if (!render_image(c,scene,&camera,s->count*sizeof(Atom)+config_memory_bytes(c),&image,e) || !check_cancel(e)) goto done;
     clock_gettime(CLOCK_MONOTONIC,&rendered);
     PngOptions png=png_resolve_options(c->output,c->png);
-    if (c->benchmark) {
+    if (c->benchmark && !strcmp(image_format_name(c->output),"png")) {
         if (png.encoder==ENCODER_CAIRO) fprintf(stderr,"png_encoder_internal=1\n");
         else fprintf(stderr,"png_compression_resolved=%d\n",png.compression);
     }
-    if (!png_write_options_atomic(c->output,&image,&png,scene_memory_bytes(scene)+s->count*sizeof(Atom)+config_memory_bytes(c),e)) goto done;
+    if (!image_write_atomic(c->output,&image,&png,scene_memory_bytes(scene)+s->count*sizeof(Atom)+config_memory_bytes(c),e)) goto done;
     clock_gettime(CLOCK_MONOTONIC,&written);
     double stages[5]={config_ms,milliseconds(begin,parsed),milliseconds(parsed,built),milliseconds(built,rendered),milliseconds(rendered,written)};
-    if (c->benchmark) fprintf(stderr,"stages_ms: config=%.3f parse=%.3f scene=%.3f render=%.3f png=%.3f (excludes process startup and JSON output)\n",stages[0],stages[1],stages[2],stages[3],stages[4]);
+    if (c->benchmark) fprintf(stderr,"stages_ms: config=%.3f parse=%.3f scene=%.3f render=%.3f %s=%.3f (excludes process startup and JSON output)\n",stages[0],stages[1],stages[2],stages[3],!strcmp(image_format_name(c->output),"png") ? "png" : "encode",stages[4]);
     if (report) result=render_report(c,s,scene,&camera,&png,version,input_hash,stages,e);
     else result=cJSON_CreateObject();
     if (!result) {if (!e->code) fail(e,6,"cannot allocate job result");goto done;}
