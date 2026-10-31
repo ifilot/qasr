@@ -1,0 +1,158 @@
+{
+  "input": "../../tests/fixtures/slabs/01_co0001_clean/CONTCAR",
+  "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+  "executable_sha256": "2ecf68f036c599a37c914cc0e189e5a2b8edb3e993d7bb43b16e05444f796196",
+  "generator_sha256": "00cb2ca17bb5fcaf23a805e2f20d5d532159956575657e45e2c5de6baa6087c8",
+  "images": [
+    {
+      "name": "01-xy-expansion",
+      "label": "XY expansion / neighbor bonds",
+      "image": "01-xy-expansion.png",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/tests/fixtures/slabs/01_co0001_clean/CONTCAR",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/01-xy-expansion.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/01-xy-expansion.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/01-xy-expansion.report.json"
+      ],
+      "counts": {
+        "atom_instances": 567,
+        "bonds": 2704,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "bonds_with_missing_endpoint_atoms": 0,
+      "sha256": "dc23a2e383061206f872bbd530640f340cbcd325ff78d3c91aabed2246c24d17"
+    },
+    {
+      "name": "02-complete-endpoint-bonds",
+      "label": "Both endpoint atoms present",
+      "image": "02-complete-endpoint-bonds.png",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/tests/fixtures/slabs/01_co0001_clean/CONTCAR",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/02-complete-endpoint-bonds.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/02-complete-endpoint-bonds.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/02-complete-endpoint-bonds.report.json"
+      ],
+      "counts": {
+        "atom_instances": 63,
+        "bonds": 208,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "bonds_with_missing_endpoint_atoms": 0,
+      "sha256": "f0e4d063e22996b4cfa80de11474ee9a6f821ae19c267f0010a2d5e7729db8bb"
+    },
+    {
+      "name": "03-dashed-cell",
+      "label": "Dashed black cell",
+      "image": "03-dashed-cell.png",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/tests/fixtures/slabs/01_co0001_clean/CONTCAR",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/03-dashed-cell.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/03-dashed-cell.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/03-dashed-cell.report.json"
+      ],
+      "counts": {
+        "atom_instances": 63,
+        "bonds": 208,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "bonds_with_missing_endpoint_atoms": 0,
+      "sha256": "ab3d76c8d0979029e746ce5bb20f46ea8d9de8e8bd1d1849b3d6a2debc5c352b"
+    },
+    {
+      "name": "04-solid-white-contour",
+      "label": "Solid black + white contour",
+      "image": "04-solid-white-contour.png",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/tests/fixtures/slabs/01_co0001_clean/CONTCAR",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/04-solid-white-contour.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/04-solid-white-contour.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/04-solid-white-contour.report.json"
+      ],
+      "counts": {
+        "atom_instances": 63,
+        "bonds": 208,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "bonds_with_missing_endpoint_atoms": 0,
+      "sha256": "e0a0e10d22cb1eaee720b33441f10bddf3320ebc9fbe6fde9b6c3962125d7bf1"
+    },
+    {
+      "name": "05-dashed-white-contour",
+      "label": "Dashed black + white contour",
+      "image": "05-dashed-white-contour.png",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/tests/fixtures/slabs/01_co0001_clean/CONTCAR",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/05-dashed-white-contour.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/05-dashed-white-contour.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/05-dashed-white-contour.report.json"
+      ],
+      "counts": {
+        "atom_instances": 63,
+        "bonds": 208,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "bonds_with_missing_endpoint_atoms": 0,
+      "sha256": "130c50fc7fb2a5375e6ff079dbbb8933b584a5518db3cdab6de091f4eacb063d"
+    },
+    {
+      "name": "06-dark-background",
+      "label": "Dashed + contour / dark background",
+      "image": "06-dark-background.png",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/tests/fixtures/slabs/01_co0001_clean/CONTCAR",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/06-dark-background.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/06-dark-background.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/cell-lines/06-dark-background.report.json"
+      ],
+      "counts": {
+        "atom_instances": 63,
+        "bonds": 208,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "bonds_with_missing_endpoint_atoms": 0,
+      "sha256": "b431f2938722595370ecfdd4f7ffccf33ee4f3aff558132e5648fc8f9198fa3a"
+    }
+  ]
+}

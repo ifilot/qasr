@@ -1,0 +1,830 @@
+{
+  "version": "0.6.0",
+  "executable_sha256": "ea3ec0902f58da57e6a3e77142025c13a9104349dad4f7dd964208c6e0a2a4be",
+  "documented_flags": [
+    "--",
+    "--aa",
+    "--axes",
+    "--backend",
+    "--background",
+    "--batch",
+    "--benchmark-stages",
+    "--bond-colors",
+    "--bond-radius",
+    "--build-info",
+    "--cache-mib",
+    "--cell",
+    "--cell-color",
+    "--cell-dash-gap",
+    "--cell-dash-length",
+    "--cell-outline-width",
+    "--cell-style",
+    "--cell-width",
+    "--config",
+    "--dump-config",
+    "--expand-xy",
+    "--faces",
+    "--format",
+    "--frame",
+    "--height",
+    "--help",
+    "--image-colors",
+    "--init-config",
+    "--inspect",
+    "--inspect-scene",
+    "--job",
+    "--json-errors",
+    "--labels",
+    "--legend",
+    "--max-jobs",
+    "--movie",
+    "--movie-angle",
+    "--movie-axis",
+    "--movie-codec",
+    "--movie-fps",
+    "--movie-frames",
+    "--movie-interpolate",
+    "--no-user-config",
+    "--outline-width",
+    "--output",
+    "--png-compression",
+    "--png-encoder",
+    "--png-filter",
+    "--recover",
+    "--repeat",
+    "--report",
+    "--scale-bar",
+    "--schema",
+    "--species",
+    "--sphere-scale",
+    "--style",
+    "--threads",
+    "--tone",
+    "--up",
+    "--validate-config",
+    "--version",
+    "--view",
+    "--width",
+    "-o"
+  ],
+  "catalog": [
+    {
+      "group": "input",
+      "flags": [
+        "--format"
+      ],
+      "title": "Choose the input reader",
+      "values": "auto (default), poscar, contcar, outcar, xml, xyz, extxyz, gaussian-input, gaussian-output, ams",
+      "description": "Normally QASR detects the format from the file contents. Choose a reader explicitly when you want to constrain detection.",
+      "example": "qasr examples/ring.xyz --no-user-config --format xyz --cell off -o structure.png",
+      "note": "XML requires an XML-enabled build. CIF files must first be converted to a supported format."
+    },
+    {
+      "group": "input",
+      "flags": [
+        "--frame"
+      ],
+      "title": "Select a geometry frame",
+      "values": "final (default), or a zero-based integer",
+      "description": "Choose the final geometry or a particular ionic snapshot. Frame 0 is the first snapshot; a single-frame input accepts only 0 or final.",
+      "example": "qasr examples/OUTCAR.relax --no-user-config --frame 0 --view top -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "input",
+      "flags": [
+        "--recover"
+      ],
+      "title": "Read a complete snapshot from an unfinished OUTCAR",
+      "values": "Off by default; no value after the flag",
+      "description": "Permit an unfinished OUTCAR when it contains a complete usable snapshot. A warning records recovery; malformed coordinates are still errors.",
+      "example": "qasr examples/OUTCAR.relax --no-user-config --recover --frame final -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "input",
+      "flags": [
+        "--species"
+      ],
+      "title": "Supply missing element identities",
+      "values": "Comma-separated symbols in source population order",
+      "description": "Provide species for an older POSCAR without an element-symbol row. Explicit identities must agree with any identities already in the input.",
+      "example": "qasr examples/POSCAR.skew --no-user-config --species Si,O -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "input",
+      "flags": [
+        "--inspect"
+      ],
+      "title": "Check the input without rendering",
+      "values": "No output image required",
+      "description": "Print normalized geometry, selected frame, cell vectors, periodic axes and effective settings as JSON.",
+      "example": "qasr examples/POSCAR.skew --no-user-config --inspect",
+      "note": ""
+    },
+    {
+      "group": "input",
+      "flags": [
+        "--inspect-scene"
+      ],
+      "title": "Inspect the displayed atoms and bonds",
+      "values": "No output image required",
+      "description": "Print atom instances, complete bonds, cell edges and the fitted camera. Useful for checking expansion and connectivity.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --expand-xy 1,1 --inspect-scene",
+      "note": ""
+    },
+    {
+      "group": "input",
+      "flags": [
+        "--build-info"
+      ],
+      "title": "Check compiled capabilities",
+      "values": "Run alone",
+      "description": "Report the program version and features such as OpenMP, XML, JPEG, WebP and polygon faces.",
+      "example": "qasr --build-info",
+      "note": ""
+    },
+    {
+      "group": "input",
+      "flags": [
+        "--help"
+      ],
+      "title": "See the command-line synopsis",
+      "values": "Run alone",
+      "description": "Print the supported command-line syntax for your executable.",
+      "example": "qasr --help",
+      "note": ""
+    },
+    {
+      "group": "input",
+      "flags": [
+        "--version"
+      ],
+      "title": "Check the installed version",
+      "values": "Run alone",
+      "description": "Print the executable name and version.",
+      "example": "qasr --version",
+      "note": ""
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--style"
+      ],
+      "title": "Choose a drawing style",
+      "values": "shaded (default), illustrated, ortep, balsac",
+      "description": "Use lighting for depth, flat illustrated contours, ORTEP spherical arcs, or BALSAC-inspired highlights. A style flag does not load a preset palette or camera.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --style illustrated -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--tone"
+      ],
+      "title": "Use monochrome or two-color stippling",
+      "values": "color (default), monocolor, dualtone",
+      "description": "Apply a shared black/white or navy/gold dithered palette to ORTEP or BALSAC spheres.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --style ortep --tone dualtone --cell off -o structure.png",
+      "note": "Choose ortep or balsac when using a non-color tone."
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--view"
+      ],
+      "title": "Aim the camera",
+      "values": "1,1,1 (default), top, or X,Y,Z",
+      "description": "Set the direction toward the camera. Top looks along the actual a \u00d7 b surface normal and aligns a with image right.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --view top -o structure.png",
+      "note": "Top requires independent a/b cell vectors. Use a numeric direction for a cell-free molecule."
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--up"
+      ],
+      "title": "Rotate the image in its plane",
+      "values": "0,0,1 by default; top view chooses a-based alignment unless overridden",
+      "description": "Choose the world direction that projects toward the top of the image. It must not be parallel to the viewing direction.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --view 0,0,1 --up 0,1,0 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--width",
+        "--height"
+      ],
+      "title": "Set output dimensions",
+      "values": "1\u201316384 pixels per dimension; default 512 \u00d7 512",
+      "description": "Set the pixel dimensions of the final image. More pixels retain detail for export or printing, at the cost of more work and memory.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --width 1200 --height 900 -o structure.png",
+      "note": "The total-pixel and memory budgets can reject otherwise valid dimensions."
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--background"
+      ],
+      "title": "Choose a background or transparency",
+      "values": "#RRGGBB or #RRGGBBAA; default opaque white",
+      "description": "Set canvas color and opacity. An alpha suffix of 00 makes the background fully transparent; ff is opaque.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --background '#ffffff00' -o structure.png",
+      "note": "Quote color strings in a shell. JPEG requires an opaque result."
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--aa"
+      ],
+      "title": "Smooth image edges",
+      "values": "native, 2x (default), 4x, adaptive",
+      "description": "Choose the sampling quality. Native is useful for previews; 2\u00d7 and 4\u00d7 take more samples. Adaptive selectively refines supported geometry.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --width 768 --height 768 --aa 4x -o structure.png",
+      "note": "Some styles and scene features use full 2\u00d7 sampling in adaptive mode."
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--outline-width"
+      ],
+      "title": "Set atom and bond ink width",
+      "values": "0\u20138 output pixels; default 1",
+      "description": "Adjust illustrated, ORTEP and BALSAC contours. Zero removes the contours and ORTEP arcs.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --outline-width 1.5 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--backend"
+      ],
+      "title": "Choose the rendering backend",
+      "values": "zbuffer (default), cairo",
+      "description": "The Z-buffer resolves intersecting surfaces and supports the full drawing interface. Cairo is an optional experimental painter with depth and feature limitations.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --backend zbuffer -o structure.png",
+      "note": "Cairo requires a special build and does not support every style, polygon faces, annotations or multiple render threads."
+    },
+    {
+      "group": "geometry",
+      "flags": [
+        "--repeat"
+      ],
+      "title": "Repeat a periodic cell",
+      "values": "NX,NY,NZ, each 1\u20131024; default 1,1,1",
+      "description": "Repeat the structure in the positive lattice-vector directions. Every bond requires both endpoint atoms in the displayed cells.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --repeat 2,2,1 --view top -o structure.png",
+      "note": "Only periodic axes can repeat. Reset centered expansion before using an ordinary repeat."
+    },
+    {
+      "group": "geometry",
+      "flags": [
+        "--expand-xy"
+      ],
+      "title": "Add neighbors around the primary cell",
+      "values": "NX,NY, each 0\u2013511; default 0,0",
+      "description": "Add this many neighboring cells on each side along a and b. A value of 1,1 gives a centered 3 \u00d7 3 patch. Bonds to included neighbors remain connected.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --expand-xy 1,1 -o structure.png",
+      "note": "Bonds stop at the outer displayed boundary. Centered expansion and nontrivial ordinary repetition are mutually exclusive."
+    },
+    {
+      "group": "geometry",
+      "flags": [
+        "--image-colors"
+      ],
+      "title": "Distinguish periodic neighbors",
+      "values": "normal, muted, greyscale; centered expansion defaults to muted",
+      "description": "Keep the primary cell in its element palette and choose how neighboring atom copies are colored. Geometry and atom opacity are preserved.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --expand-xy 1,1 --image-colors greyscale -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "geometry",
+      "flags": [
+        "--sphere-scale"
+      ],
+      "title": "Scale every atom radius",
+      "values": "Positive multiplier; default 1",
+      "description": "Multiply the display radii of all atoms. Smaller spheres reveal bonds and polygon faces without moving atoms or changing connectivity.",
+      "example": "qasr examples/ring.xyz --no-user-config --sphere-scale 0.45 --bond-colors atoms --cell off -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "geometry",
+      "flags": [
+        "--bond-radius"
+      ],
+      "title": "Set bond thickness",
+      "values": "Positive radius in \u00c5; default 0.12",
+      "description": "Set the radius of the bond cylinders. Their diameter is twice this value. Display thickness does not change which atoms are connected.",
+      "example": "qasr examples/ring.xyz --no-user-config --bond-radius 0.075 --bond-colors atoms --cell off -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "geometry",
+      "flags": [
+        "--bond-colors"
+      ],
+      "title": "Color both halves from their atoms",
+      "values": "uniform (default), atoms",
+      "description": "With atoms, the first half takes one endpoint atom\u2019s color and the second half takes the other. The halves meet at the midpoint.",
+      "example": "qasr examples/ring.xyz --no-user-config --config examples/ring-bonds.json --bond-colors atoms -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "geometry",
+      "flags": [
+        "--faces"
+      ],
+      "title": "Fill a polygon or zeolite tile",
+      "values": "Path to a polygon-face JSON file",
+      "description": "Load an ordered polygon boundary from explicit vertices or zero-based atom indices. A single face is sufficient; a complete cage is optional. Alpha in the face color controls translucency.",
+      "example": "qasr examples/cage.xyz --no-user-config --config examples/zeolite-faces.json --faces examples/tiles.json -o structure.png",
+      "note": "For visible oxygen atoms, include the bridging O positions in the polygon loop. CIF input requires conversion first."
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--cell"
+      ],
+      "title": "Show the unit-cell edges",
+      "values": "on (default), off",
+      "description": "Draw depth-tested cell edges. Hiding them also removes cell and vacuum extents from auto-framing.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --view top --cell off -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--cell-width"
+      ],
+      "title": "Set unit-cell stroke thickness",
+      "values": "Greater than 0, up to 32 output pixels; default 2",
+      "description": "Change the width of the inner cell line independently of atom and bond outlines.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --view top --cell-width 3 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--cell-style"
+      ],
+      "title": "Use dashed unit-cell edges",
+      "values": "solid (default), dashed",
+      "description": "Choose a continuous or dashed stroke for the cell boundary.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/cell-contour.json --cell-style dashed -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--cell-color"
+      ],
+      "title": "Choose the cell stroke color",
+      "values": "#RRGGBB or #RRGGBBAA; default #464646",
+      "description": "Set the inner unit-cell line color and opacity. Use black with a white contour for contrast over colored atoms.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --view top --cell-color '#000000' --cell-outline-width 1.5 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--cell-outline-width"
+      ],
+      "title": "Add a white contour",
+      "values": "0\u20138 output pixels per side; default 0",
+      "description": "Surround the inner cell stroke with white. It follows dash segments and their ends; zero disables it.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/cell-contour.json --cell-outline-width 1.5 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--cell-dash-length",
+        "--cell-dash-gap"
+      ],
+      "title": "Adjust the dash pattern",
+      "values": "1\u2013256 output pixels; default length 8, gap 5",
+      "description": "Set the length of each dash and the blank space between dashes. These settings apply to dashed cell lines.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --view top --cell-style dashed --cell-dash-length 12 --cell-dash-gap 6 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--labels"
+      ],
+      "title": "Label visible atoms",
+      "values": "none (default), element, index",
+      "description": "Display element symbols or zero-based rendered-instance indices. Collision filtering suppresses labels that would overlap or lie behind surfaces.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --labels element -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--legend"
+      ],
+      "title": "Show element colors and counts",
+      "values": "off (default), on",
+      "description": "Add a legend that counts all displayed atom instances, including repeated and hidden atoms.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --legend on -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--axes"
+      ],
+      "title": "Add Cartesian axes",
+      "values": "off (default), on",
+      "description": "Project the Cartesian X, Y and Z directions into the image. These are world axes, rather than lattice a, b and c.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --view top --axes on -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--scale-bar"
+      ],
+      "title": "Show physical scale",
+      "values": "off (default), on",
+      "description": "Add a fitted bar labeled in angstroms, based on the final camera scale.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --scale-bar on -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--output",
+        "-o"
+      ],
+      "title": "Write a PNG, JPEG or WebP image",
+      "values": "Local destination path; no default image path",
+      "description": "The filename extension selects the image format. PNG is always supported; JPEG and lossless WebP require optional build capabilities.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --view top -o cobalt.png",
+      "note": "JPEG needs opaque pixels. Images cannot be written to stdout."
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--png-encoder"
+      ],
+      "title": "Choose the PNG encoder",
+      "values": "libdeflate when available, otherwise libpng; optional cairo",
+      "description": "Select an encoder supported by your build. Libdeflate and libpng preserve image pixels; the experimental Cairo encoder has transparent-RGB limitations.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --png-encoder libpng --png-compression 6 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--png-compression"
+      ],
+      "title": "Balance PNG size and write time",
+      "values": "auto (default), or integer 0\u20139",
+      "description": "Choose lossless compression effort. Auto selects an encoding level for the destination filesystem. Start at 1 for compact output with modest encoding effort.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --png-compression 1 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--png-filter"
+      ],
+      "title": "Choose the PNG row filter",
+      "values": "none, sub, up, adaptive; default depends on encoder",
+      "description": "Control the scanline filter before compression. It changes encoding effort and size, while libpng/libdeflate preserve the decoded pixels.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --png-encoder libpng --png-filter adaptive --png-compression 6 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--config"
+      ],
+      "title": "Reuse a JSON recipe",
+      "values": "One JSON path, or - for stdin",
+      "description": "Load rendering settings, then override selected fields with explicit command-line flags. Objects merge by field and arrays replace.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --width 1000 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--no-user-config"
+      ],
+      "title": "Start from reproducible built-in defaults",
+      "values": "No value after the flag",
+      "description": "Skip automatically discovered personal preferences for this invocation. Explicit recipes and command-line options still apply.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --view top -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--init-config"
+      ],
+      "title": "Create personal preferences",
+      "values": "Run alone; refuses to overwrite an existing file",
+      "description": "Create a starter config in your user configuration directory. Edit it to set the defaults you use most often.",
+      "example": "qasr --init-config",
+      "note": "Uses an absolute XDG_CONFIG_HOME, otherwise HOME/.config. Never copy a complete machine-specific invocation into this preferences file."
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--dump-config"
+      ],
+      "title": "See settings and where they came from",
+      "values": "No image required",
+      "description": "Print resolved configuration, runtime settings and per-field provenance. Useful when a personal default, recipe and CLI flag interact.",
+      "example": "qasr --no-user-config --config examples/illustrated.json --dump-config",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--validate-config"
+      ],
+      "title": "Check a recipe before rendering",
+      "values": "Input path optional unless the settings need input identity",
+      "description": "Validate combined settings, selectors and build requirements without writing an image. Include an input to check atom indices and element identities.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --config examples/source-highlight.json --validate-config",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--schema"
+      ],
+      "title": "Get machine-readable JSON rules",
+      "values": "config (default), user, job, worker, faces; run alone",
+      "description": "Print a Draft 2020-12 schema for settings, preferences, invocations, batch requests or polygon-face files.",
+      "example": "qasr --schema config",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--job"
+      ],
+      "title": "Bundle input, output and settings",
+      "values": "JSON path, or - for stdin; exclusive with --config",
+      "description": "Load a complete invocation containing paths and embedded rendering settings. Paths in a job file resolve relative to that file.",
+      "example": "qasr --job examples/highlight-job.json",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--report"
+      ],
+      "title": "Save a reproducibility record",
+      "values": "JSON path, or - for stdout",
+      "description": "Write a successful render\u2019s settings, counts, input/output hashes and stage timings. It complements the image with a compact record.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --view top --report render-report.json -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--json-errors"
+      ],
+      "title": "Return structured error details",
+      "values": "No value after the flag",
+      "description": "Format failures as JSON on stderr with an error code, exit status, message and setting path where available.",
+      "example": "qasr examples/POSCAR.skew --no-user-config --json-errors --validate-config",
+      "note": ""
+    },
+    {
+      "group": "files",
+      "flags": [
+        "--"
+      ],
+      "title": "Use a filename beginning with a dash",
+      "values": "Put rendering options before the terminator",
+      "description": "End option parsing so the next positional token can be a literal input path beginning with a dash.",
+      "example": "qasr --no-user-config -o structure.png -- -structure.vasp",
+      "note": "Replace -structure.vasp with your filename; the other examples use files from the example kit."
+    },
+    {
+      "group": "performance",
+      "flags": [
+        "--threads"
+      ],
+      "title": "Choose CPU parallelism",
+      "values": "auto (default), or 1\u2013256",
+      "description": "Choose render threads. Auto uses one for small images and up to eight for images at least 512 \u00d7 512, subject to environment limits.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --threads 4 --width 768 --height 768 -o structure.png",
+      "note": "Multiple threads require OpenMP. Divide CPUs between processes when launching several workers."
+    },
+    {
+      "group": "performance",
+      "flags": [
+        "--benchmark-stages"
+      ],
+      "title": "Measure the rendering steps",
+      "values": "No value after the flag",
+      "description": "Write configuration, parse, scene, rendering and encoding timings to stderr. Repeat a comparable job to distinguish sustained behavior from one-off variation.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --benchmark-stages --threads 4 --width 768 --height 768 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "performance",
+      "flags": [
+        "--batch"
+      ],
+      "title": "Render several requests in one process",
+      "values": "First argument; read JSONL from stdin",
+      "description": "Process render, validate, stats and clear_cache requests sequentially. Retain input and scenes within the cache budget; each render can use CPU threads.",
+      "example": "cd examples\nqasr --batch < worker-requests.jsonl",
+      "note": "Start in the directory containing the supplied inputs. Batch workers skip implicit personal preferences."
+    },
+    {
+      "group": "performance",
+      "flags": [
+        "--cache-mib"
+      ],
+      "title": "Bound retained batch data",
+      "values": "0\u2013512 MiB; default 64; batch only",
+      "description": "Set the input/scene cache budget. Zero disables retention. This is a cache limit rather than a cap on all process memory.",
+      "example": "cd examples\nqasr --batch --cache-mib 128 < worker-requests.jsonl",
+      "note": ""
+    },
+    {
+      "group": "performance",
+      "flags": [
+        "--max-jobs"
+      ],
+      "title": "Stop a batch after a chosen count",
+      "values": "1\u20131000000; default reads until end of input; batch only",
+      "description": "Exit after this many nonblank requests. Useful when supervising or periodically replacing a worker.",
+      "example": "cd examples\nqasr --batch --max-jobs 3 < worker-requests.jsonl",
+      "note": ""
+    },
+    {
+      "group": "movies",
+      "flags": [
+        "--movie"
+      ],
+      "title": "Make a camera orbit or reaction movie",
+      "values": "orbit, trajectory; no movie by default",
+      "description": "Stream rendered frames directly into an MP4. Orbit moves the camera around one structure; trajectory plays all snapshots with fixed framing.",
+      "example": "qasr examples/cage.xyz --no-user-config --movie orbit --movie-frames 60 --movie-fps 24 --cell off -o orbit.mp4",
+      "note": "Requires ENABLE_FFMPEG=ON. Use even image dimensions and an opaque background. See the movie guide for input and codec requirements."
+    },
+    {
+      "group": "movies",
+      "flags": [
+        "--movie-fps"
+      ],
+      "title": "Set movie playback speed",
+      "values": "Integer 1\u2013120; default 30",
+      "description": "Choose how many encoded frames play per second. This sets visual playback speed without assuming a physical simulation time step.",
+      "example": "qasr examples/reaction.xyz --no-user-config --movie trajectory --movie-fps 24 --config examples/reaction.json -o reaction.mp4",
+      "note": "Requires a build with FFmpeg support."
+    },
+    {
+      "group": "movies",
+      "flags": [
+        "--movie-frames"
+      ],
+      "title": "Choose the length of an orbit",
+      "values": "2\u2013100000; default 120; orbit only",
+      "description": "Set the number of camera poses. At 24 fps, 120 frames play for five seconds. Full turns avoid duplicating the first pose at the end.",
+      "example": "qasr examples/cage.xyz --no-user-config --movie orbit --movie-frames 120 --movie-fps 24 --cell off -o orbit.mp4",
+      "note": "Requires a build with FFmpeg support."
+    },
+    {
+      "group": "movies",
+      "flags": [
+        "--movie-axis"
+      ],
+      "title": "Choose the world axis of rotation",
+      "values": "Nonzero X,Y,Z; default 0,0,1; orbit only",
+      "description": "Orbit around a world Cartesian axis through the displayed structure center. View, up and right rotate together without a pole flip.",
+      "example": "qasr examples/cage.xyz --no-user-config --movie orbit --movie-axis 0,1,0 --movie-frames 60 --cell off -o orbit.mp4",
+      "note": "Requires a build with FFmpeg support."
+    },
+    {
+      "group": "movies",
+      "flags": [
+        "--movie-angle"
+      ],
+      "title": "Set the orbit angle and direction",
+      "values": "Nonzero \u22123600 to 3600 degrees; default 360; orbit only",
+      "description": "Choose a full revolution or a partial arc. Negative angles reverse direction. Partial arcs include both endpoint views.",
+      "example": "qasr examples/cage.xyz --no-user-config --movie orbit --movie-angle 180 --movie-frames 60 --cell off -o orbit.mp4",
+      "note": "Requires a build with FFmpeg support."
+    },
+    {
+      "group": "movies",
+      "flags": [
+        "--movie-interpolate"
+      ],
+      "title": "Smooth a supplied reaction path",
+      "values": "0\u20131000 inserted geometries per interval; default 0; trajectory only",
+      "description": "Insert linearly interpolated Cartesian positions and cell vectors between source snapshots. The fixed camera fits every displayed pose.",
+      "example": "qasr examples/reaction.xyz --no-user-config --movie trajectory --movie-interpolate 3 --config examples/reaction.json -o reaction.mp4",
+      "note": "Requires FFmpeg support. This smooths a supplied path; it does not calculate a reaction, infer atom mapping or unwrap periodic positions."
+    },
+    {
+      "group": "movies",
+      "flags": [
+        "--movie-codec"
+      ],
+      "title": "Select the MP4 encoder",
+      "values": "auto (default), h264, mpeg4",
+      "description": "Auto prefers FFmpeg\u2019s libx264 H.264 encoder and otherwise uses native MPEG-4 Part 2. An explicit encoder must be available in the linked libraries.",
+      "example": "qasr examples/cage.xyz --no-user-config --movie orbit --movie-codec mpeg4 --movie-frames 60 --cell off -o orbit.mp4",
+      "note": "Requires FFmpeg support. YUV 4:2:0 MP4 output uses no alpha channel and is not lossless RGB."
+    }
+  ],
+  "images": [
+    {
+      "id": "zeolite-faces",
+      "title": "Polygon faces on a complete cage",
+      "caption": "A complete LTA alpha cage with translucent faces spanning both Si and O atoms.",
+      "source": "cage.xyz",
+      "image": "assets/zeolite-faces.png",
+      "recipe": "downloads/zeolite-faces.json",
+      "png_sha256": "5cfb12561023d20a4b74680fb564427bc885098649fd7fd83f3d43a59eff76a3",
+      "input_sha256": "a8716236ccec1ce35b438cf2ea44422eca1a0e4cdc671f3efff00db8689b99af",
+      "config_sha256": "a49b0de9c97aaf9668a4cc63d181d15dca7b8a935e338c9cd4b0fed93c4e0c0d",
+      "command": "qasr examples/cage.xyz --no-user-config --config examples/zeolite-faces.json -o zeolite-faces.png"
+    },
+    {
+      "id": "single-polygon",
+      "title": "One translucent polygon",
+      "caption": "A single ordered ring is enough to define a tile; no closed cage is required.",
+      "source": "ring.xyz",
+      "image": "assets/single-polygon.png",
+      "recipe": "downloads/single-polygon.json",
+      "png_sha256": "5c90b17299f17e4f75635521623ffb0e0357aaff2cbdb54a4450a9deec3a5521",
+      "input_sha256": "db8aef80e27ff164c4bf90257128331fbc7bc6daebfb89ad45dfb48c33907639",
+      "config_sha256": "81868ad8efcfe267732f72fc19f3bf9a3dd3f3cb380bb5e72e7ec8e4a9f2171a",
+      "command": "qasr examples/ring.xyz --no-user-config --config examples/single-polygon.json -o single-polygon.png"
+    },
+    {
+      "id": "ring-bonds",
+      "title": "Atom-colored bond halves",
+      "caption": "Each half of a Si\u2013O bond takes the color of its originating atom.",
+      "source": "ring.xyz",
+      "image": "assets/ring-bonds.png",
+      "recipe": "downloads/ring-bonds.json",
+      "png_sha256": "93d10d45a199beb591954e4b95661af541ceeebccd9a68c780b229a518382ebb",
+      "input_sha256": "db8aef80e27ff164c4bf90257128331fbc7bc6daebfb89ad45dfb48c33907639",
+      "config_sha256": "6cffac757759ae91acbcb505fa1a1ba7a18483ff0a4eb3ea6c4638eee4dc22fb",
+      "command": "qasr examples/ring.xyz --no-user-config --config examples/ring-bonds.json -o ring-bonds.png"
+    },
+    {
+      "id": "thin-bonds",
+      "title": "Thin bond cylinders",
+      "caption": "A small bond radius leaves more space around a polygonal ring.",
+      "source": "ring.xyz",
+      "image": "assets/thin-bonds.png",
+      "recipe": "downloads/thin-bonds.json",
+      "png_sha256": "b2b7d1030017b10e2984f9a847feb86f3480adf553aadeb925e8046ecfcc493c",
+      "input_sha256": "db8aef80e27ff164c4bf90257128331fbc7bc6daebfb89ad45dfb48c33907639",
+      "config_sha256": "15abf8aa3d601b1e672acc9ff8b72e181cb963ec1cd1a878484f4b4e3c445a4a",
+      "command": "qasr examples/ring.xyz --no-user-config --config examples/thin-bonds.json -o thin-bonds.png"
+    },
+    {
+      "id": "thick-bonds",
+      "title": "Thicker bond cylinders",
+      "caption": "The same atoms and connectivity with a larger display radius for bonds.",
+      "source": "ring.xyz",
+      "image": "assets/thick-bonds.png",
+      "recipe": "downloads/thick-bonds.json",
+      "png_sha256": "0b4bc15e8fd2245792145a153be7c49a9f199e466ab6f8e91f12417a148f06b9",
+      "input_sha256": "db8aef80e27ff164c4bf90257128331fbc7bc6daebfb89ad45dfb48c33907639",
+      "config_sha256": "8c61441f1c00253e29eb449e043d6578e8e2290b372850459a9e41b6509911e6",
+      "command": "qasr examples/ring.xyz --no-user-config --config examples/thick-bonds.json -o thick-bonds.png"
+    },
+    {
+      "id": "cell-contour",
+      "title": "Dashed cell with a white contour",
+      "caption": "Black dashes remain legible over atoms thanks to the white surround.",
+      "source": "CONTCAR.co",
+      "image": "assets/cell-contour.png",
+      "recipe": "downloads/cell-contour.json",
+      "png_sha256": "130c50fc7fb2a5375e6ff079dbbb8933b584a5518db3cdab6de091f4eacb063d",
+      "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
+      "config_sha256": "f4d021cbddd81b32bf8874594226533a60738df5a071ec8cb9d4de117d817b86",
+      "command": "qasr examples/CONTCAR.co --no-user-config --config examples/cell-contour.json -o cell-contour.png"
+    }
+  ],
+  "files": {
+    "options.html": "a3625d96f7f0a651624581a44a2de1e01fc2b7da86815107b2eb01713bf674ce",
+    "options.js": "b23888142db0896afec9bbe58fc4964bef719ba42f70186f410e4198d98033ea",
+    "downloads/cage.xyz": "a8716236ccec1ce35b438cf2ea44422eca1a0e4cdc671f3efff00db8689b99af",
+    "downloads/ring.xyz": "db8aef80e27ff164c4bf90257128331fbc7bc6daebfb89ad45dfb48c33907639",
+    "downloads/tiles.json": "7f0724a2c4c36677538e12926ec5449c178f47aa5cd2fbdba85edec0198fa4e0",
+    "downloads/single-face.json": "f071164c2fe1bf67d281d0da60cba6f3c6b0c58b4553b9a1e6aaa77ecb7c5612",
+    "downloads/LTA.cif": "fe090b64a2101c211d8d3868307a9c4764fbb5ecdcb5e6f91a1486a12ca4a146",
+    "downloads/zeolite-provenance.md": "697ff7278c98c6444c5b67081ea2a336bd8819581a1f8108c9b5abe4e46811a1"
+  }
+}

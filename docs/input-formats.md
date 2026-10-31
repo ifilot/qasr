@@ -1,6 +1,6 @@
 # Source-independent geometry input
 
-Available in **v0.5.0**. Check `--build-info` for `nonperiodic: true` and
+Available since **v0.5.0**. Check `--build-info` for `nonperiodic: true` and
 `partial_pbc: true`. Earlier releases support VASP input only. No ASE, Python runtime,
 Gaussian installation, AMS installation or new library is required by the readers.
 Python remains a test/tooling dependency only.

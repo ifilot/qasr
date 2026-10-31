@@ -1,0 +1,272 @@
+{
+  "source": "https://europe.iza-structure.org/IZA-SC/download_cif.php?ID=138",
+  "cage_topology_source": "https://america.iza-structure.org/IZA-SC/Tilings/LTA.pdf",
+  "cif_sha256": "fe090b64a2101c211d8d3868307a9c4764fbb5ecdcb5e6f91a1486a12ca4a146",
+  "executable_sha256": "2ecf68f036c599a37c914cc0e189e5a2b8edb3e993d7bb43b16e05444f796196",
+  "input_sha256": {
+    "cage.xyz": "a8716236ccec1ce35b438cf2ea44422eca1a0e4cdc671f3efff00db8689b99af",
+    "cages-2x2.xyz": "15a77d0fce4868395062a61fcfc2d3c486e11818677832b6ea80ebc69fbfaa4a",
+    "ring.xyz": "db8aef80e27ff164c4bf90257128331fbc7bc6daebfb89ad45dfb48c33907639",
+    "tiles.json": "7f0724a2c4c36677538e12926ec5449c178f47aa5cd2fbdba85edec0198fa4e0",
+    "repeated-tiles.json": "94d564f7bb1c1af08426d51ae0adbe95c0be3fb12359076a976f835e59336f31",
+    "single-face.json": "f071164c2fe1bf67d281d0da60cba6f3c6b0c58b4553b9a1e6aaa77ecb7c5612",
+    "tiles-periodic.json": "d452b0dd8f419ae2b483a52cd702cdbf576eb2a4c85f62927def19ae03b4c05c",
+    "all-ring-faces.json": "ecfc238b2064ac170e18bd980f53769fdb1cbf1707c267904756edd734c6c51e",
+    "cage-topology.json": "da5ac6f93a915094a14cc5e63270bb61f33c6989909ba50821ed264538778a90"
+  },
+  "generator_sha256": "e37ad649a23ecb30535f42595c7f9671f37217750eb490349a40c438dca749b2",
+  "structure": {
+    "unit_cell": {
+      "atoms": 72,
+      "silicon": 24,
+      "oxygen": 48
+    },
+    "alpha_cage": {
+      "silicon": 48,
+      "oxygen": 72,
+      "atoms": 120,
+      "Si_edges": 72,
+      "SiO_edges": 144,
+      "faces": 26,
+      "Si_ring_counts": {
+        "4": 12,
+        "6": 8,
+        "8": 6
+      },
+      "polygon_vertices": {
+        "8": 12,
+        "12": 8,
+        "16": 6
+      },
+      "edge_face_incidence": 2,
+      "Euler_characteristic": 2,
+      "silicon_boundary_degree": 3,
+      "oxygen_boundary_degree": 2,
+      "cluster_atoms": 416,
+      "cluster_faces": 100
+    },
+    "rings": {
+      "4": 18,
+      "6": 20,
+      "8": 3
+    }
+  },
+  "images": [
+    {
+      "name": "01-lta-framework",
+      "source": "cage.xyz",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/cage.xyz",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/01-lta-framework.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/01-lta-framework.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/01-lta-framework.report.json"
+      ],
+      "image": "01-lta-framework.png",
+      "counts": {
+        "atom_instances": 120,
+        "bonds": 144,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "sha256": "613416cb1d0e39fc8c0b90c7cfc807ccd22ff92004f76a4e68c5fff8baa815c1"
+    },
+    {
+      "name": "02-lta-polygon-tiles",
+      "source": "cage.xyz",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/cage.xyz",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/02-lta-polygon-tiles.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/02-lta-polygon-tiles.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/02-lta-polygon-tiles.report.json"
+      ],
+      "image": "02-lta-polygon-tiles.png",
+      "counts": {
+        "atom_instances": 120,
+        "bonds": 144,
+        "atom_rules": 0,
+        "faces": 26,
+        "face_triangles": 236
+      },
+      "sha256": "5cfb12561023d20a4b74680fb564427bc885098649fd7fd83f3d43a59eff76a3"
+    },
+    {
+      "name": "03-single-face-translucent",
+      "source": "ring.xyz",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/ring.xyz",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/03-single-face-translucent.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/03-single-face-translucent.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/03-single-face-translucent.report.json"
+      ],
+      "image": "03-single-face-translucent.png",
+      "counts": {
+        "atom_instances": 16,
+        "bonds": 16,
+        "atom_rules": 0,
+        "faces": 1,
+        "face_triangles": 14
+      },
+      "sha256": "5c90b17299f17e4f75635521623ffb0e0357aaff2cbdb54a4450a9deec3a5521"
+    },
+    {
+      "name": "04-single-face-opaque",
+      "source": "ring.xyz",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/ring.xyz",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/04-single-face-opaque.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/04-single-face-opaque.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/04-single-face-opaque.report.json"
+      ],
+      "image": "04-single-face-opaque.png",
+      "counts": {
+        "atom_instances": 16,
+        "bonds": 16,
+        "atom_rules": 0,
+        "faces": 1,
+        "face_triangles": 14
+      },
+      "sha256": "ebd462a111baf4fcbc13b07c3ec7f943b3b3d84090852a59a12c4393f75275bc"
+    },
+    {
+      "name": "05-uniform-bonds",
+      "source": "ring.xyz",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/ring.xyz",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/05-uniform-bonds.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/05-uniform-bonds.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/05-uniform-bonds.report.json"
+      ],
+      "image": "05-uniform-bonds.png",
+      "counts": {
+        "atom_instances": 16,
+        "bonds": 16,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "sha256": "4cb8b9769db8e54d0b8d98da4263875084ef42c239b66cef91f7c0020e019404"
+    },
+    {
+      "name": "06-atom-colored-bonds",
+      "source": "ring.xyz",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/ring.xyz",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/06-atom-colored-bonds.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/06-atom-colored-bonds.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/06-atom-colored-bonds.report.json"
+      ],
+      "image": "06-atom-colored-bonds.png",
+      "counts": {
+        "atom_instances": 16,
+        "bonds": 16,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "sha256": "93d10d45a199beb591954e4b95661af541ceeebccd9a68c780b229a518382ebb"
+    },
+    {
+      "name": "07-thin-bonds",
+      "source": "ring.xyz",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/ring.xyz",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/07-thin-bonds.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/07-thin-bonds.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/07-thin-bonds.report.json"
+      ],
+      "image": "07-thin-bonds.png",
+      "counts": {
+        "atom_instances": 16,
+        "bonds": 16,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "sha256": "b2b7d1030017b10e2984f9a847feb86f3480adf553aadeb925e8046ecfcc493c"
+    },
+    {
+      "name": "08-thick-bonds",
+      "source": "ring.xyz",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/ring.xyz",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/08-thick-bonds.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/08-thick-bonds.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/08-thick-bonds.report.json"
+      ],
+      "image": "08-thick-bonds.png",
+      "counts": {
+        "atom_instances": 16,
+        "bonds": 16,
+        "atom_rules": 0,
+        "faces": 0,
+        "face_triangles": 0
+      },
+      "sha256": "0b4bc15e8fd2245792145a153be7c49a9f199e466ab6f8e91f12417a148f06b9"
+    },
+    {
+      "name": "09-repeated-tiles",
+      "source": "cages-2x2.xyz",
+      "command": [
+        "/tmp/qasr-cell-lines/qasr",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/cages-2x2.xyz",
+        "--no-user-config",
+        "--config",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/09-repeated-tiles.json",
+        "-o",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/09-repeated-tiles.png",
+        "--report",
+        "/mnt/d/PROGRAMMING/C/qasr/examples/zeolite/renders/09-repeated-tiles.report.json"
+      ],
+      "image": "09-repeated-tiles.png",
+      "counts": {
+        "atom_instances": 416,
+        "bonds": 512,
+        "atom_rules": 0,
+        "faces": 100,
+        "face_triangles": 888
+      },
+      "sha256": "f04e529d54a540c2c155514e0350200d115fe7fd33485d57cc2696eb33609b0c"
+    }
+  ]
+}

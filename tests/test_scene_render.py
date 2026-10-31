@@ -126,7 +126,7 @@ class SceneTests(unittest.TestCase):
     def test_skewed_images_beyond_adjacent_cells(self):
         basis = [[1,0,0],[3.2,0.2,0],[0,0,10]]
         f = [[0.43,0.37,0.5]]
-        scene = self.scene(poscar(basis, ["H"], f), config={"bond_cutoffs_A": {"H-H": 0.3}})
+        scene = self.scene(poscar(basis, ["H"], f), "--repeat", "4,2,1", config={"bond_cutoffs_A": {"H-H": 0.3}})
         expected = brute_bonds(basis, f, ["H"], 0.3, 8)
         actual = {(p["source"][0], p["source"][1], *p["image"]) for p in scene["primitives"] if p["kind"] == "bond"}
         self.assertEqual(actual, expected)
@@ -144,7 +144,8 @@ class SceneTests(unittest.TestCase):
             expected = brute_bonds(basis,f,elements,0.8,5)
             bonds = [p for p in result["primitives"] if p["kind"] == "bond"]
             actual = {(p["source"][0],p["source"][1],*p["image"]) for p in bonds}
-            self.assertEqual(actual,expected)
+            visible={key for key in expected if all(abs(shift)<size for shift,size in zip(key[2:],[2,2,1]))}
+            self.assertEqual(actual,visible)
             self.assertEqual(result["base_bond_count"],len(expected))
             unique = {(tuple(p["source"]),tuple(p["image"]),tuple(p["origin"])) for p in bonds}
             self.assertEqual(len(unique),len(bonds))
@@ -311,6 +312,8 @@ class SceneTests(unittest.TestCase):
             with self.subTest(name=item["name"]):
                 source=ROOT/item["input"]
                 self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(),item["input_sha256"])
+                scene=self.scene(source.read_text(),config=item["config"])
+                self.assertEqual({'atom_instances':scene['instance_count'],'bonds':scene['bond_count']},item['scene_counts'])
                 _,_,pixels=self.render(source.read_text(),item["config"])
                 self.assertEqual(hashlib.sha256(pixels).hexdigest(),item["rgba_sha256"])
 

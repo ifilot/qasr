@@ -38,7 +38,11 @@
         },
         "tone": {
           "type": "string",
-          "enum": ["color", "monocolor", "dualtone"],
+          "enum": [
+            "color",
+            "monocolor",
+            "dualtone"
+          ],
           "description": "Dithered atom/bond tones for ortep and balsac; color preserves the style palette."
         },
         "aa": {
@@ -174,6 +178,13 @@
         "bond_radius_A": {
           "type": "number",
           "exclusiveMinimum": 0
+        },
+        "bond_colors": {
+          "enum": [
+            "uniform",
+            "atoms"
+          ],
+          "description": "Uniform grey, or two continuous halves colored by the resolved endpoint atoms."
         }
       },
       "additionalProperties": false
@@ -355,6 +366,34 @@
         },
         "scale_bar": {
           "type": "boolean"
+        },
+        "cell_style": {
+          "enum": [
+            "solid",
+            "dashed"
+          ]
+        },
+        "cell_color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+        },
+        "cell_outline_width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8,
+          "description": "White contrast contour width per side in output pixels; zero disables it."
+        },
+        "cell_dash_length": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 256,
+          "description": "Dash length in output pixels; default 8."
+        },
+        "cell_dash_gap": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 256,
+          "description": "Gap between dashes in output pixels; default 5."
         }
       },
       "additionalProperties": false
@@ -715,7 +754,134 @@
         ]
       },
       "maxItems": 4096
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vertices": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": -1000000000000.0,
+                "maximum": 1000000000000.0
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "minItems": 3,
+            "maxItems": 64
+          },
+          "coordinates": {
+            "enum": [
+              "cartesian",
+              "fractional"
+            ]
+          },
+          "atom_indices": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 999999
+            },
+            "minItems": 3,
+            "maxItems": 64
+          },
+          "cell_offsets": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": -1024,
+                "maximum": 1024
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "minItems": 3,
+            "maxItems": 64
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+          },
+          "outline_color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+          },
+          "outline_width": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "repeat": {
+            "type": "boolean"
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "vertices"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "atom_indices"
+                  ]
+                },
+                {
+                  "required": [
+                    "cell_offsets"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "required": [
+              "atom_indices"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "vertices"
+                  ]
+                },
+                {
+                  "required": [
+                    "coordinates"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "maxItems": 4096
+    },
+    "faces_file": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Polygon JSON file; paths resolve relative to the containing config or job file."
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "not": {
+        "required": [
+          "faces",
+          "faces_file"
+        ]
+      }
+    }
+  ]
 }

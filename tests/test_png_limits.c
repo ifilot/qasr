@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-#include "render.h"
+#include "image_io.h"
 #include "overlay.h"
 #include <stdio.h>
 

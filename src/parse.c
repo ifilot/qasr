@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "parse.h"
+#include "input.h"
 #include <ctype.h>
 #include <math.h>
 #include <stdint.h>
@@ -314,6 +315,10 @@ static bool parse_outcar(Reader *r, const InputOptions *c, Structure *s, Error *
             /* A closing rule proves the table has exactly the declared number of rows. */
             if (!required(r, e)) { incomplete = feof(r->file) != 0; if (incomplete) goto end_of_stream; goto done; }
             if (!separator(r->text)) { fail(e, 4, "%s:%zu: missing closing POSITION separator or count mismatch", r->path, r->line); goto done; }
+            if (c->visit) {
+                for (int d=0;d<3;++d) candidate.cell_present[d]=candidate.pbc[d]=true;
+                if (!structure_validate(&candidate,e) || !c->visit(&candidate,frames,c->visit_context,e)) goto done;
+            }
             if (c->final_frame || frames == c->frame) {
                 if (!s->atoms && !allocate_atoms(s, total, species, counts, ns, e)) goto done;
                 memcpy(s->atoms, candidate.atoms, total * sizeof *s->atoms);

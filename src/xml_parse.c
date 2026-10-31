@@ -263,6 +263,11 @@ static bool finish(Xml *x, int depth, Structure *s)
         }
         if (x->kind == IONIC) {
             if (x->frames == VR_MAX_FRAMES) return problem(x, 6, "ionic frame limit exceeded");
+            if (x->config->visit) {
+                for (int d=0;d<3;++d) x->candidate.cell_present[d]=x->candidate.pbc[d]=true;
+                if (!structure_validate(&x->candidate,x->error) ||
+                    !x->config->visit(&x->candidate,x->frames,x->config->visit_context,x->error)) return false;
+            }
             if ((x->config->final_frame || x->frames == x->config->frame) && !save_snapshot(x, s, x->frames)) return false;
             ++x->frames;
         } else if (x->kind == FINAL) {

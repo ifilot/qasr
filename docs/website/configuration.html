@@ -1,8 +1,8 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Layered configuration and atom styling — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#guide">Skip to documentation</a><main id="guide" style="margin:0 auto;max-width:1100px;padding:32px 24px;overflow-wrap:anywhere"><nav aria-label="Handbook navigation"><a href="index.html">← QASR handbook</a> · <a href="configuration.html">Configuration</a> · <a href="batch.html">Batch &amp; OpenMP</a> · <a href="downloads/qasr-source.tar.gz" download>QASR sources</a></nav><p class="eyebrow">QASR: QUICK ATOMIC STRUCTURE RENDERER · V0.5.0 RELEASE</p><article class="doc-section"><h1 id="layered-configuration-and-automation-m9">Layered configuration and automation (M9)</h1>
+<html lang="en"><head><meta name="qasr-version" content="0.6.0"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Layered configuration and atom styling — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#guide">Skip to documentation</a><main id="guide" style="margin:0 auto;max-width:1100px;padding:32px 24px;overflow-wrap:anywhere"><nav aria-label="Handbook navigation"><a href="index.html">← QASR handbook</a> · <a href="options.html">All options &amp; examples</a> · <a href="configuration.html">Defaults &amp; atom styling</a> · <a href="batch.html">Batch rendering &amp; speed</a> · <a href="movies.html">Movies &amp; reaction paths</a> · <a href="downloads/qasr-source.tar.gz" download>QASR sources</a></nav><p class="eyebrow">QASR: QUICK ATOMIC STRUCTURE RENDERER · V0.6.0 RELEASE</p><article class="doc-section"><h1 id="layered-configuration-and-automation-m9">Defaults, atom styling and automation</h1>
 <p>Available in <strong>v0.4.0</strong>. The immutable v0.3.0 tag contains XML input,
-periodic context and the original handbook; it does not contain M9 flags.
+periodic context and the original handbook; it does not contain user-preference or atom-override options.
 Check <code>--build-info</code> for <code>user_config</code>, <code>atom_overrides</code>, <code>job_requests</code> and
 <code>config_schema_version: 1</code> before using this interface.</p>
 <h2 id="defaults-and-reproducibility">Defaults and reproducibility</h2>
@@ -28,7 +28,7 @@ Missing optional files are normal. Earlier development builds used the provision
 occurs. <code>--init-config</code> explicitly creates a starter file and any missing parent
 directories; existing files and symlinks are never overwritten. Use
 <code>--no-user-config</code> in CI, benchmarks and reproducible jobs. User preferences may
-set element palettes/radii, but cannot contain nonempty <code>atom_overrides</code>.</p>
+set element palettes/radii, but cannot contain nonempty <code>atom_overrides</code> or polygon faces. Keep structure-specific rules and faces in explicit recipes/jobs.</p>
 <pre><code class="language-sh">qasr --init-config
 qasr --dump-config
 qasr --no-user-config --config recipe.json --width 1200 --dump-config
@@ -81,16 +81,14 @@ list, whereas qasr uses zero-based offsets.</p>
 <pre><code class="language-sh">qasr --schema config &gt; config.schema.json
 qasr --schema user &gt; user.schema.json
 qasr --schema job &gt; job.schema.json
+qasr --schema worker &gt; worker.schema.json
+qasr --schema faces &gt; faces.schema.json
 qasr --no-user-config --config recipe.json --validate-config
 qasr CONTCAR --no-user-config --config recipe.json --validate-config --json-errors
 qasr --job render-job.json
 cat render-job.json | qasr --job -
 </code></pre>
-<p>The three Draft 2020-12 schemas are embedded in the executable, installed under
-<code>share/qasr/schemas</code>, and served by the handbook. <code>--schema</code> alone selects
-config. Schema discovery runs alone. Validation never builds/rasterizes a scene
-or writes PNG/report files. Without input it reports <code>input_validated: false</code>
-and <code>selectors_validated: false</code>; supply input for selector checks.</p>
+<p>The five Draft 2020-12 schemas cover config, user preferences, jobs, worker requests and face files. They are embedded in the executable, installed under <code>share/qasr/schemas</code>, and served by the handbook. <code>--schema</code> alone selects config; discovery runs alone. Validation does not rasterize or write image/movie/report files. With input and polygon faces, it builds geometry to check atom references and triangulation. Without input it reports <code>input_validated: false</code> and <code>selectors_validated: false</code>; supply input for selector and face checks.</p>
 <p>A job is an invocation, distinct from persistent preferences:</p>
 <pre><code class="language-json">{
   &quot;schema_version&quot;: 1,
@@ -104,9 +102,9 @@ and <code>selectors_validated: false</code>; supply input for selector checks.</
   &quot;config&quot;: {&quot;image&quot;: {&quot;width&quot;: 768, &quot;height&quot;: 768}}
 }
 </code></pre>
-<p>Optional runtime fields also include <code>format</code> and <code>recover</code>. Paths in a job file
+<p>Optional runtime fields also include <code>format</code>, <code>recover</code> and <code>movie</code>. Movie mode, frame rate and codec belong in the job; image/geometry/face settings remain in <code>config</code>. See <a href="movies.html#automation">movie jobs and limits</a>. Paths in a job file
 are relative to that file's directory; stdin jobs use the working directory.
-Input structures remain file paths. PNG stdout is unsupported. <code>report: "-"</code>
+Input structures remain file paths. Image/movie stdout is unsupported. <code>report: "-"</code>
 uses stdout. CLI input/output/frame/settings override the corresponding job
 values. <code>--job</code> and <code>--config</code> are mutually exclusive. Both accept <code>-</code> for one
 bounded stdin JSON object. Dump/validate modes can read a full render job without
@@ -137,7 +135,10 @@ rendering. PNG and report are individually atomic, <strong>not one transaction</
 late report I/O failure can leave a successfully written PNG and an older report.
 Consumers must check exit status and output hash. Atomic rename does not imply
 fsync durability or concurrent-input protection; do not modify inputs during a job.</p>
-<p>See <a href="https://github.com/ifilot/qasr/blob/master/docs/m9-validation.md">M9 validation evidence</a> for correctness and performance checks.</p>
-<p>A network server is not required. Optional M10 batch/stdio caching or an MCP
-adapter remains conditional on a repeated-input/integration workflow and measured
-benefit. This iteration adds no service dependency.</p></article><section aria-label="Verified atom styling examples"><h2>Try a verified highlight</h2><p>These QASR renders show a 63-source-atom cobalt slab expanded to 567 instances. Orange highlights source atoms 6 and 34. The second image adds a green override to source 6 in cell [1,0,0], after greyscale context colors are applied. The legend retains the element palette.</p><div class="two-col"><figure class="image-card"><a href="assets/source-highlight.png"><img src="assets/source-highlight.png" width="900" height="700" alt="Orange source highlights in a primary cobalt cell with greyscale copies" loading="lazy"></a><figcaption><a href="downloads/source-highlight.json" download>Source highlight recipe</a></figcaption></figure><figure class="image-card"><a href="assets/cell-highlight.png"><img src="assets/cell-highlight.png" width="900" height="700" alt="A green atom in a neighboring cell alongside orange primary highlights" loading="lazy"></a><figcaption><a href="downloads/cell-highlight.json" download>Copy-specific highlight recipe</a></figcaption></figure></div><p>Place <a href="downloads/CONTCAR.co" download>CONTCAR.co</a> and <a href="downloads/highlight-job.json" download>highlight-job.json</a> together, then run <code>qasr --job /path/to/highlight-job.json</code>. It writes highlight.png and highlight-report.json beside the job file.</p><p>Schemas: <a href="schemas/config.schema.json">config</a> · <a href="schemas/user.schema.json">user preferences</a> · <a href="schemas/job.schema.json">job</a>. <a href="configuration-manifest.json">Example provenance</a>.</p></section><footer><p><a href="index.html">QASR handbook</a> · GPL-3.0-only · Works offline.</p></footer></main></body></html>
+<p>See <a href="https://github.com/ifilot/qasr/blob/master/docs/m9-validation.md">Configuration validation evidence</a> for correctness and performance checks.</p>
+<p>For several views of the same structure, use <a href="batch.html">batch rendering</a> to retain parsed input and scene data between requests. Rendering runs locally without a network service.</p><h2 id="polygon-faces-bonds-cell-lines">Polygon faces, bonds and cell lines</h2>
+<p>Use root-level <code>faces: [...]</code> or <code>faces_file: "polygons.json"</code> in a recipe. Paths resolve against the containing recipe/job; stdin and worker paths use the working directory. Later layers replace the face array; an empty array clears it. <code>--faces FILE</code> is the final override. Resolved dumps contain inline faces. See <a href="options.html#face-fields">face fields, offsets and limits</a>.</p>
+<p><code>geometry.bond_radius_A</code> sets radius in angstroms; diameter is twice the radius. <code>geometry.bond_colors: "atoms"</code> colors halves from endpoint atoms. Both endpoint instances must be displayed, including included neighboring cells, with no override. Cell dashes, color and white contours are <code>overlays</code> fields; see <a href="options.html#annotations">cell-line controls</a>.</p>
+<h2 id="supported-input-formats">Supported input formats</h2>
+<p>Job <code>format</code> also accepts <code>xyz</code>, <code>extxyz</code>, <code>gaussian-input</code>, <code>gaussian-output</code> and <code>ams</code>. Cell vectors and per-axis periodicity remain separate. Read the <a href="index.html#input-formats">supported subsets and geometry rules</a> before choosing a format.</p>
+</article><section aria-label="Verified atom styling examples"><h2>Try a verified highlight</h2><p>These QASR renders show a 63-source-atom cobalt slab expanded to 567 instances. Orange highlights source atoms 6 and 34. The second image adds a green override to source 6 in cell [1,0,0], after greyscale context colors are applied. The legend retains the element palette.</p><div class="two-col"><figure class="image-card"><a href="assets/source-highlight.png"><img src="assets/source-highlight.png" width="900" height="700" alt="Orange source highlights in a primary cobalt cell with greyscale copies" loading="lazy"></a><figcaption><a href="downloads/source-highlight.json" download>Source highlight recipe</a></figcaption></figure><figure class="image-card"><a href="assets/cell-highlight.png"><img src="assets/cell-highlight.png" width="900" height="700" alt="A green atom in a neighboring cell alongside orange primary highlights" loading="lazy"></a><figcaption><a href="downloads/cell-highlight.json" download>Copy-specific highlight recipe</a></figcaption></figure></div><p>Place <a href="downloads/CONTCAR.co" download>CONTCAR.co</a> and <a href="downloads/highlight-job.json" download>highlight-job.json</a> together, then run <code>qasr --job /path/to/highlight-job.json</code>. It writes highlight.png and highlight-report.json beside the job file.</p><p>Schemas: <a href="schemas/config.schema.json">config</a> · <a href="schemas/user.schema.json">user preferences</a> · <a href="schemas/job.schema.json">job</a> · <a href="schemas/worker.schema.json">worker</a> · <a href="schemas/faces.schema.json">faces</a>. <a href="configuration-manifest.json">Example provenance</a>.</p></section><footer><p><a href="index.html">QASR handbook</a> · GPL-3.0-only · Works offline.</p></footer></main></body></html>

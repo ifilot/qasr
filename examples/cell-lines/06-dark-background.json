@@ -1,0 +1,74 @@
+{
+  "image": {
+    "width": 768,
+    "height": 768,
+    "background": "#526579",
+    "style": "illustrated",
+    "depth_fade": 0.9,
+    "outline_width": 1.5
+  },
+  "camera": {
+    "view": "top",
+    "margin": 0.06
+  },
+  "geometry": {
+    "bond_radius_A": 0.12
+  },
+  "overlays": {
+    "cell": true,
+    "cell_width": 2,
+    "cell_color": "#000000",
+    "cell_style": "dashed",
+    "cell_outline_width": 1.5
+  },
+  "elements": {
+    "H": {
+      "color": "#e5cf66",
+      "radius_A": 0.38
+    },
+    "C": {
+      "color": "#6b777d",
+      "radius_A": 0.5
+    },
+    "N": {
+      "color": "#8aaed1",
+      "radius_A": 0.5
+    },
+    "O": {
+      "color": "#e88069",
+      "radius_A": 0.5
+    },
+    "Co": {
+      "color": "#89aeb0",
+      "radius_A": 0.85
+    },
+    "Rh": {
+      "color": "#8aa5b5",
+      "radius_A": 0.85
+    },
+    "Ru": {
+      "color": "#7fa8ad",
+      "radius_A": 0.85
+    },
+    "Pd": {
+      "color": "#6f9fae",
+      "radius_A": 0.85
+    },
+    "Ce": {
+      "color": "#e4d088",
+      "radius_A": 1.0
+    },
+    "Fe": {
+      "color": "#ba8b76",
+      "radius_A": 0.85
+    },
+    "Li": {
+      "color": "#ba9dca",
+      "radius_A": 0.7
+    },
+    "Ag": {
+      "color": "#b9bec6",
+      "radius_A": 0.85
+    }
+  }
+}

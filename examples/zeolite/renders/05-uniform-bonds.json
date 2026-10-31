@@ -1,0 +1,37 @@
+{
+  "image": {
+    "width": 900,
+    "height": 900,
+    "style": "shaded",
+    "aa": "2x"
+  },
+  "elements": {
+    "Si": {
+      "color": "#70a9d2",
+      "radius_A": 0.32
+    },
+    "O": {
+      "color": "#ed7667",
+      "radius_A": 0.23
+    }
+  },
+  "geometry": {
+    "bond_colors": "uniform",
+    "bond_radius_A": 0.075
+  },
+  "overlays": {
+    "cell": false
+  },
+  "camera": {
+    "view": [
+      0,
+      0,
+      1
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ]
+  }
+}

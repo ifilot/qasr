@@ -29,7 +29,12 @@ def main():
         'OUTCAR.relax': fixtures/'OUTCAR.relax',
         'illustrated.json': ROOT/'presets/illustrated.json',
         'LICENSE': ROOT/'LICENSE',
+        'reaction.xyz': ROOT/'examples/movies/reaction.xyz',
+        'reaction.json': ROOT/'examples/movies/reaction.json',
     }
+    styles = ['ortep', 'balsac', 'ortep-monocolor', 'ortep-dualtone',
+              'balsac-monocolor', 'balsac-dualtone']
+    examples.update({style+'.json': ROOT/'presets'/(style+'.json') for style in styles})
     for name, source in examples.items(): shutil.copyfile(source, downloads/name)
     xml = '''<?xml version="1.0" encoding="UTF-8"?>
 <modeling>
@@ -80,6 +85,7 @@ The original slab provenance is retained in SLAB-PROVENANCE.md and SLAB-MANIFEST
 POSCAR.skew and OUTCAR.relax: original synthetic parser/geometry fixtures.
 vasprun.example.xml: original synthetic, complete two-atom XML document.
 illustrated.json: the repository's illustrated top-view preset.
+ortep*.json and balsac*.json: spherical style and dithered tone presets.
 publication.json: a portable libpng example with transparent output and periodic context.
 
 Original project material and these user-provided examples: GPL-3.0-only.
@@ -104,6 +110,9 @@ See LICENSE. Website images are program-generated examples, not AI illustrations
         ('xml-example', 'vasprun.example.xml', ['--width', '768', '--height', '768', '--view', '1,1,1']),
         ('publication', 'CONTCAR.co', ['--config', 'publication.json']),
     ]
+    jobs.extend(('co-'+style, 'CONTCAR.co',
+                 ['--config', style+'.json', '--width', '640', '--height', '480'])
+                for style in styles)
     records = []
     for name, source, flags in jobs:
         actual = [str(downloads/v) if v.endswith('.json') else v for v in flags]

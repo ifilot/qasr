@@ -6,11 +6,14 @@ import struct
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 import zlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from compare_benchmarks import compare, pixel_metrics
 from cpu_counters import measure_cycles
+from benchmark_iteration import comparison, measure_cli
 import subprocess
 
 
@@ -26,6 +29,32 @@ def report():
 
 
 class BenchmarkTests(unittest.TestCase):
+    def test_interleaved_interval_keeps_pairs_together(self):
+        rows = [{'baseline': {'wall_ms': n, 'cpu_ms': n},
+                 'candidate': {'wall_ms': n / 2, 'cpu_ms': n / 2}}
+                for n in [1, 100, 10000]]
+        result = comparison(rows)
+        self.assertEqual(result['candidate_over_baseline'], .5)
+        self.assertEqual(result['paired_bootstrap_ratio_95pct'], [.5, .5])
+
+    def test_interleaved_rejects_changed_output_before_reporting(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            source = work / 'input'
+            source.write_text('input')
+            args = SimpleNamespace(output=work / 'report.json', warmups=1, samples=2, seed=1729)
+            report_data = {'cases': []}
+
+            def fake_run(command):
+                output = b'reference' if str(command[0]) == '/baseline' else b'changed'
+                return subprocess.CompletedProcess(command, 0, stdout=output), {}
+
+            with mock.patch('benchmark_iteration.run', side_effect=fake_run):
+                with self.assertRaisesRegex(ValueError, 'output differs'):
+                    measure_cli({'baseline': Path('/baseline'), 'candidate': Path('/candidate')},
+                                [('case', source, [], None)], args, work, report_data, lambda: None)
+            self.assertEqual(report_data['cases'], [])
+
     def test_cycle_child_lifecycle(self):
         result=measure_cycles(["/bin/true"])
         self.assertIsInstance(result["available"],bool)

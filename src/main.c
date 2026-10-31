@@ -10,6 +10,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <signal.h>
+
+static void cancel_movie(int number)
+{
+    (void)number;atomic_store_explicit(&vr_cancel_requested,1,memory_order_relaxed);
+}
 
 static void print_vector(Vec3 v)
 {
@@ -52,7 +58,7 @@ static void help(void)
          "qasr " VR_VERSION "\n"
          "Usage: qasr INPUT -o OUTPUT.png|jpg|webp [options]\n"
          "  --inspect                   Normalized input JSON, without scene building\n"
-         "  --inspect-scene             Wrapped instances, clipped bonds and camera JSON\n"
+         "  --inspect-scene             Wrapped instances, complete bonds and camera JSON\n"
          "  --format auto|poscar|contcar|outcar|xml|xyz|extxyz\n"
          "           gaussian-input|gaussian-output|ams\n"
          "  --frame final|N             Zero-based geometry frame index\n"
@@ -67,7 +73,13 @@ static void help(void)
          "  --validate-config           Validate settings/selectors without rendering\n"
          "  --json-errors               Structured errors on stderr\n"
          "  --report FILE|-             Compact successful render manifest\n"
-         "  --schema [config|user|job|worker]   Print JSON Schema; run alone\n"
+         "  --schema [config|user|job|worker|faces]   Print JSON Schema; run alone\n"
+         "  --faces FILE                JSON polygon faces (vertices or atom_indices)\n"
+         "  --movie orbit|trajectory    Stream MP4; requires ENABLE_FFMPEG=ON\n"
+         "  --movie-fps N --movie-frames N   Default 30 fps; orbit defaults to 120 frames\n"
+         "  --movie-axis X,Y,Z --movie-angle DEGREES  Orbit axis/angle; defaults 0,0,1 / 360\n"
+         "  --movie-interpolate N       Intermediate frames per trajectory interval (default 0)\n"
+         "  --movie-codec auto|h264|mpeg4  Auto prefers libx264, then native MPEG-4\n"
          "  --width N --height N --repeat NX,NY,NZ\n"
          "  --expand-xy NX,NY           Neighbor cells on each side along a/b (0..511)\n"
          "  --image-colors normal|muted|greyscale  Color copies outside primary cell\n"
@@ -81,7 +93,12 @@ static void help(void)
          "  --png-compression auto|0..9 --png-filter adaptive|none|sub|up\n"
          "  --outline-width PIXELS      Illustrated/ORTEP/BALSAC ink width; 0 disables\n"
          "  --cell-width PIXELS         Unit-cell line width (default 2, maximum 32)\n"
+         "  --cell-style solid|dashed --cell-color '#RRGGBB[AA]'\n"
+         "  --cell-outline-width PIXELS White contour per side (default 0, maximum 8)\n"
+         "  --cell-dash-length PIXELS --cell-dash-gap PIXELS (defaults 8 and 5)\n"
          "  --sphere-scale F --bond-radius ANGSTROM\n"
+         "                              Bond radius is half its diameter; default 0.12 A\n"
+         "  --bond-colors uniform|atoms Atom-colored halves meet at the bond midpoint\n"
          "  --cell on|off --labels none|element|index\n"
          "  --axes on|off --legend on|off --scale-bar on|off\n"
          "  --threads auto|N --benchmark-stages\n"
@@ -126,7 +143,18 @@ static bool inspect_scene(const Config *c, const Scene *s, const Camera *camera)
             if (rules.radius==SIZE_MAX) printf("null");else printf("%zu",rules.radius);
             putchar('}');
         }
+        if (p->kind==CYLINDER && c->bond_colors==BONDS_ATOMS)
+            printf(",\"rgba_b\":[%u,%u,%u,%u],\"color_split\":%.17g",p->color_b[0],p->color_b[1],p->color_b[2],p->color_b[3],p->color_split);
         printf("}");
+    }
+    printf("],\"face_count\":%zu,\"face_triangles\":[",s->face_count);
+    for (size_t i=0;i<s->triangle_count;++i) {
+        const FaceTriangle *f=&s->faces[i];if (i) putchar(',');
+        printf("{\"face\":%zu,\"instance\":%zu,\"origin\":[%d,%d,%d],\"vertices\":[",f->face,f->instance,f->origin[0],f->origin[1],f->origin[2]);
+        for (size_t k=0;k<3;++k) {if (k) putchar(',');print_vector(f->vertices[k]);}
+        printf("],\"rgba\":[%u,%u,%u,%u],\"boundary_edges\":%u,\"outline_width\":%.17g,\"outline_rgba\":[%u,%u,%u,%u]}",
+               f->color[0],f->color[1],f->color[2],f->color[3],f->edges,f->outline_width,
+               f->outline_color[0],f->outline_color[1],f->outline_color[2],f->outline_color[3]);
     }
     puts("]}"); return fflush(stdout)==0 && !ferror(stdout);
 }
@@ -144,13 +172,14 @@ int main(int argc, char **argv)
         if (argc==3 && !strcmp(argv[2],"job")) schema=job_schema;
         else if (argc==3 && !strcmp(argv[2],"worker")) schema=worker_schema;
         else if (argc==3 && !strcmp(argv[2],"user")) schema=user_schema;
-        else if (argc==3 && strcmp(argv[2],"config")) {fputs("unknown schema; use config, user, job or worker\n",stderr);return 2;}
+        else if (argc==3 && !strcmp(argv[2],"faces")) schema=faces_schema;
+        else if (argc==3 && strcmp(argv[2],"config")) {fputs("unknown schema; use config, user, job, worker or faces\n",stderr);return 2;}
         return fputs((const char *)schema,stdout)==EOF || fflush(stdout) ? 7 : 0;
     }
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
     if (argc == 2 && !strcmp(argv[1], "--version")) { puts("qasr " VR_VERSION); return 0; }
     if (argc == 2 && !strcmp(argv[1],"--build-info")) {
-        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"nonperiodic\":true,\"partial_pbc\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s,\"jpeg\":%s,\"webp\":%s}\n",VR_VERSION,
+        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"nonperiodic\":true,\"partial_pbc\":true,\"polygon_faces\":true,\"atom_colored_bonds\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s,\"jpeg\":%s,\"webp\":%s,\"ffmpeg\":%s}\n",VR_VERSION,
 #ifdef VR_HAVE_XML
                "true",
 #else
@@ -177,6 +206,11 @@ int main(int argc, char **argv)
                "false",
 #endif
 #ifdef VR_HAVE_WEBP
+               "true",
+#else
+               "false",
+#endif
+#ifdef VR_HAVE_FFMPEG
                "true"
 #else
                "false"
@@ -198,6 +232,10 @@ int main(int argc, char **argv)
         config_free(&c);return 0;
     }
     if (!c.inspect && !c.validate_config) {
+        if (c.movie.mode) {
+            struct sigaction action={0};action.sa_handler=cancel_movie;sigemptyset(&action.sa_mask);
+            sigaction(SIGINT,&action,NULL);sigaction(SIGTERM,&action,NULL);
+        }
         cJSON *result=job_render(&c,NULL,c.report!=NULL,VR_VERSION,elapsed_ms(begin,configured),&e);
         if (!result) goto failure;
         bool ok=!c.report || json_write(c.report,result,false,&e);cJSON_Delete(result);
@@ -210,11 +248,12 @@ int main(int argc, char **argv)
         AtomStyle *styles=NULL;
         if (c.input && !atom_styles_resolve(&c,&s,&styles,&e)) goto failure;
         free(styles);
+        if (c.input && c.face_count && !scene_build(&c,&s,&scene,&e)) goto failure;
         cJSON *result=cJSON_CreateObject();cJSON_AddBoolToObject(result,"ok",1);cJSON_AddNumberToObject(result,"schema_version",1);
         cJSON_AddBoolToObject(result,"input_validated",c.input!=NULL);cJSON_AddBoolToObject(result,"selectors_validated",c.input!=NULL);
         cJSON_AddNumberToObject(result,"atom_rules",(double)c.rule_count);
         bool ok=json_write("-",result,false,&e);cJSON_Delete(result);if (!ok) goto failure;
-        structure_free(&s);config_free(&c);return 0;
+        scene_free(&scene);structure_free(&s);config_free(&c);return 0;
     }
     clock_gettime(CLOCK_MONOTONIC, &parsed);
     if (s.source.recovered) fprintf(stderr, "%s: warning: recovered complete ionic frame %zu from unfinished OUTCAR\n", c.input, s.source.frame);

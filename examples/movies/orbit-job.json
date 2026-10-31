@@ -1,0 +1,49 @@
+{
+  "input": "../zeolite/cage.xyz",
+  "output": "orbit.mp4",
+  "no_user_config": true,
+  "movie": {
+    "mode": "orbit",
+    "frames": 120,
+    "fps": 24,
+    "axis": [
+      0,
+      0,
+      1
+    ],
+    "angle": 360
+  },
+  "config": {
+    "image": {
+      "width": 640,
+      "height": 640,
+      "style": "shaded",
+      "aa": "2x"
+    },
+    "elements": {
+      "Si": {
+        "color": "#70a9d2",
+        "radius_A": 0.32
+      },
+      "O": {
+        "color": "#ed7667",
+        "radius_A": 0.23
+      }
+    },
+    "geometry": {
+      "bond_colors": "atoms",
+      "bond_radius_A": 0.075
+    },
+    "overlays": {
+      "cell": false
+    },
+    "camera": {
+      "view": [
+        1.4,
+        1,
+        1.2
+      ]
+    },
+    "faces_file": "../zeolite/tiles.json"
+  }
+}

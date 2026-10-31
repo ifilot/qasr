@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #define _POSIX_C_SOURCE 200809L
 #include "job.h"
+#include "automation.h"
 #include "parse.h"
 #include <errno.h>
 #include <signal.h>
@@ -48,6 +49,10 @@ static cJSON *dispatch(const cJSON *request, JobCache *cache, const char *versio
         Structure s={0};AtomStyle *styles=NULL;
         /* Validation evicts retained data so parser allocations share the same budget. */
         if (c.input && (!parse_structure(&c,&s,e) || !atom_styles_resolve(&c,&s,&styles,e))) {free(styles);structure_free(&s);goto done;}
+        if (c.input && c.face_count) {
+            Scene scene={0};bool valid=scene_build(&c,&s,&scene,e);scene_free(&scene);
+            if (!valid) {free(styles);structure_free(&s);goto done;}
+        }
         free(styles);structure_free(&s);
         result=cJSON_CreateObject();cJSON_AddBoolToObject(result,"input_validated",c.input!=NULL);cJSON_AddBoolToObject(result,"selectors_validated",c.input!=NULL);
     } else {

@@ -51,6 +51,7 @@ static bool accept_frame(Reader *r, const InputOptions *o, Structure *candidate,
 {
     if (frame>=VR_MAX_FRAMES) return problem(r,e,"frame limit exceeded");
     if (!structure_validate(candidate,e)) return false;
+    if (o->visit && !o->visit(candidate,frame,o->visit_context,e)) return false;
     if (o->final_frame || o->frame==frame) {
         structure_free(selected); *selected=*candidate; memset(candidate,0,sizeof *candidate);
         selected->source.frame=frame;
@@ -196,6 +197,8 @@ bool read_xyz(Reader *r, const InputOptions *o, Structure *s, Error *e)
                 if ((props[p].type=='R' && !number(word,&v)) ||
                     (props[p].type=='I' && (!number(word,&v) || floor(v)!=v)) ||
                     (props[p].type=='L' && !bool_token(word,&b))) { problem(r,e,"invalid Extended XYZ property value"); goto done; }
+                if (props[p].type=='R' && (int)props[p].offset==position)
+                    candidate.atoms[i].position.x[k]=v;
             }
             unsigned element=species>=0 ? element_id(words[species]) : 0;
             if (species>=0 && !element) { problem(r,e,"unknown XYZ element"); goto done; }
@@ -205,7 +208,7 @@ bool read_xyz(Reader *r, const InputOptions *o, Structure *s, Error *e)
                 element=(unsigned)atomic;
             }
             candidate.atoms[i].element=element;
-            for (int d=0;d<3;++d) if (!number(words[position+d],&candidate.atoms[i].position.x[d])) { problem(r,e,"invalid XYZ position"); goto done; }
+            if (!extended) for (int d=0;d<3;++d) if (!number(words[position+d],&candidate.atoms[i].position.x[d])) { problem(r,e,"invalid XYZ position"); goto done; }
         }
         if (!accept_frame(r,o,&candidate,s,frames++,e)) goto done;
     }

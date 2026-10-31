@@ -1,5 +1,8 @@
 # Performance work after v0.1.0
 
+For the current optimization results, see the
+[2026-10-31 performance iteration](performance-iteration.md).
+
 Historical measurements below use the provisional executable name `vasp-render`.
 The current application is QASR: Quick Atomic Structure Renderer; use `qasr`
 for new builds. Retained commands and measurements are preserved as recorded.

@@ -1,0 +1,24 @@
+{
+  "silicon": 48,
+  "oxygen": 72,
+  "atoms": 120,
+  "Si_edges": 72,
+  "SiO_edges": 144,
+  "faces": 26,
+  "Si_ring_counts": {
+    "4": 12,
+    "6": 8,
+    "8": 6
+  },
+  "polygon_vertices": {
+    "8": 12,
+    "12": 8,
+    "16": 6
+  },
+  "edge_face_incidence": 2,
+  "Euler_characteristic": 2,
+  "silicon_boundary_degree": 3,
+  "oxygen_boundary_degree": 2,
+  "cluster_atoms": 416,
+  "cluster_faces": 100
+}

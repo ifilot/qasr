@@ -115,6 +115,17 @@ class Inputs(unittest.TestCase):
         self.read('1\nProperties=species:S:1:pos:R:3 pbc="T F F"\nH 0 0 0\n',ok=False)
         self.read(text.replace('Properties=','Lattice="1 0 0 0 1 0 0 0 1" Properties='),ok=False)
 
+    def test_extended_positions_reused_with_reordered_properties(self):
+        for properties, row in [
+            ('pos:R:3:fixed:L:1:species:S:1:charge:R:1', '1D-1 -2.5 3 T C .25'),
+            ('fixed:L:1:charge:R:1:species:S:1:pos:R:3', 'T .25 C 1D-1 -2.5 3'),
+        ]:
+            text = f'1\nProperties={properties}\n{row}\n'
+            self.assertEqual(self.read(text)['atoms'][0]['position_A'], [.1, -2.5, 3])
+            for old, bad in [('1D-1', 'NaN'), ('.25', 'Inf'), ('T', 'invalid')]:
+                with self.subTest(properties=properties, bad=bad):
+                    self.read(text.replace('\n' + row, '\n' + row.replace(old, bad)), ok=False)
+
     def test_partial_cells_edges_wrap_and_replication(self):
         wire=extxyz([[2,0,0],[0,0,0],[0,0,0]],[True,False,False],[('H',[2.1,-3,5]),('H',[1.9,-3,5])])
         scene=self.read(wire,scene=True)

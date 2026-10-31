@@ -1,0 +1,1893 @@
+{
+  "schema_version": 1,
+  "faces": [
+    {
+      "atom_indices": [
+        0,
+        160,
+        1,
+        162,
+        3,
+        164,
+        5,
+        166,
+        7,
+        167,
+        6,
+        165,
+        4,
+        163,
+        2,
+        161
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        72,
+        280,
+        73,
+        282,
+        75,
+        284,
+        77,
+        286,
+        79,
+        287,
+        78,
+        285,
+        76,
+        283,
+        74,
+        281
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        0,
+        160,
+        1,
+        177,
+        17,
+        192,
+        16,
+        176
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        72,
+        280,
+        73,
+        265,
+        59,
+        257,
+        58,
+        264
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        0,
+        161,
+        2,
+        178,
+        18,
+        201,
+        32,
+        213,
+        30,
+        199,
+        16,
+        176
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        72,
+        281,
+        74,
+        266,
+        60,
+        245,
+        46,
+        235,
+        44,
+        243,
+        58,
+        264
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        1,
+        162,
+        3,
+        179,
+        19,
+        202,
+        33,
+        214,
+        31,
+        200,
+        17,
+        177
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        73,
+        282,
+        75,
+        267,
+        61,
+        246,
+        47,
+        236,
+        45,
+        244,
+        59,
+        265
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        2,
+        163,
+        4,
+        180,
+        20,
+        193,
+        18,
+        178
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        74,
+        283,
+        76,
+        268,
+        62,
+        258,
+        60,
+        266
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        3,
+        164,
+        5,
+        181,
+        21,
+        194,
+        19,
+        179
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        75,
+        284,
+        77,
+        269,
+        63,
+        259,
+        61,
+        267
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        4,
+        165,
+        6,
+        182,
+        22,
+        205,
+        36,
+        215,
+        34,
+        203,
+        20,
+        180
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        76,
+        285,
+        78,
+        270,
+        64,
+        249,
+        50,
+        237,
+        48,
+        247,
+        62,
+        268
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        5,
+        166,
+        7,
+        183,
+        23,
+        206,
+        37,
+        216,
+        35,
+        204,
+        21,
+        181
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        77,
+        286,
+        79,
+        271,
+        65,
+        250,
+        51,
+        238,
+        49,
+        248,
+        63,
+        269
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        6,
+        167,
+        7,
+        183,
+        23,
+        195,
+        22,
+        182
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        78,
+        287,
+        79,
+        271,
+        65,
+        260,
+        64,
+        270
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        16,
+        192,
+        17,
+        200,
+        31,
+        222,
+        45,
+        244,
+        59,
+        257,
+        58,
+        243,
+        44,
+        221,
+        30,
+        199
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        22,
+        195,
+        23,
+        206,
+        37,
+        228,
+        51,
+        250,
+        65,
+        260,
+        64,
+        249,
+        50,
+        227,
+        36,
+        205
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        18,
+        193,
+        20,
+        203,
+        34,
+        225,
+        48,
+        247,
+        62,
+        258,
+        60,
+        245,
+        46,
+        223,
+        32,
+        201
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        19,
+        194,
+        21,
+        204,
+        35,
+        226,
+        49,
+        248,
+        63,
+        259,
+        61,
+        246,
+        47,
+        224,
+        33,
+        202
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        30,
+        213,
+        32,
+        223,
+        46,
+        235,
+        44,
+        221
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        36,
+        215,
+        34,
+        225,
+        48,
+        237,
+        50,
+        227
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        31,
+        214,
+        33,
+        224,
+        47,
+        236,
+        45,
+        222
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        37,
+        216,
+        35,
+        226,
+        49,
+        238,
+        51,
+        228
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        8,
+        168,
+        9,
+        170,
+        11,
+        172,
+        13,
+        174,
+        15,
+        175,
+        14,
+        173,
+        12,
+        171,
+        10,
+        169
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        80,
+        288,
+        81,
+        290,
+        83,
+        292,
+        85,
+        294,
+        87,
+        295,
+        86,
+        293,
+        84,
+        291,
+        82,
+        289
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        8,
+        168,
+        9,
+        185,
+        23,
+        195,
+        22,
+        184
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        80,
+        288,
+        81,
+        273,
+        65,
+        260,
+        64,
+        272
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        8,
+        169,
+        10,
+        186,
+        24,
+        207,
+        38,
+        217,
+        36,
+        205,
+        22,
+        184
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        80,
+        289,
+        82,
+        274,
+        66,
+        251,
+        52,
+        239,
+        50,
+        249,
+        64,
+        272
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        9,
+        170,
+        11,
+        187,
+        25,
+        208,
+        39,
+        218,
+        37,
+        206,
+        23,
+        185
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        81,
+        290,
+        83,
+        275,
+        67,
+        252,
+        53,
+        240,
+        51,
+        250,
+        65,
+        273
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        10,
+        171,
+        12,
+        188,
+        26,
+        196,
+        24,
+        186
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        82,
+        291,
+        84,
+        276,
+        68,
+        261,
+        66,
+        274
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        11,
+        172,
+        13,
+        189,
+        27,
+        197,
+        25,
+        187
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        83,
+        292,
+        85,
+        277,
+        69,
+        262,
+        67,
+        275
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        12,
+        173,
+        14,
+        190,
+        28,
+        211,
+        42,
+        219,
+        40,
+        209,
+        26,
+        188
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        84,
+        293,
+        86,
+        278,
+        70,
+        255,
+        56,
+        241,
+        54,
+        253,
+        68,
+        276
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        13,
+        174,
+        15,
+        191,
+        29,
+        212,
+        43,
+        220,
+        41,
+        210,
+        27,
+        189
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        85,
+        294,
+        87,
+        279,
+        71,
+        256,
+        57,
+        242,
+        55,
+        254,
+        69,
+        277
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        14,
+        175,
+        15,
+        191,
+        29,
+        198,
+        28,
+        190
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        86,
+        295,
+        87,
+        279,
+        71,
+        263,
+        70,
+        278
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        28,
+        198,
+        29,
+        212,
+        43,
+        234,
+        57,
+        256,
+        71,
+        263,
+        70,
+        255,
+        56,
+        233,
+        42,
+        211
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        24,
+        196,
+        26,
+        209,
+        40,
+        231,
+        54,
+        253,
+        68,
+        261,
+        66,
+        251,
+        52,
+        229,
+        38,
+        207
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        25,
+        197,
+        27,
+        210,
+        41,
+        232,
+        55,
+        254,
+        69,
+        262,
+        67,
+        252,
+        53,
+        230,
+        39,
+        208
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        36,
+        217,
+        38,
+        229,
+        52,
+        239,
+        50,
+        227
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        42,
+        219,
+        40,
+        231,
+        54,
+        241,
+        56,
+        233
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        37,
+        218,
+        39,
+        230,
+        53,
+        240,
+        51,
+        228
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        43,
+        220,
+        41,
+        232,
+        55,
+        242,
+        57,
+        234
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        144,
+        400,
+        145,
+        402,
+        147,
+        404,
+        149,
+        406,
+        151,
+        407,
+        150,
+        405,
+        148,
+        403,
+        146,
+        401
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        72,
+        280,
+        73,
+        297,
+        89,
+        312,
+        88,
+        296
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        144,
+        400,
+        145,
+        385,
+        131,
+        377,
+        130,
+        384
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        72,
+        281,
+        74,
+        298,
+        90,
+        321,
+        104,
+        333,
+        102,
+        319,
+        88,
+        296
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        144,
+        401,
+        146,
+        386,
+        132,
+        365,
+        118,
+        355,
+        116,
+        363,
+        130,
+        384
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        73,
+        282,
+        75,
+        299,
+        91,
+        322,
+        105,
+        334,
+        103,
+        320,
+        89,
+        297
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        145,
+        402,
+        147,
+        387,
+        133,
+        366,
+        119,
+        356,
+        117,
+        364,
+        131,
+        385
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        74,
+        283,
+        76,
+        300,
+        92,
+        313,
+        90,
+        298
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        146,
+        403,
+        148,
+        388,
+        134,
+        378,
+        132,
+        386
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        75,
+        284,
+        77,
+        301,
+        93,
+        314,
+        91,
+        299
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        147,
+        404,
+        149,
+        389,
+        135,
+        379,
+        133,
+        387
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        76,
+        285,
+        78,
+        302,
+        94,
+        325,
+        108,
+        335,
+        106,
+        323,
+        92,
+        300
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        148,
+        405,
+        150,
+        390,
+        136,
+        369,
+        122,
+        357,
+        120,
+        367,
+        134,
+        388
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        77,
+        286,
+        79,
+        303,
+        95,
+        326,
+        109,
+        336,
+        107,
+        324,
+        93,
+        301
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        149,
+        406,
+        151,
+        391,
+        137,
+        370,
+        123,
+        358,
+        121,
+        368,
+        135,
+        389
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        78,
+        287,
+        79,
+        303,
+        95,
+        315,
+        94,
+        302
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        150,
+        407,
+        151,
+        391,
+        137,
+        380,
+        136,
+        390
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        88,
+        312,
+        89,
+        320,
+        103,
+        342,
+        117,
+        364,
+        131,
+        377,
+        130,
+        363,
+        116,
+        341,
+        102,
+        319
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        94,
+        315,
+        95,
+        326,
+        109,
+        348,
+        123,
+        370,
+        137,
+        380,
+        136,
+        369,
+        122,
+        347,
+        108,
+        325
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        90,
+        313,
+        92,
+        323,
+        106,
+        345,
+        120,
+        367,
+        134,
+        378,
+        132,
+        365,
+        118,
+        343,
+        104,
+        321
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        91,
+        314,
+        93,
+        324,
+        107,
+        346,
+        121,
+        368,
+        135,
+        379,
+        133,
+        366,
+        119,
+        344,
+        105,
+        322
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        102,
+        333,
+        104,
+        343,
+        118,
+        355,
+        116,
+        341
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        108,
+        335,
+        106,
+        345,
+        120,
+        357,
+        122,
+        347
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        103,
+        334,
+        105,
+        344,
+        119,
+        356,
+        117,
+        342
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        109,
+        336,
+        107,
+        346,
+        121,
+        358,
+        123,
+        348
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        152,
+        408,
+        153,
+        410,
+        155,
+        412,
+        157,
+        414,
+        159,
+        415,
+        158,
+        413,
+        156,
+        411,
+        154,
+        409
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        80,
+        288,
+        81,
+        305,
+        95,
+        315,
+        94,
+        304
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        152,
+        408,
+        153,
+        393,
+        137,
+        380,
+        136,
+        392
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        80,
+        289,
+        82,
+        306,
+        96,
+        327,
+        110,
+        337,
+        108,
+        325,
+        94,
+        304
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        152,
+        409,
+        154,
+        394,
+        138,
+        371,
+        124,
+        359,
+        122,
+        369,
+        136,
+        392
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        81,
+        290,
+        83,
+        307,
+        97,
+        328,
+        111,
+        338,
+        109,
+        326,
+        95,
+        305
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        153,
+        410,
+        155,
+        395,
+        139,
+        372,
+        125,
+        360,
+        123,
+        370,
+        137,
+        393
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        82,
+        291,
+        84,
+        308,
+        98,
+        316,
+        96,
+        306
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        154,
+        411,
+        156,
+        396,
+        140,
+        381,
+        138,
+        394
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        83,
+        292,
+        85,
+        309,
+        99,
+        317,
+        97,
+        307
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        155,
+        412,
+        157,
+        397,
+        141,
+        382,
+        139,
+        395
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        84,
+        293,
+        86,
+        310,
+        100,
+        331,
+        114,
+        339,
+        112,
+        329,
+        98,
+        308
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        156,
+        413,
+        158,
+        398,
+        142,
+        375,
+        128,
+        361,
+        126,
+        373,
+        140,
+        396
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        85,
+        294,
+        87,
+        311,
+        101,
+        332,
+        115,
+        340,
+        113,
+        330,
+        99,
+        309
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        157,
+        414,
+        159,
+        399,
+        143,
+        376,
+        129,
+        362,
+        127,
+        374,
+        141,
+        397
+      ],
+      "repeat": false,
+      "color": "#57afcf68",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        86,
+        295,
+        87,
+        311,
+        101,
+        318,
+        100,
+        310
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        158,
+        415,
+        159,
+        399,
+        143,
+        383,
+        142,
+        398
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        100,
+        318,
+        101,
+        332,
+        115,
+        354,
+        129,
+        376,
+        143,
+        383,
+        142,
+        375,
+        128,
+        353,
+        114,
+        331
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        96,
+        316,
+        98,
+        329,
+        112,
+        351,
+        126,
+        373,
+        140,
+        381,
+        138,
+        371,
+        124,
+        349,
+        110,
+        327
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        97,
+        317,
+        99,
+        330,
+        113,
+        352,
+        127,
+        374,
+        141,
+        382,
+        139,
+        372,
+        125,
+        350,
+        111,
+        328
+      ],
+      "repeat": false,
+      "color": "#a488d478",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        108,
+        337,
+        110,
+        349,
+        124,
+        359,
+        122,
+        347
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        114,
+        339,
+        112,
+        351,
+        126,
+        361,
+        128,
+        353
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        109,
+        338,
+        111,
+        350,
+        125,
+        360,
+        123,
+        348
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    },
+    {
+      "atom_indices": [
+        115,
+        340,
+        113,
+        352,
+        127,
+        362,
+        129,
+        354
+      ],
+      "repeat": false,
+      "color": "#e7b34c58",
+      "outline_width": 0.65,
+      "outline_color": "#285168b0"
+    }
+  ]
+}

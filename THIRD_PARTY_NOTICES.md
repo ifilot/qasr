@@ -43,3 +43,18 @@ package notices for the selected implementation). Optional `ENABLE_WEBP` builds
 link system libwebp (BSD-3-Clause). Neither library nor its transitive shared
 libraries are vendored or copied into binary archives; install the corresponding
 runtime packages when distributing a build with these options enabled.
+
+Optional `ENABLE_FFMPEG` builds dynamically link the system libavcodec,
+libavformat, libavutil and libswscale libraries. FFmpeg is LGPL-2.1-or-later by
+default; GPL components such as libx264 make the selected distribution's build
+GPL. Consult that system package's license/configuration and notices. QASR does
+not vendor FFmpeg, libx264 or their runtime dependencies. Enabled binaries need
+the matching shared libraries installed; builds with this option OFF link none
+of these libraries. QASR's own code remains GPL-3.0-only.
+
+The idealized LTA coordinate data in `examples/zeolite/LTA.cif` come from the
+IZA Structure Commission's Database of Zeolite Structures, credited to
+Ch. Baerlocher and L. B. McCusker. The original source header is preserved.
+Converted geometry and illustrative ring-face selections are documented in
+`examples/zeolite/README.md`, with source links and access date. The idealized
+geometry is not a new experimental structure determination by this project.

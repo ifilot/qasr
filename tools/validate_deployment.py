@@ -33,6 +33,7 @@ def main():
     args=parser.parse_args();build=args.build.resolve();out=args.output.resolve()
     out.parent.mkdir(parents=True,exist_ok=True)
     work=Path(tempfile.mkdtemp(prefix='qasr-deployment-'))
+    os.environ['XDG_CONFIG_HOME']=str(work/'isolated-user-config')
     report={'started_utc':datetime.now(timezone.utc).isoformat(),'work_dir':str(work),'checks':[]}
     def save():out.write_text(json.dumps(report,indent=2)+'\n')
     save()
@@ -65,6 +66,12 @@ def main():
     linked=run('installed-libraries',['ldd',installed])
     if 'not found' in linked:raise RuntimeError('unresolved installed shared library')
     if not (install/'share/doc/qasr/LICENSE').is_file():raise RuntimeError('installed GPL notice missing')
+    if capabilities.get('ffmpeg'):
+        installed_movie=runtime/'installed.mp4'
+        run('installed-movie',[installed,source,'--no-user-config','--movie','orbit',
+                              '--movie-frames','2','--movie-codec','mpeg4','--width','64',
+                              '--height','64','--aa','native','--cell','off','-o',installed_movie])
+        if not installed_movie.stat().st_size:raise RuntimeError('installed movie is empty')
     archives=out.parent/'archives';archives.mkdir(exist_ok=True)
     run('binary-package',['cpack','--config',build/'CPackConfig.cmake','-B',archives])
     binary=next(archives.glob('qasr-*-Linux-*.tar.gz'))
@@ -85,22 +92,30 @@ def main():
     for relative,expected in manifest['files'].items():
         if digest(unpacked/relative)!=expected:raise RuntimeError('source file hash mismatch: '+relative)
     for required in ['src/overlay.c','src/overlay.h','tests/test_overlays.py','docs/performance-targets.json',
+                     'src/movie.c','src/movie.h','src/image.c','src/image.h','src/image_io.h','src/sha256.h',
+                     'src/faces.c','src/face_render.c','schemas/faces.schema.json','tests/test_movies.py',
+                     f"docs/release-v{capabilities['version']}.md",'docs/polygon-faces.md','docs/movies.md',
                      'tools/check_performance.py','tools/validate_deployment.py','LICENSE','THIRD_PARTY_NOTICES.md']:
         if required not in manifest['files']:raise RuntimeError('required source content missing: '+required)
     clean_build=work/'source-build'
-    run('source-configure',['cmake','-S',unpacked,'-B',clean_build,'-DCMAKE_BUILD_TYPE=Release','-DBUILD_TESTING=ON'])
+    feature_options=[f'-DENABLE_{name.upper()}={"ON" if capabilities.get(name) else "OFF"}'
+                     for name in ['openmp','libdeflate','xml','jpeg','webp','ffmpeg']]
+    run('source-configure',['cmake','-S',unpacked,'-B',clean_build,'-DCMAKE_BUILD_TYPE=Release','-DBUILD_TESTING=ON',*feature_options])
     run('source-build',['cmake','--build',clean_build,'-j',args.jobs])
+    source_cap=json.loads(run('source-build-info',[clean_build/'qasr','--build-info']))
+    if source_cap!=capabilities:raise RuntimeError('fresh source build capabilities differ from installed build')
     run('source-tests',['ctest','--test-dir',clean_build,'--output-on-failure'])
     source_png=runtime/'source.png'
     run('source-render',[clean_build/'qasr',*flags,'--config',unpacked/'presets/illustrated.json','-o',source_png],cwd=runtime)
     if decode_png(source_png)!=decode_png(installed_png):raise RuntimeError('fresh source build image differs')
     minimal=work/'minimal-build'
     run('minimal-configure',['cmake','-S',unpacked,'-B',minimal,'-DCMAKE_BUILD_TYPE=Release','-DBUILD_TESTING=ON',
-                             '-DENABLE_OPENMP=OFF','-DENABLE_LIBDEFLATE=OFF','-DENABLE_CAIRO_EXPERIMENTS=OFF','-DENABLE_XML=OFF'])
+                             '-DENABLE_OPENMP=OFF','-DENABLE_LIBDEFLATE=OFF','-DENABLE_CAIRO_EXPERIMENTS=OFF','-DENABLE_XML=OFF',
+                             '-DENABLE_JPEG=OFF','-DENABLE_WEBP=OFF','-DENABLE_FFMPEG=OFF'])
     run('minimal-build',['cmake','--build',minimal,'-j',args.jobs])
     run('minimal-tests',['ctest','--test-dir',minimal,'--output-on-failure'])
     minimal_cap=json.loads(run('minimal-build-info',[minimal/'qasr','--build-info']))
-    if any(minimal_cap.get(key,False) for key in ['openmp','libdeflate','cairo','xml']):raise RuntimeError('minimal features were not disabled')
+    if any(minimal_cap.get(key,False) for key in ['openmp','libdeflate','cairo','xml','jpeg','webp','ffmpeg']):raise RuntimeError('minimal features were not disabled')
     minimal_png=runtime/'minimal.png'
     run('minimal-render',[minimal/'qasr',*flags,'--config',unpacked/'presets/illustrated.json','-o',minimal_png],cwd=runtime)
     if decode_png(minimal_png)!=decode_png(installed_png):raise RuntimeError('minimal build changes annotation pixels')

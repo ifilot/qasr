@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define VR_MEMORY_BUDGET ((size_t)1073741824)
 #define VR_MAX_ATOMS 1000000u
 #define VR_MAX_INSTANCES 2000000u
 #define VR_MAX_FRAMES 10000000u

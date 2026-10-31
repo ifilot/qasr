@@ -16,15 +16,19 @@ jobs:
           - jpeg: 'OFF'
             webp: 'OFF'
             cairo: 'OFF'
+            ffmpeg: 'OFF'
           - jpeg: 'ON'
             webp: 'OFF'
             cairo: 'OFF'
+            ffmpeg: 'OFF'
           - jpeg: 'OFF'
             webp: 'ON'
             cairo: 'OFF'
+            ffmpeg: 'OFF'
           - jpeg: 'ON'
             webp: 'ON'
             cairo: 'ON'
+            ffmpeg: 'ON'
     steps:
       - uses: actions/checkout@v6
       - name: Install base dependencies
@@ -38,8 +42,11 @@ jobs:
       - name: Install Cairo
         if: matrix.cairo == 'ON'
         run: sudo apt-get install -y libcairo2-dev
+      - name: Install FFmpeg libraries and movie validation tools
+        if: matrix.ffmpeg == 'ON'
+        run: sudo apt-get install -y libavcodec-dev libavformat-dev libavutil-dev libswscale-dev ffmpeg
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_JPEG=${{ matrix.jpeg }} -DENABLE_WEBP=${{ matrix.webp }} -DENABLE_CAIRO_EXPERIMENTS=${{ matrix.cairo }}
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_JPEG=${{ matrix.jpeg }} -DENABLE_WEBP=${{ matrix.webp }} -DENABLE_CAIRO_EXPERIMENTS=${{ matrix.cairo }} -DENABLE_FFMPEG=${{ matrix.ffmpeg }}
       - name: Build
         run: cmake --build build -j2
       - name: Test

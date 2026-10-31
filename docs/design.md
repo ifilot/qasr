@@ -1,5 +1,33 @@
 # Technical Design v0.1 — Headless VASP Geometry-to-PNG Renderer
 
+## Current implementation boundaries
+
+The implementation has grown beyond the original design below: it supports a
+sequential JSONL worker, multiple structure and image formats, polygon faces,
+atom-colored bonds, configurable cell lines and optional FFmpeg movies.
+`main.c`/`worker.c` orchestrate configuration and jobs; `job.c` owns the cache and
+still-image pipeline, and `movie.c` owns frame scheduling and its private FFmpeg
+encoder. Configuration validation and serialization live in `config.c` and
+`config_json.c`, including movie settings; neither depends on the movie renderer.
+
+`parse.c` adapts invocation settings to the input-only `input.h` reader contract.
+`scene.c` builds geometry; `render.h` exposes rendering and reusable sampling
+storage. `image.h` owns the RGBA buffer contract, while `image_io.h` owns image
+encoding and atomic file replacement. These boundaries keep image codecs and
+hashing independent of scene/raster implementation details. Concrete scene and
+image structs are intentional internal value types; there is no installed C ABI.
+FFmpeg handles stay private to `movie.c`.
+
+See [movies](movies.md), [polygon faces](polygon-faces.md),
+[cell lines](cell-lines.md), [render styles](render-styles.md) and the
+[code polish review](code-polish.md) for current behavior and validation.
+The remaining sections record historical requirements and implementation stages.
+
+Current bond display requires both endpoint atom instances in the requested
+cells, with no override. Clipping described in historical sections below is no
+longer supported. See [current cell-line options](cell-lines.md)
+for dashed edges and white contrast contours.
+
 **Status:** v0.1.0 records M0–M3, v0.2.0 M4–M6, and v0.3.0 completes M7 XML, M8 periodic context and the standalone handbook. v0.4.0 closes M9 configuration/atom styling, M10 cached JSONL processing, M11 OpenMP investigation and the QASR naming correction. v0.5.0 adds generalized geometry input, optional JPEG/WebP output and ORTEP/BALSAC styles with dithered tones. WSL is the approved deployment/performance environment. Historical milestone records remain below.
 
 **Language:** C11. **Platform:** Linux workstations and HPC nodes. **Interface:** standalone CLI. **Default image:** 512 × 512 PNG.

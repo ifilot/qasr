@@ -1,6 +1,6 @@
 [![Compilation status](https://github.com/ifilot/qasr/actions/workflows/image-libs.yml/badge.svg?branch=master)](https://github.com/ifilot/qasr/actions/workflows/image-libs.yml)
 [![Language: C11](https://img.shields.io/badge/language-C11-blue.svg)](CMakeLists.txt)
-[![Version: 0.5.0](https://img.shields.io/badge/version-0.5.0-blue.svg)](https://github.com/ifilot/qasr/tree/v0.5.0)
+[![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-blue.svg)](https://github.com/ifilot/qasr/tree/v0.6.0)
 
 # QASR: Quick Atomic Structure Renderer
 
@@ -9,11 +9,19 @@ QASR turns atomic structures into images from the command line, without a graphi
 - Read VASP, XYZ/Extended XYZ, Gaussian and AMS geometry files.
 - Render molecules, crystals and slabs with configurable views, colors and drawing styles.
 - Save PNG images, or enable optional JPEG and lossless WebP output.
+- Enable optional FFmpeg support for camera-orbit and fixed-camera reaction
+  movies; see the [movie guide](docs/movies.md) and [examples](examples/movies/README.md).
 - Automate repeated renders with JSON settings and batch jobs.
+- Add polygon faces and atom-colored bond halves; see the
+  [zeolite examples](examples/zeolite/README.md) and [feature guide](docs/polygon-faces.md).
+- Draw bonds between displayed atoms and style unit-cell edges with dashes and
+  white contours; see the [cell-line examples](examples/cell-lines/README.md).
 
 See the [user handbook](https://ifilot.github.io/qasr/) for detailed usage,
 [supported input formats](docs/input-formats.md) and [drawing styles](docs/render-styles.md).
-See the [v0.5.0 release notes](docs/release-v0.5.0.md) for changes and limitations.
+See the [v0.6.0 release notes](docs/release-v0.6.0.md) for changes and limitations.
+See the [feature performance report](docs/performance-features.md) for the
+polygon, cell-line and movie optimization measurements and reproduction steps.
 
 ## Examples
 
@@ -65,6 +73,11 @@ cmake --build build --parallel
 
 To run the test suite, install Python 3, configure with `-DBUILD_TESTING=ON`,
 rebuild, and run `ctest --test-dir build --output-on-failure`.
+
+For movies, install `libavcodec-dev libavformat-dev libavutil-dev libswscale-dev`
+and configure with `-DENABLE_FFMPEG=ON`. This links shared FFmpeg libraries and
+streams MP4 frames directly, without a separate `ffmpeg` process or PNG sequence.
+The option defaults to OFF; `qasr --build-info` reports `ffmpeg: true` when enabled.
 
 ## Minimal working example
 

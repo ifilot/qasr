@@ -1,10 +1,10 @@
-# M10 — Sequential JSONL worker
+# Sequential JSONL worker
 
 Available in **v0.4.0**. `--build-info` reports `batch_worker: true`.
 The original single-job CLI remains supported and shares its rendering path with
 the worker. No additional runtime package, network listener or HTTP service is
 required. MCP remains an optional integration adapter when a client needs it;
-this implementation delivers the persistent rendering/batch branch of M10.
+the rendering worker itself needs no integration adapter.
 
 ## Start and call
 
@@ -32,7 +32,7 @@ including the envelope. Duplicate/unknown keys remain errors.
 
 IDs are required printable ASCII strings of 1..128 bytes. Operations are
 `render`, `validate`, `stats` and `clear_cache`. Render/validate require an ordinary
-M9 invocation under `job`; control operations reject a `job` field. All paths
+render invocation under `job`; control operations reject a `job` field. All paths
 are relative to the worker's working directory, equivalent to stdin JSON jobs.
 No shell commands or input-data uploads are accepted. Create output parent
 directories before submission. Input structures remain files; PNG stdout remains

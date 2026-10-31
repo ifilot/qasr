@@ -2,7 +2,8 @@
 #define _POSIX_C_SOURCE 200809L
 #define _XOPEN_SOURCE 700
 #include "automation.h"
-#include "render.h"
+#include "sha256.h"
+#include "image_io.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -129,6 +130,8 @@ cJSON *render_report(const Config *c, const Structure *s, const Scene *scene, co
     struct stat info;if (!stat(c->output,&info)) cJSON_AddNumberToObject(output,"bytes",(double)info.st_size);
     cJSON_AddNumberToObject(counts,"atom_instances",(double)scene->atom_count);cJSON_AddNumberToObject(counts,"bonds",(double)scene->bond_count);
     cJSON_AddNumberToObject(counts,"atom_rules",(double)c->rule_count);
+    cJSON_AddNumberToObject(counts,"faces",(double)scene->face_count);
+    cJSON_AddNumberToObject(counts,"face_triangles",(double)scene->triangle_count);
     cJSON_AddStringToObject(root,"config_sha256",config_hash);
     const char *groups[]={"image","camera","geometry","overlays"};
     for (size_t i=0;i<4;++i) cJSON_AddItemToObject(options,groups[i],cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(settings,groups[i]),1));

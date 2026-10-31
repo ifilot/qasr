@@ -46,9 +46,9 @@ class InputTests(unittest.TestCase):
         return path
 
     def test_help_and_version(self):
-        self.assertIn("qasr 0.5.0", self.run_cli("--help").stdout)
+        self.assertIn("qasr 0.6.0", self.run_cli("--help").stdout)
         self.assertIn("QASR: Quick Atomic Structure Renderer", self.run_cli("--help").stdout)
-        self.assertEqual("qasr 0.5.0\n", self.run_cli("--version").stdout)
+        self.assertEqual("qasr 0.6.0\n", self.run_cli("--version").stdout)
 
     def test_skewed_direct_and_species_order(self):
         result = self.data(self.poscar)
@@ -323,6 +323,19 @@ class InputTests(unittest.TestCase):
         self.run_cli(path, "--inspect", code=4)
         self.data(self.poscar + "x" * 65536 + "\n", fmt="poscar")
         self.data(self.poscar.replace("\n", "\r\n"))
+
+    def test_physical_line_boundaries_and_final_eof(self):
+        tail = self.poscar.split('\n', 1)[1]
+        # Auto detection rewinds the stream; long titles and trailing physical
+        # lines must retain their exact limits with and without a final newline.
+        for length in [4095, 4096, 65535, 65536]:
+            with self.subTest(length=length):
+                self.data('x' * length + '\n' + tail)
+                self.data(self.poscar + 'x' * length, fmt='poscar')
+        self.data('x' * 65537 + '\n' + tail, code=4)
+        for suffix in ['\n', '']:
+            self.data(self.poscar + 'x' * 65537 + suffix, fmt='poscar', code=4)
+            self.data(self.poscar + 'x' * 4095 + '\x00' + suffix, fmt='poscar', code=4)
 
 
 if __name__ == "__main__":

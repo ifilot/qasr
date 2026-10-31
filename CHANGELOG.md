@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.6.0] - 2026-10-31
+
+- Optimize polygon compositing and outlined/dashed cell strokes, reuse movie
+  sampling/interpolation buffers, and avoid unused final-snapshot copies in
+  trajectory observer passes. Keep output pixels and encoding settings unchanged;
+  include interleaved feature benchmarks and retained-allocation budget gates.
+- Add optional shared FFmpeg integration (`ENABLE_FFMPEG=ON`) for streaming MP4
+  camera orbits and fixed-camera trajectories, with interpolated geometries,
+  stable global framing, CLI/JSON job/batch controls and capability reporting.
+  Preserve existing destinations on encoding failures or cancellation.
+- Require both endpoint atoms in the displayed cells, eliminating boundary
+  stubs with no override. Included xy neighbors retain complete connecting bonds.
+- Add dashed unit-cell lines, configurable color/dash length/gap, and a white
+  contrast contour, with CLI/config/job/worker support and example images.
+- Add independent polygon faces from JSON vertices or source atom indices,
+  including periodic image offsets, repetition, color/alpha and boundary lines.
+  Concave triangulation and per-sample depth compositing preserve intersections
+  and transparent-face layering. Integrate configuration, inspection, validation,
+  schemas, worker caching and allocation/work limits.
+- Add `--bond-colors atoms` / `geometry.bond_colors` for continuous endpoint-colored
+  bond halves, meeting at the midpoint of each complete displayed bond. Colors follow
+  atom overrides and periodic-copy styling. Keep `--bond-radius` for thickness.
+- Separate image ownership/encoding and provenance hashing from the renderer;
+  keep movie validation/serialization in configuration. Clarify buffer ownership,
+  callback lifetimes, cache behavior and output/report failure contracts.
+- Complete the offline handbook for v0.6.0 with all 61 CLI controls, JSON and face
+  field references, downloadable zeolite/reaction recipes, optional movie setup,
+  release notes and corrected validation/schema documentation. Check release
+  versions, links, examples, source downloads and unchanged legacy archives.
+- Include an idealized LTA example, single-face and bond comparison images,
+  source data/provenance and a reproducible example generator.
+- Improve text-reader, bond-search and opaque-raster performance; retain the
+  measured results in `docs/performance-iteration.md`.
+
 ## [0.5.0] - 2026-10-30
 
 - Add monocolor and dualtone dithered variants for ORTEP and BALSAC via

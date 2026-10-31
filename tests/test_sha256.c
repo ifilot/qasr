@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-#include "automation.h"
+#include "sha256.h"
 #include <stdlib.h>
 #include <string.h>
 int main(void)

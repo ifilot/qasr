@@ -10,6 +10,7 @@ The original slab provenance is retained in SLAB-PROVENANCE.md and SLAB-MANIFEST
 POSCAR.skew and OUTCAR.relax: original synthetic parser/geometry fixtures.
 vasprun.example.xml: original synthetic, complete two-atom XML document.
 illustrated.json: the repository's illustrated top-view preset.
+ortep*.json and balsac*.json: spherical style and dithered tone presets.
 publication.json: a portable libpng example with transparent output and periodic context.
 
 Original project material and these user-provided examples: GPL-3.0-only.

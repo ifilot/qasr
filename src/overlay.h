@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #ifndef VR_OVERLAY_H
 #define VR_OVERLAY_H
-#include "render.h"
+#include "image.h"
+#include "scene.h"
 #define VR_LABEL_SAMPLES 9u
 typedef struct { double x,y,depth; bool visible; } LabelAnchor;
 /** Additional temporary label-order/collision storage for the aggregate budget. */

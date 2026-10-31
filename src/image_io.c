@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #define _POSIX_C_SOURCE 200809L
-#include "render.h"
+#include "image_io.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +25,8 @@ const char *image_format_name(const char *path)
 
 bool image_output_validate(const char *path, Error *e)
 {
+    const char *ext=strrchr(path,'.');
+    if (ext && !strcasecmp(ext,".mp4")) return fail(e,2,"MP4 output requires --movie orbit or --movie trajectory");
     const char *format=image_format_name(path);
 #ifndef VR_HAVE_JPEG
     if (!strcmp(format,"jpeg")) return fail(e,3,"JPEG output requires ENABLE_JPEG=ON (system libjpeg)");

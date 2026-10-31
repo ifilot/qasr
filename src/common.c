@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
+#define _POSIX_C_SOURCE 200809L
 #include "common.h"
 #include <ctype.h>
 #include <errno.h>
@@ -36,28 +37,34 @@ int read_line(Reader *r, Error *e)
 {
     if (!check_cancel(e)) return -1;
     size_t n = 0;
-    int c;
-    while ((c = fgetc(r->file)) != EOF) {
+    int c, result = -1;
+    /* One lock per physical line, rather than one stdio lock per byte. Keep
+     * stdio's EOF/read position semantics for OUTCAR recovery and detection. */
+    flockfile(r->file);
+    while ((c = getc_unlocked(r->file)) != EOF) {
         if (++r->bytes > VR_MAX_INPUT_BYTES || c == 0) {
             fail(e, 4, "%s:%zu: input byte/line limit exceeded or embedded NUL", r->path, r->line + 1);
-            return -1;
+            goto done;
         }
         if (c == '\n') break;
         if (n >= VR_MAX_LINE) {
             fail(e, 4, "%s:%zu: input line limit exceeded", r->path, r->line + 1);
-            return -1;
+            goto done;
         }
         r->text[n++] = (char)c;
     }
     if (ferror(r->file)) {
         fail(e, 7, "%s:%zu: input read error", r->path, r->line + 1);
-        return -1;
+        goto done;
     }
-    if (c == EOF && n == 0) return 0;
+    if (c == EOF && n == 0) { result = 0; goto done; }
     r->unterminated = c == EOF;
     r->text[n] = '\0';
     ++r->line;
-    return 1;
+    result = 1;
+done:
+    funlockfile(r->file);
+    return result;
 }
 
 size_t split_words(char *text, char **words, size_t capacity)

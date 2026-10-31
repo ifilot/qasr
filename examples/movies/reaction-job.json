@@ -1,0 +1,73 @@
+{
+  "input": "reaction.xyz",
+  "output": "reaction.mp4",
+  "no_user_config": true,
+  "movie": {
+    "mode": "trajectory",
+    "fps": 24,
+    "interpolate": 3
+  },
+  "config": {
+    "image": {
+      "width": 640,
+      "height": 360,
+      "style": "shaded",
+      "aa": "2x",
+      "background": "#ffffff"
+    },
+    "camera": {
+      "view": [
+        0,
+        0,
+        1
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ]
+    },
+    "overlays": {
+      "cell": false,
+      "scale_bar": true
+    },
+    "geometry": {
+      "bond_radius_A": 0.075,
+      "bond_colors": "atoms"
+    },
+    "elements": {
+      "H": {
+        "radius_A": 0.27
+      }
+    },
+    "bond_cutoffs_A": {
+      "H-H": 0.95
+    },
+    "atom_overrides": [
+      {
+        "select": {
+          "source_indices": [
+            0
+          ]
+        },
+        "color": "#42a6b2"
+      },
+      {
+        "select": {
+          "source_indices": [
+            1
+          ]
+        },
+        "color": "#707b87"
+      },
+      {
+        "select": {
+          "source_indices": [
+            2
+          ]
+        },
+        "color": "#e57a62"
+      }
+    ]
+  }
+}

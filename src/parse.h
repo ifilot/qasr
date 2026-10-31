@@ -2,7 +2,6 @@
 #ifndef VR_PARSE_H
 #define VR_PARSE_H
 #include "config.h"
-#include "input.h"
 
 /** @brief Read and validate a complete input under the selected recovery policy.
  * @param[in] c Validated config; input path and species mapping are borrowed.

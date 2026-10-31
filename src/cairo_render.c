@@ -84,6 +84,19 @@ static void ellipse(cairo_t *cr, double x, double y, double major, double minor,
 
 static void paint_cylinder(cairo_t *cr, const Config *c, const PaintPrimitive *p)
 {
+    if (p->primitive->kind==CELL_EDGE && (c->cell_style==CELL_DASHED || c->cell_outline_width>0)) {
+        cairo_save(cr);
+        if (c->cell_style==CELL_DASHED) {
+            double dashes[2]={c->cell_dash_length,c->cell_dash_gap};cairo_set_dash(cr,dashes,2,0);
+        }
+        cairo_set_line_cap(cr,CAIRO_LINE_CAP_ROUND);
+        cairo_move_to(cr,p->a.x[0],p->a.x[1]);cairo_line_to(cr,p->b.x[0],p->b.x[1]);
+        if (c->cell_outline_width>0) {
+            cairo_set_source_rgba(cr,1,1,1,(double)p->primitive->color[3]/255);
+            cairo_set_line_width(cr,c->cell_width+2*c->cell_outline_width);cairo_stroke_preserve(cr);
+        }
+        paint_color(cr,p,1,0);cairo_set_line_width(cr,c->cell_width);cairo_stroke(cr);cairo_restore(cr);return;
+    }
     double dx=p->b.x[0]-p->a.x[0], dy=p->b.x[1]-p->a.x[1];
     double length2d=hypot(dx,dy), r=p->radius;
     Vec3 axis=vsub(p->primitive->b,p->primitive->a);

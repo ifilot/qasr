@@ -1,7 +1,7 @@
 # Input expansion validation
 
-The v0.5.0 release validates these readers with the full CMake/CTest suite,
-including all pinned XML fixtures. See [release validation](release-v0.5.0.md).
+The v0.6.0 release validates these readers with the full CMake/CTest suite,
+including all pinned XML fixtures. See [release validation](release-v0.6.0.md).
 The records below describe the earlier PR environment and its limitations.
 
 ## Native builds

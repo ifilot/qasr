@@ -9,6 +9,39 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
+
+bool config_validate_movie(const Config *c, Error *e)
+{
+    if (!c->movie.mode) {
+        if (c->movie.explicit_fields) return fail_at(e,2,"movie_mode_required","movie","movie options require --movie orbit or trajectory");
+        return true;
+    }
+#ifndef VR_HAVE_FFMPEG
+    return fail_at(e,3,"movie_unavailable","movie","movie output requires a build with ENABLE_FFMPEG=ON (shared FFmpeg libraries)");
+#endif
+    if (!c->movie.fps || c->movie.fps>120 || c->movie.frames<2 || c->movie.frames>100000)
+        return fail(e,2,"movie fps must be 1..120 and orbit frames 2..100000");
+    if (c->width%2 || c->height%2 || c->width>4096 || c->height>4096)
+        return fail_at(e,2,"movie_dimensions","image","MP4 requires even width and height, each at most 4096 pixels");
+    if (strlen(c->background)==9 && strcasecmp(c->background+7,"ff"))
+        return fail_at(e,2,"movie_alpha","image.background","MP4 requires an opaque background");
+    if (c->backend!=BACKEND_ZBUFFER) return fail(e,3,"movies require the Z-buffer renderer");
+    if (c->inspect || c->init_config) return fail(e,2,"movie output cannot be combined with inspection or config initialization");
+    if (c->movie.mode==MOVIE_TRAJECTORY) {
+        if (c->frame_explicit || (c->movie.explicit_fields & (MOVIE_FIELD_FRAMES|MOVIE_FIELD_AXIS|MOVIE_FIELD_ANGLE)))
+            return fail(e,2,"trajectory movies use all input frames; omit frame selection and orbit frames/axis/angle");
+    } else {
+        double n=hypot(hypot(c->movie.axis.x[0],c->movie.axis.x[1]),c->movie.axis.x[2]);
+        if (!isfinite(n) || n<1e-12) return fail(e,2,"movie orbit axis must be a finite nonzero vector");
+        if (c->movie.explicit_fields & MOVIE_FIELD_INTERPOLATE) return fail(e,2,"movie interpolation requires trajectory mode");
+    }
+    if (c->output) {
+        const char *dot=strrchr(c->output,'.');
+        if (!dot || strcasecmp(dot,".mp4")) return fail(e,2,"movie output must have an .mp4 extension");
+    }
+    return true;
+}
 
 static bool color(const char *s)
 {
@@ -136,6 +169,22 @@ static bool style(const char *s, RenderStyle *v)
     else if (!strcmp(s,"illustrated")) *v=STYLE_ILLUSTRATED;
     else if (!strcmp(s,"ortep")) *v=STYLE_ORTEP;
     else if (!strcmp(s,"balsac")) *v=STYLE_BALSAC;
+    else return false;
+    return true;
+}
+
+static bool bond_colors(const char *s, BondColors *v)
+{
+    if (!strcmp(s,"uniform")) *v=BONDS_UNIFORM;
+    else if (!strcmp(s,"atoms")) *v=BONDS_ATOMS;
+    else return false;
+    return true;
+}
+
+static bool cell_style(const char *s, CellLineStyle *v)
+{
+    if (!strcmp(s,"solid")) *v=CELL_SOLID;
+    else if (!strcmp(s,"dashed")) *v=CELL_DASHED;
     else return false;
     return true;
 }
@@ -305,6 +354,7 @@ static bool settings_group(const cJSON *group, const char *name, Config *c, Erro
         } else if (!strcmp(name, "geometry")) {
             if (!strcmp(k, "sphere_scale")) valid = positive_json(j, &c->sphere_scale);
             else if (!strcmp(k, "bond_radius_A")) valid = positive_json(j, &c->bond_radius);
+            else if (!strcmp(k, "bond_colors")) valid = cJSON_IsString(j) && bond_colors(j->valuestring,&c->bond_colors);
             else if (!strcmp(k, "image_colors")) valid = cJSON_IsString(j) && image_style(j->valuestring, &c->image_colors);
             else if (!strcmp(k, "expand_xy") && cJSON_IsArray(j) && cJSON_GetArraySize(j) == 2) {
                 valid = true;
@@ -322,6 +372,15 @@ static bool settings_group(const cJSON *group, const char *name, Config *c, Erro
         } else if (!strcmp(name, "overlays")) {
             if (!strcmp(k, "labels")) valid = cJSON_IsString(j) && label(j->valuestring, &c->labels);
             else if (!strcmp(k,"cell_width")) valid=positive_json(j,&c->cell_width) && c->cell_width<=32;
+            else if (!strcmp(k,"cell_style")) valid=cJSON_IsString(j) && cell_style(j->valuestring,&c->cell_style);
+            else if (!strcmp(k,"cell_color")) {
+                valid=cJSON_IsString(j) && color(j->valuestring);
+                if (valid) strcpy(c->cell_color,j->valuestring);
+            } else if (!strcmp(k,"cell_outline_width")) {
+                valid=cJSON_IsNumber(j) && isfinite(j->valuedouble) && j->valuedouble>=0 && j->valuedouble<=8;
+                if (valid) c->cell_outline_width=j->valuedouble;
+            } else if (!strcmp(k,"cell_dash_length")) valid=positive_json(j,&c->cell_dash_length) && c->cell_dash_length>=1 && c->cell_dash_length<=256;
+            else if (!strcmp(k,"cell_dash_gap")) valid=positive_json(j,&c->cell_dash_gap) && c->cell_dash_gap>=1 && c->cell_dash_gap<=256;
             else if (cJSON_IsBool(j)) {
                 bool b = cJSON_IsTrue(j);
                 if (!strcmp(k, "cell")) { c->cell = b; valid = true; }
@@ -446,8 +505,30 @@ static bool source(Config *c, const char *layer, const char *file, Error *e)
     return true;
 }
 
+static bool load_faces(Config *c, const char *path, const char *relative_to, const char *layer, Error *e)
+{
+    if (!*path || !strcmp(path,"-")) return fail_at(e,2,"invalid_faces_file","faces_file","faces_file requires a file path (not stdin)");
+    char resolved[4096];const char *slash=relative_to && strcmp(relative_to,"-") ? strrchr(relative_to,'/') : NULL;
+    int n=slash && *path!='/' ? snprintf(resolved,sizeof resolved,"%.*s/%s",(int)(slash-relative_to),relative_to,path) : snprintf(resolved,sizeof resolved,"%s",path);
+    if (n<0 || (size_t)n>=sizeof resolved) return fail(e,2,"faces file path exceeds 4095 bytes");
+    cJSON *root=read_json(resolved,false,e);if (!root) return false;
+    bool ok=true;
+    for (const cJSON *j=root->child;j && ok;j=j->next) {
+        if (!strcmp(j->string,"faces")) continue;
+        if (!strcmp(j->string,"schema_version")) ok=cJSON_IsNumber(j) && j->valuedouble==1;
+        else if (!strcmp(j->string,"$schema")) ok=cJSON_IsString(j);
+        else ok=false;
+    }
+    if (!ok) fail_at(e,2,"invalid_faces_file","faces_file","face files accept schema_version, $schema and faces only");
+    if (ok) ok=config_faces(c,cJSON_GetObjectItemCaseSensitive(root,"faces"),e);
+    if (ok) ok=mark(c,"faces",layer,resolved,e) && source(c,layer,resolved,e);
+    cJSON_Delete(root);return ok;
+}
+
 static bool apply_config(const cJSON *root, Config *c, const char *layer, const char *file, Error *e)
 {
+    if (cJSON_GetObjectItemCaseSensitive(root,"faces") && cJSON_GetObjectItemCaseSensitive(root,"faces_file"))
+        return fail_at(e,2,"conflicting_faces","faces","provide faces or faces_file in one config layer, not both");
     bool ok=true;
     for (const cJSON *j=root->child;ok && j;j=j->next) {
         const char *k=j->string;
@@ -460,6 +541,13 @@ static bool apply_config(const cJSON *root, Config *c, const char *layer, const 
             if (!strcmp(layer,"user") && (!cJSON_IsArray(j) || cJSON_GetArraySize(j)>0))
                 ok=fail_at(e,2,"user_atom_rules_forbidden",k,"per-atom selections belong in a job config, not user preferences");
             else ok=config_atom_rules(c,j,e);
+        } else if (!strcmp(k,"faces")) {
+            if (!strcmp(layer,"user") && (!cJSON_IsArray(j) || cJSON_GetArraySize(j)>0))
+                ok=fail_at(e,2,"user_faces_forbidden",k,"polygon faces belong in a job config, not user preferences");
+            else ok=config_faces(c,j,e);
+        } else if (!strcmp(k,"faces_file")) {
+            if (!strcmp(layer,"user")) ok=fail_at(e,2,"user_faces_forbidden",k,"polygon files belong in a job config, not user preferences");
+            else ok=cJSON_IsString(j) && load_faces(c,j->valuestring,file,layer,e);
         } else if (!strcmp(k,"species") && cJSON_IsArray(j)) {
             int count=cJSON_GetArraySize(j);ok=count>0 && count<=(int)VR_MAX_SPECIES;c->species_count=(size_t)count;
             size_t i=0;
@@ -515,12 +603,54 @@ static const char *cli_path(const char *k)
         {"--outline-width","image.outline_width"},{"--view","camera.view"},{"--up","camera.up"},
         {"--repeat","geometry.repeat"},{"--expand-xy","geometry.expand_xy"},{"--image-colors","geometry.image_colors"},
         {"--sphere-scale","geometry.sphere_scale"},{"--bond-radius","geometry.bond_radius_A"},
+        {"--bond-colors","geometry.bond_colors"},
         {"--cell","overlays.cell"},{"--cell-width","overlays.cell_width"},{"--labels","overlays.labels"},
+        {"--cell-style","overlays.cell_style"},{"--cell-color","overlays.cell_color"},
+        {"--cell-outline-width","overlays.cell_outline_width"},{"--cell-dash-length","overlays.cell_dash_length"},{"--cell-dash-gap","overlays.cell_dash_gap"},
         {"--axes","overlays.axes"},{"--legend","overlays.legend"},{"--scale-bar","overlays.scale_bar"},
         {"--species","species"},{"--frame","runtime.frame"},{"--format","runtime.format"},{"--threads","runtime.threads"},
+        {"--movie","runtime.movie.mode"},{"--movie-fps","runtime.movie.fps"},{"--movie-frames","runtime.movie.frames"},
+        {"--movie-axis","runtime.movie.axis"},{"--movie-angle","runtime.movie.angle"},
+        {"--movie-interpolate","runtime.movie.interpolate"},{"--movie-codec","runtime.movie.codec"},
         {"-o","runtime.output"},{"--output","runtime.output"},{"--report","runtime.report"}};
     for (size_t i=0;i<sizeof pairs/sizeof *pairs;++i) if (!strcmp(k,pairs[i][0])) return pairs[i][1];
     return NULL;
+}
+
+static bool movie_mode(const char *v, MovieMode *mode)
+{
+    if (!strcmp(v,"orbit")) *mode=MOVIE_ORBIT;
+    else if (!strcmp(v,"trajectory")) *mode=MOVIE_TRAJECTORY;
+    else return false;
+    return true;
+}
+static bool movie_codec(const char *v, MovieCodec *codec)
+{
+    if (!strcmp(v,"auto")) *codec=MOVIE_CODEC_AUTO;
+    else if (!strcmp(v,"h264")) *codec=MOVIE_CODEC_H264;
+    else if (!strcmp(v,"mpeg4")) *codec=MOVIE_CODEC_MPEG4;
+    else return false;
+    return true;
+}
+static bool movie_json(Config *c, const cJSON *object, Error *e)
+{
+    if (!cJSON_IsObject(object) || !cJSON_HasObjectItem(object,"mode"))
+        return fail_at(e,2,"invalid_movie","movie","movie requires an object with mode orbit or trajectory");
+    for (const cJSON *j=object->child;j;j=j->next) {
+        const char *k=j->string;bool ok=false;
+        if (!strcmp(k,"mode")) ok=cJSON_IsString(j) && movie_mode(j->valuestring,&c->movie.mode);
+        else if (!strcmp(k,"fps")) {ok=size_json(j,120,&c->movie.fps);c->movie.explicit_fields|=MOVIE_FIELD_FPS;}
+        else if (!strcmp(k,"frames")) {ok=size_json(j,100000,&c->movie.frames) && c->movie.frames>=2;c->movie.explicit_fields|=MOVIE_FIELD_FRAMES;}
+        else if (!strcmp(k,"axis")) {ok=vector_json(j,&c->movie.axis);c->movie.explicit_fields|=MOVIE_FIELD_AXIS;}
+        else if (!strcmp(k,"angle")) {ok=cJSON_IsNumber(j) && isfinite(j->valuedouble) && j->valuedouble!=0 && fabs(j->valuedouble)<=3600;if (ok) c->movie.angle=j->valuedouble;c->movie.explicit_fields|=MOVIE_FIELD_ANGLE;}
+        else if (!strcmp(k,"interpolate")) {
+            ok=cJSON_IsNumber(j) && j->valuedouble>=0 && j->valuedouble<=1000 && floor(j->valuedouble)==j->valuedouble;
+            if (ok) c->movie.interpolate=(size_t)j->valuedouble;
+            c->movie.explicit_fields|=MOVIE_FIELD_INTERPOLATE;
+        } else if (!strcmp(k,"codec")) {ok=cJSON_IsString(j) && movie_codec(j->valuestring,&c->movie.codec);c->movie.explicit_fields|=MOVIE_FIELD_CODEC;}
+        if (!ok) return fail_at(e,2,"invalid_movie",k,"movie.%s: unknown key or invalid value",k);
+    }
+    return true;
 }
 
 static bool job_runtime(Config *c, const char *path, Error *e)
@@ -550,9 +680,13 @@ static bool job_runtime(Config *c, const char *path, Error *e)
                 else c->report=j->valuestring;
             }
         } else if (!strcmp(k,"frame")) {
+            c->frame_explicit=true;
             c->final_frame=cJSON_IsString(j) && !strcmp(j->valuestring,"final");
             ok=c->final_frame || (cJSON_IsNumber(j) && j->valuedouble>=0 && j->valuedouble<VR_MAX_FRAMES && floor(j->valuedouble)==j->valuedouble);
             if (ok && !c->final_frame) c->frame=(size_t)j->valuedouble;
+        } else if (!strcmp(k,"movie")) {
+            if (!movie_json(c,j,e)) return false;
+            ok=true;
         } else if (!strcmp(k,"threads")) {
             ok=cJSON_IsString(j) && !strcmp(j->valuestring,"auto");
             if (!ok) ok=size_json(j,256,&c->threads);
@@ -574,6 +708,9 @@ static bool job_runtime(Config *c, const char *path, Error *e)
 
 static bool validate(Config *c, Error *e)
 {
+    if (!config_validate_movie(c,e)) return false;
+    if (c->backend==BACKEND_CAIRO && (c->face_count || c->bond_colors==BONDS_ATOMS))
+        return fail_at(e,3,"unsupported_backend","image.backend","polygon faces and atom-colored bonds require the Z-buffer backend");
     if (c->tone!=TONE_COLOR && c->style!=STYLE_ORTEP && c->style!=STYLE_BALSAC)
         return fail_at(e,2,"unsupported_tone","image.tone","monocolor and dualtone require ortep or balsac style");
     if (c->backend==BACKEND_CAIRO && (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC))
@@ -615,6 +752,7 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
 {
     memset(c, 0, sizeof *c);
     c->width = c->height = 512;
+    c->movie.frames=120;c->movie.fps=30;c->movie.axis=(Vec3){{0,0,1}};c->movie.angle=360;
     c->aa_scale=2;
     c->png.compression=-1;c->png.filter=FILTER_DEFAULT;
 #ifdef VR_HAVE_LIBDEFLATE
@@ -625,6 +763,8 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
     c->margin = 0.06; c->sphere_scale = 1; c->bond_radius = 0.12;
     c->outline_width=1;
     c->cell_width=2;
+    c->cell_dash_length=8;c->cell_dash_gap=5;
+    strcpy(c->cell_color,"#464646");
     strcpy(c->background, "#ffffff"); c->cell = true; c->final_frame = true;
     c->provenance=cJSON_CreateObject();c->sources=cJSON_CreateArray();
     if (!c->provenance || !c->sources || !source(c,"built-in",NULL,e)) return fail(e,6,"cannot allocate configuration metadata");
@@ -655,7 +795,7 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
     }
     if (config_path && !load_config(config_path,c,"config",false,e)) return false;
     bool positional = false, cli_input=false, explicit_output=false, explicit_report=false;
-    const char *seen[64]; size_t nseen = 0;
+    const char *seen[80]; size_t nseen = 0;
     for (int i = 1; i < argc; ++i) {
         const char *k = argv[i];
         if (!positional && !strcmp(k, "--")) { positional = true; continue; }
@@ -667,7 +807,7 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
         }
         const char *canonical = !strcmp(k, "--output") ? "-o" : k;
         for (size_t j = 0; j < nseen; ++j) if (!strcmp(canonical, seen[j])) return fail(e, 2, "duplicate option '%s'", k);
-        if (nseen == 64) return fail(e, 2, "too many options");
+        if (nseen == 80) return fail(e, 2, "too many options");
         seen[nseen++] = canonical;
         if (!strcmp(k, "--inspect")) { c->inspect = true; continue; }
         if (!strcmp(k, "--inspect-scene")) { c->inspect = true; c->inspect_scene = true; continue; }
@@ -682,6 +822,14 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
         const char *v = argv[++i];
         bool ok = false;
         if (!strcmp(k, "--config") || !strcmp(k,"--job")) ok = true;
+        else if (!strcmp(k,"--movie")) ok=movie_mode(v,&c->movie.mode);
+        else if (!strcmp(k,"--movie-fps")) {ok=integer(v,120,&c->movie.fps) && c->movie.fps;c->movie.explicit_fields|=MOVIE_FIELD_FPS;}
+        else if (!strcmp(k,"--movie-frames")) {ok=integer(v,100000,&c->movie.frames) && c->movie.frames>=2;c->movie.explicit_fields|=MOVIE_FIELD_FRAMES;}
+        else if (!strcmp(k,"--movie-axis")) {ok=vector_text(v,&c->movie.axis);c->movie.explicit_fields|=MOVIE_FIELD_AXIS;}
+        else if (!strcmp(k,"--movie-angle")) {ok=number(v,&c->movie.angle) && c->movie.angle!=0 && fabs(c->movie.angle)<=3600;c->movie.explicit_fields|=MOVIE_FIELD_ANGLE;}
+        else if (!strcmp(k,"--movie-interpolate")) {ok=integer(v,1000,&c->movie.interpolate);c->movie.explicit_fields|=MOVIE_FIELD_INTERPOLATE;}
+        else if (!strcmp(k,"--movie-codec")) {ok=movie_codec(v,&c->movie.codec);c->movie.explicit_fields|=MOVIE_FIELD_CODEC;}
+        else if (!strcmp(k,"--faces")) ok=load_faces(c,v,NULL,"cli",e);
         else if (!strcmp(k,"--report")) {c->report=v;explicit_report=true;ok=*v!=0;}
         else if (!strcmp(k, "-o") || !strcmp(k, "--output")) { c->output = v;explicit_output=true; ok = *v && strcmp(v, "-"); }
         else if (!strcmp(k, "--width")) ok = integer(v, 16384, &c->width) && c->width;
@@ -703,6 +851,11 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
         }
         else if (!strcmp(k,"--outline-width")) ok=number(v,&c->outline_width) && c->outline_width>=0 && c->outline_width<=8;
         else if (!strcmp(k,"--cell-width")) ok=number(v,&c->cell_width) && c->cell_width>0 && c->cell_width<=32;
+        else if (!strcmp(k,"--cell-style")) ok=cell_style(v,&c->cell_style);
+        else if (!strcmp(k,"--cell-color")) {ok=color(v);if (ok) strcpy(c->cell_color,v);}
+        else if (!strcmp(k,"--cell-outline-width")) ok=number(v,&c->cell_outline_width) && c->cell_outline_width>=0 && c->cell_outline_width<=8;
+        else if (!strcmp(k,"--cell-dash-length")) ok=number(v,&c->cell_dash_length) && c->cell_dash_length>=1 && c->cell_dash_length<=256;
+        else if (!strcmp(k,"--cell-dash-gap")) ok=number(v,&c->cell_dash_gap) && c->cell_dash_gap>=1 && c->cell_dash_gap<=256;
         else if (!strcmp(k, "--view")) {
             c->view_top=!strcmp(v,"top");
             ok=c->view_top || vector_text(v,&c->view);
@@ -710,6 +863,7 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
         else if (!strcmp(k, "--up")) { ok = vector_text(v, &c->up); c->up_explicit=true; }
         else if (!strcmp(k, "--sphere-scale")) ok = number(v, &c->sphere_scale) && c->sphere_scale > 0;
         else if (!strcmp(k, "--bond-radius")) ok = number(v, &c->bond_radius) && c->bond_radius > 0;
+        else if (!strcmp(k, "--bond-colors")) ok = bond_colors(v,&c->bond_colors);
         else if (!strcmp(k, "--background")) { ok = color(v); if (ok) strcpy(c->background, v); }
         else if (!strcmp(k, "--cell")) ok = toggle(v, &c->cell);
         else if (!strcmp(k, "--axes")) ok = toggle(v, &c->axes);
@@ -718,13 +872,14 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
         else if (!strcmp(k, "--labels")) ok = label(v, &c->labels);
         else if (!strcmp(k, "--species")) ok = species_text(v, c);
         else if (!strcmp(k, "--frame")) {
+            c->frame_explicit=true;
             c->final_frame = !strcmp(v, "final");
             ok = c->final_frame || integer(v, VR_MAX_FRAMES - 1, &c->frame);
         } else if (!strcmp(k, "--threads")) {if (!strcmp(v,"auto")) {c->threads=0;ok=true;} else ok=integer(v,256,&c->threads) && c->threads;}
         else if (!strcmp(k, "--format")) {
             ok = format_parse(v,&c->format);
         }
-        if (!ok) return fail_at(e, 2,"invalid_option",k, "unknown option or invalid value: %s %s", k, v);
+        if (!ok) {if (e->code) return false;return fail_at(e, 2,"invalid_option",k, "unknown option or invalid value: %s %s", k, v);}
         const char *field=cli_path(k);if (field && !mark(c,field,"cli",NULL,e)) return false;
     }
     unsigned modes=(unsigned)c->init_config+(unsigned)c->dump_config+(unsigned)c->validate_config+(unsigned)c->inspect;

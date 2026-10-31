@@ -4,6 +4,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+cJSON *config_movie_json(const Config *c)
+{
+    cJSON *j=cJSON_CreateObject();
+    if (!j) return NULL;
+    bool ok=cJSON_AddStringToObject(j,"mode",c->movie.mode==MOVIE_ORBIT ? "orbit" : "trajectory") &&
+        cJSON_AddNumberToObject(j,"fps",(double)c->movie.fps) &&
+        cJSON_AddStringToObject(j,"codec",c->movie.codec==MOVIE_CODEC_H264 ? "h264" : c->movie.codec==MOVIE_CODEC_MPEG4 ? "mpeg4" : "auto");
+    if (c->movie.mode==MOVIE_ORBIT) {
+        cJSON *axis=cJSON_CreateDoubleArray(c->movie.axis.x,3);
+        if (!axis || !cJSON_AddItemToObject(j,"axis",axis)) {cJSON_Delete(axis);ok=false;}
+        ok=ok && cJSON_AddNumberToObject(j,"frames",(double)c->movie.frames) && cJSON_AddNumberToObject(j,"angle",c->movie.angle);
+    } else ok=ok && cJSON_AddNumberToObject(j,"interpolate",(double)c->movie.interpolate);
+    if (!ok) {cJSON_Delete(j);return NULL;}
+    return j;
+}
+
 static bool put(cJSON *object, const char *key, cJSON *item)
 {
     if (!item) return false;
@@ -50,8 +66,14 @@ cJSON *config_settings_json(const Config *c)
     ok &= put(geometry,"image_colors",cJSON_CreateString(c->image_colors==IMAGES_MUTED ? "muted" : c->image_colors==IMAGES_GREYSCALE ? "greyscale" : "normal"));
     ok &= put(geometry,"sphere_scale",cJSON_CreateNumber(c->sphere_scale));
     ok &= put(geometry,"bond_radius_A",cJSON_CreateNumber(c->bond_radius));
+    ok &= put(geometry,"bond_colors",cJSON_CreateString(c->bond_colors==BONDS_ATOMS ? "atoms" : "uniform"));
     ok &= put(overlays,"cell",cJSON_CreateBool(c->cell));
     ok &= put(overlays,"cell_width",cJSON_CreateNumber(c->cell_width));
+    ok &= put(overlays,"cell_style",cJSON_CreateString(c->cell_style==CELL_DASHED ? "dashed" : "solid"));
+    ok &= put(overlays,"cell_color",cJSON_CreateString(c->cell_color));
+    ok &= put(overlays,"cell_outline_width",cJSON_CreateNumber(c->cell_outline_width));
+    ok &= put(overlays,"cell_dash_length",cJSON_CreateNumber(c->cell_dash_length));
+    ok &= put(overlays,"cell_dash_gap",cJSON_CreateNumber(c->cell_dash_gap));
     ok &= put(overlays,"labels",cJSON_CreateString(c->labels==1 ? "element" : c->labels==2 ? "index" : "none"));
     ok &= put(overlays,"axes",cJSON_CreateBool(c->axes));
     ok &= put(overlays,"legend",cJSON_CreateBool(c->legend));
@@ -75,6 +97,7 @@ cJSON *config_settings_json(const Config *c)
     ok &= put(root,"image",image);ok &= put(root,"camera",camera);ok &= put(root,"geometry",geometry);
     ok &= put(root,"overlays",overlays);ok &= put(root,"elements",elements);ok &= put(root,"bond_cutoffs_A",cutoffs);
     if (c->rule_json) ok &= put(root,"atom_overrides",cJSON_Duplicate(c->rule_json,1));
+    if (c->faces_json) ok &= put(root,"faces",cJSON_Duplicate(c->faces_json,1));
     if (!ok) {cJSON_Delete(root);return NULL;}return root;
 }
 
@@ -109,6 +132,7 @@ cJSON *config_dump_json(const Config *c)
     ok &= put(runtime,"format",cJSON_CreateString(format_name(c->format)));
     ok &= put(runtime,"threads",c->threads ? cJSON_CreateNumber((double)c->threads) : cJSON_CreateString("auto"));
     ok &= put(runtime,"recover",cJSON_CreateBool(c->recover));
+    if (c->movie.mode) ok &= put(runtime,"movie",config_movie_json(c));
     ok &= put(user,"path",c->user_path ? cJSON_CreateString(c->user_path) : cJSON_CreateNull());
     ok &= put(user,"loaded",cJSON_CreateBool(c->user_loaded));
     ok &= put(user,"disabled",cJSON_CreateBool(c->no_user_config));
@@ -129,13 +153,15 @@ static size_t json_bytes(const cJSON *j)
 }
 size_t config_memory_bytes(const Config *c)
 {
-    size_t n=json_bytes(c->provenance)+json_bytes(c->sources)+json_bytes(c->rule_json)+json_bytes(c->job_json)+
+    size_t n=json_bytes(c->provenance)+json_bytes(c->sources)+json_bytes(c->rule_json)+json_bytes(c->job_json)+json_bytes(c->faces_json)+c->face_count*sizeof(FaceDefinition)+
              (c->user_path ? strlen(c->user_path)+1 : 0)+c->rule_count*sizeof(AtomRule);
     for (size_t i=0;i<c->rule_count;++i) n+=c->rules[i].index_count*sizeof(size_t);
+    for (size_t i=0;i<c->face_count;++i) n+=c->faces[i].count*(c->faces[i].indices ? sizeof(size_t)+sizeof(int[3]) : sizeof(Vec3));
     return n;
 }
 void config_free(Config *c)
 {
+    config_faces_free(c);
     for (size_t i=0;i<c->rule_count;++i) free(c->rules[i].indices);
     free(c->rules);free(c->user_path);cJSON_Delete(c->provenance);cJSON_Delete(c->sources);cJSON_Delete(c->rule_json);cJSON_Delete(c->job_json);
     memset(c,0,sizeof *c);

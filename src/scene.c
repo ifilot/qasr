@@ -22,32 +22,12 @@ static bool append(Scene *s, Primitive p, size_t scratch, Error *e)
     return true;
 }
 
-/* Liang-Barsky clipping in fractional coordinates handles any skewed basis. */
-static bool clip(Vec3 a, Vec3 b, const Config *c, const bool pbc[3], double *low, double *high)
-{
-    *low = 0; *high = 1;
-    for (int d = 0; d < 3; ++d) {
-        if (!pbc[d]) continue;
-        double lower = d < 2 ? -(double)c->expand_xy[d] : 0;
-        double upper = lower + (double)c->repeat[d];
-        double delta = b.x[d] - a.x[d];
-        if (delta == 0) { if (a.x[d] < lower || a.x[d] >= upper) return false; }
-        else {
-            double x = (lower-a.x[d]) / delta, y = (upper-a.x[d]) / delta;
-            if (x > y) { double temp = x; x = y; y = temp; }
-            *low = fmax(*low, x); *high = fmin(*high, y);
-            if (*low >= *high) return false;
-        }
-    }
-    return *high - *low > 1e-12;
-}
-
-static bool image_bounds(Vec3 delta, double cutoff, const Vec3 reciprocal[3], const bool pbc[3], int lo[3], int hi[3], size_t *work, Error *e)
+static bool image_bounds(Vec3 delta, double cutoff, const double reciprocal_lengths[3], const bool pbc[3], int lo[3], int hi[3], size_t *work, Error *e)
 {
     size_t product = 1;
     for (int d = 0; d < 3; ++d) {
         if (!pbc[d]) { lo[d]=hi[d]=0; continue; }
-        double bound = cutoff * length(reciprocal[d]);
+        double bound = cutoff * reciprocal_lengths[d];
         double padding=1e-10+64*DBL_EPSILON*fmax(1,fabs(delta.x[d])+bound);
         double a = ceil(-delta.x[d] - bound - padding), b = floor(-delta.x[d] + bound + padding);
         if (!isfinite(a) || !isfinite(b) || a < -1000000 || b > 1000000)
@@ -62,7 +42,19 @@ static bool image_bounds(Vec3 delta, double cutoff, const Vec3 reciprocal[3], co
     return true;
 }
 
-static bool expand_bond(const Config *c, const Structure *s, Scene *scene, const Vec3 basis[3], Vec3 fa, Vec3 fb,
+static void image_color(PeriodicImageStyle style, const uint8_t base[4], uint8_t out[4]);
+static void bond_color(const Config *c, const Structure *s, const AtomStyle *styles,
+                       size_t index, const int origin[3], uint8_t out[4])
+{
+    AtomStyle base={.radius=element_radius(c,s->atoms[index].element)};
+    element_color(c,s->atoms[index].element,base.color);
+    if (styles) base=styles[index];
+    AtomStyle instance=base;
+    image_color(origin[0] || origin[1] || origin[2] ? c->image_colors : IMAGES_NORMAL,base.color,instance.color);
+    if (c->cell_rule_count) atom_style_instance(c,index,s->atoms[index].element,origin,&instance);
+    memcpy(out,instance.color,4);
+}
+static bool expand_bond(const Config *c, const Structure *s, const AtomStyle *styles, Scene *scene, const Vec3 basis[3], Vec3 fa, Vec3 fb,
                         size_t i, size_t j, const int image[3], double distance, size_t scratch,
                         size_t *work, Error *e)
 {
@@ -71,8 +63,12 @@ static bool expand_bond(const Config *c, const Structure *s, Scene *scene, const
     for (int d = 0; d < 3; ++d) {
         if (!s->pbc[d]) { lo[d]=hi[d]=0; continue; }
         double lower = d < 2 ? -(double)c->expand_xy[d] : 0;
-        lo[d] = (int)ceil(lower-fmax(fa.x[d], fb.x[d]));
-        hi[d] = (int)floor(lower+(double)c->repeat[d] - fmin(fa.x[d], fb.x[d]));
+        /* Atom instances are identified by integer lattice origins. Both
+         * endpoints must belong to the same requested set as the spheres. */
+        int first=(int)lower,last=first+(int)c->repeat[d]-1;
+        lo[d]=first>first-image[d] ? first : first-image[d];
+        hi[d]=last<last-image[d] ? last : last-image[d];
+        if (lo[d]>hi[d]) return true;
         size_t n = (size_t)(hi[d] - lo[d] + 1);
         if (product > VR_MAX_CANDIDATES / n) return fail(e, 6, "bond expansion work limit exceeded");
         product *= n;
@@ -81,17 +77,19 @@ static bool expand_bond(const Config *c, const Structure *s, Scene *scene, const
     *work += product;
     for (int x = lo[0]; x <= hi[0]; ++x) for (int y = lo[1]; y <= hi[1]; ++y) for (int z = lo[2]; z <= hi[2]; ++z) {
         Vec3 origin = {{x,y,z}}, a = vadd(fa,origin), b = vadd(fb,origin);
-        double low, high;
-        if (!clip(a, b, c, s->pbc, &low, &high)) continue;
-        Vec3 delta = vsub(b,a);
         Primitive p = {0};
-        p.a = cartesian(basis, vadd(a,vmul(delta,low)));
-        p.b = cartesian(basis, vadd(a,vmul(delta,high)));
+        p.a = cartesian(basis,a);
+        p.b = cartesian(basis,b);
         if (length(vsub(p.b,p.a)) < 1e-12) continue;
         if (scene->bond_count == VR_MAX_BONDS) return fail(e, 6, "scene exceeds bond limit");
         p.radius = c->bond_radius; p.kind = CYLINDER;
         p.color[0] = p.color[1] = p.color[2] = 160; p.color[3] = 255;
         p.source_a = i; p.source_b = j; p.distance = distance;
+        if (c->bond_colors==BONDS_ATOMS) {
+            int first[3]={x,y,z},second[3]={x+image[0],y+image[1],z+image[2]};
+            bond_color(c,s,styles,i,first,p.color);bond_color(c,s,styles,j,second,p.color_b);
+            p.color_split=0.5;
+        }
         memcpy(p.image,image,sizeof p.image);
         p.origin[0]=x; p.origin[1]=y; p.origin[2]=z;
         if (!append(scene,p,scratch,e)) return false;
@@ -114,6 +112,11 @@ static void image_color(PeriodicImageStyle style, const uint8_t base[4], uint8_t
 
 bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
 {
+    return scene_build_retained(c,s,0,scene,e);
+}
+
+bool scene_build_retained(const Config *c, const Structure *s, size_t retained, Scene *scene, Error *e)
+{
     Vec3 basis[3], reciprocal[3];
     if (!structure_basis(s,basis,reciprocal,e)) return false;
     for (int d=0;d<3;++d)
@@ -122,15 +125,27 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
     memcpy(scene->cell_present,s->cell_present,sizeof scene->cell_present);
     memcpy(scene->pbc,s->pbc,sizeof scene->pbc);
     size_t scratch = s->count * (sizeof(Vec3) + sizeof(Atom)) + config_memory_bytes(c);
+    if (scratch>VR_MEMORY_BUDGET || retained>VR_MEMORY_BUDGET-scratch) {
+        scene_free(scene);return fail(e,6,"retained data and scene scratch exceed 1 GiB allocation budget");
+    }
+    scratch+=retained;
+    size_t instances=0;
+    if (c->rule_count) {
+        instances=s->count;
+        for (size_t d=0;d<3;++d) {
+            if (instances>VR_MAX_INSTANCES/c->repeat[d]) {scene_free(scene);return fail(e,6,"atom instance limit exceeded");}
+            instances*=c->repeat[d];
+        }
+        size_t styles_bytes=s->count*sizeof(AtomStyle)+instances*sizeof(RuleStamp);
+        if (styles_bytes>VR_MEMORY_BUDGET-scratch) {scene_free(scene);return fail(e,6,"atom styles exceed aggregate allocation budget");}
+        scratch+=styles_bytes;
+    }
     AtomStyle *styles=NULL;
     Vec3 *fractional = malloc(s->count * sizeof *fractional);
     if (!fractional) { scene_free(scene); return fail(e,6,"cannot allocate fractional positions"); }
     bool ok = false;
     if (!atom_styles_resolve(c,s,&styles,e)) goto done;
     if (styles) {
-        size_t instances=s->count*c->repeat[0]*c->repeat[1]*c->repeat[2];
-        scratch+=s->count*sizeof(AtomStyle)+instances*sizeof(RuleStamp);
-        if (scratch>VR_MEMORY_BUDGET) {fail(e,6,"atom styles exceed aggregate allocation budget");goto done;}
         scene->style_rules=calloc(instances,sizeof *scene->style_rules);
         if (!scene->style_rules) {fail(e,6,"cannot allocate instance rule metadata");goto done;}
     }
@@ -167,16 +182,25 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
         }
     }
     size_t work = 0, expansion_work = 0;
-    for (size_t i = 0; i < s->count; ++i) for (size_t j = i; j < s->count; ++j) {
+    double reciprocal_lengths[3];
+    for (size_t d=0;d<3;++d) reciprocal_lengths[d]=length(reciprocal[d]);
+    for (size_t i = 0; i < s->count; ++i) {
+      /* Resolve only pairs actually visited, preserving validation order. */
+      double thresholds[VR_MAX_SPECIES+1]={0};
+      for (size_t j = i; j < s->count; ++j) {
         /* Account for pairs even when reciprocal bounds contain no integer image. */
         if (!(work%4096) && !check_cancel(e)) goto done;
         if (++work > VR_MAX_CANDIDATES) { fail(e,6,"pair search work budget exceeded"); goto done; }
-        double cutoff = bond_cutoff(c,s->atoms[i].element,s->atoms[j].element);
-        if (!isfinite(cutoff) || cutoff > 1e6) { fail(e,5,"bond cutoff exceeds 1e6 angstroms"); goto done; }
+        unsigned element=s->atoms[j].element;
+        if (!thresholds[element]) {
+            double cutoff=bond_cutoff(c,s->atoms[i].element,element);
+            if (!isfinite(cutoff) || cutoff > 1e6) { fail(e,5,"bond cutoff exceeds 1e6 angstroms"); goto done; }
+            thresholds[element]=cutoff+32*DBL_EPSILON*fmax(1,cutoff);
+        }
         Vec3 delta = vsub(fractional[j],fractional[i]);
-        int lo[3], hi[3];
-        double threshold=cutoff+32*DBL_EPSILON*fmax(1,cutoff);
-        if (!image_bounds(delta,threshold,reciprocal,s->pbc,lo,hi,&work,e)) goto done;
+        int lo[3]={0}, hi[3]={0};
+        double threshold=thresholds[element];
+        if (!image_bounds(delta,threshold,reciprocal_lengths,s->pbc,lo,hi,&work,e)) goto done;
         for (int x = lo[0]; x <= hi[0]; ++x) for (int y = lo[1]; y <= hi[1]; ++y) for (int z = lo[2]; z <= hi[2]; ++z) {
             if (i == j && !(x > 0 || (x == 0 && y > 0) || (x == 0 && y == 0 && z > 0))) continue;
             Vec3 shift = {{x,y,z}};
@@ -186,8 +210,9 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
             if (distance == 0 || distance > threshold) continue;
             ++scene->base_bond_count;
             int image[3] = {x,y,z};
-            if (!expand_bond(c,s,scene,basis,fractional[i],vadd(fractional[j],shift),i,j,image,distance,scratch,&expansion_work,e)) goto done;
+            if (!expand_bond(c,s,styles,scene,basis,fractional[i],vadd(fractional[j],shift),i,j,image,distance,scratch,&expansion_work,e)) goto done;
         }
+      }
     }
     if (c->cell) {
         bool primary = c->expand_xy[0] || c->expand_xy[1] ||
@@ -206,19 +231,19 @@ bool scene_build(const Config *c, const Structure *s, Scene *scene, Error *e)
             }
             if (duplicate) continue;
             Primitive p = {0}; p.kind = CELL_EDGE; p.a = a; p.b = vadd(a,primary ? s->lattice[axis] : scene->supercell[axis]);
-            p.color[0] = p.color[1] = p.color[2] = 70; p.color[3] = 255;
+            decode_color(c->cell_color[0] ? c->cell_color : "#464646",p.color);
             if (!append(scene,p,scratch,e)) goto done;
         }
     }
-    ok = true;
+    ok = scene_faces_build(c,s,fractional,basis,scene,scratch,e);
 done:
     free(fractional);free(styles);
     if (!ok) scene_free(scene);
     return ok;
 }
 
-size_t scene_memory_bytes(const Scene *s) {return s->capacity*sizeof(Primitive)+(s->style_rules ? s->atom_count*sizeof(RuleStamp) : 0);}
-void scene_free(Scene *s) { free(s->items);free(s->style_rules); memset(s,0,sizeof *s); }
+size_t scene_memory_bytes(const Scene *s) {return s->capacity*sizeof(Primitive)+(s->style_rules ? s->atom_count*sizeof(RuleStamp) : 0)+s->triangle_count*sizeof(FaceTriangle);}
+void scene_free(Scene *s) { free(s->items);free(s->style_rules);free(s->faces); memset(s,0,sizeof *s); }
 
 Vec3 camera_project(const Camera *c, Vec3 p)
 {
@@ -252,13 +277,17 @@ bool camera_fit(const Config *c, const Scene *s, Camera *camera, Error *e)
         lo[0]=fmin(lo[0],fmin(ax,bx)-p->radius); hi[0]=fmax(hi[0],fmax(ax,bx)+p->radius);
         lo[1]=fmin(lo[1],fmin(ay,by)-p->radius); hi[1]=fmax(hi[1],fmax(ay,by)+p->radius);
     }
+    for (size_t i=0;i<s->triangle_count;++i) for (size_t k=0;k<3;++k) {
+        Vec3 p=s->faces[i].vertices[k];double x=dot(p,camera->right),y=dot(p,camera->up);
+        lo[0]=fmin(lo[0],x);hi[0]=fmax(hi[0],x);lo[1]=fmin(lo[1],y);hi[1]=fmax(hi[1],y);
+    }
     double width = hi[0]-lo[0], height = hi[1]-lo[1];
     if (!isfinite(width) || !isfinite(height) || width <= 0 || height <= 0)
         return fail(e,5,"scene has invalid projected bounds");
     camera->center_x = lo[0]+width/2; camera->center_y = lo[1]+height/2;
     /* Reserve the full line width plus an AA guard even with a zero margin. */
     bool has_cell=s->cell_present[0] || s->cell_present[1] || s->cell_present[2];
-    double guard=c->cell && has_cell ? c->cell_width+1 : 2;
+    double guard=c->cell && has_cell ? c->cell_width+4*c->cell_outline_width+1 : 2;
     double usable_x = fmax((double)camera->viewport_width*(1-2*c->margin)-guard,0.5);
     double usable_y = fmax((double)camera->viewport_height*(1-2*c->margin)-guard,0.5);
     camera->scale = fmin(usable_x/width,usable_y/height);

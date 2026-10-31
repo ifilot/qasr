@@ -1,7 +1,7 @@
-# Layered configuration and automation (M9)
+# Defaults, atom styling and automation
 
 Available in **v0.4.0**. The immutable v0.3.0 tag contains XML input,
-periodic context and the original handbook; it does not contain M9 flags.
+periodic context and the original handbook; it does not contain user-preference or atom-override options.
 Check `--build-info` for `user_config`, `atom_overrides`, `job_requests` and
 `config_schema_version: 1` before using this interface.
 
@@ -30,7 +30,8 @@ Missing optional files are normal. Earlier development builds used the provision
 occurs. `--init-config` explicitly creates a starter file and any missing parent
 directories; existing files and symlinks are never overwritten. Use
 `--no-user-config` in CI, benchmarks and reproducible jobs. User preferences may
-set element palettes/radii, but cannot contain nonempty `atom_overrides`.
+set element palettes/radii, but cannot contain nonempty `atom_overrides` or
+polygon faces. Keep structure-specific rules and faces in explicit recipes/jobs.
 
 ```sh
 qasr --init-config
@@ -97,17 +98,22 @@ list, whereas qasr uses zero-based offsets.
 qasr --schema config > config.schema.json
 qasr --schema user > user.schema.json
 qasr --schema job > job.schema.json
+qasr --schema worker > worker.schema.json
+qasr --schema faces > faces.schema.json
 qasr --no-user-config --config recipe.json --validate-config
 qasr CONTCAR --no-user-config --config recipe.json --validate-config --json-errors
 qasr --job render-job.json
 cat render-job.json | qasr --job -
 ```
 
-The three Draft 2020-12 schemas are embedded in the executable, installed under
+The five Draft 2020-12 schemas cover config, user preferences, jobs, worker
+requests and face files. They are embedded in the executable, installed under
 `share/qasr/schemas`, and served by the handbook. `--schema` alone selects
-config. Schema discovery runs alone. Validation never builds/rasterizes a scene
-or writes PNG/report files. Without input it reports `input_validated: false`
-and `selectors_validated: false`; supply input for selector checks.
+config. Schema discovery runs alone. Validation does not rasterize or write
+image/movie/report files. With input and polygon faces, it builds geometry to
+check atom references and triangulation. Without input it reports
+`input_validated: false` and `selectors_validated: false`; supply input for
+selector and face checks.
 
 A job is an invocation, distinct from persistent preferences:
 
@@ -125,9 +131,11 @@ A job is an invocation, distinct from persistent preferences:
 }
 ```
 
-Optional runtime fields also include `format` and `recover`. Paths in a job file
+Optional runtime fields also include `format`, `recover` and `movie`.
+Movie mode, frame rate and codec are runtime job fields; image/geometry/face
+settings remain in `config`. See [movie jobs and limits](movies.md). Paths in a job file
 are relative to that file's directory; stdin jobs use the working directory.
-Input structures remain file paths. PNG stdout is unsupported. `report: "-"`
+Input structures remain file paths. Image/movie stdout is unsupported. `report: "-"`
 uses stdout. CLI input/output/frame/settings override the corresponding job
 values. `--job` and `--config` are mutually exclusive. Both accept `-` for one
 bounded stdin JSON object. Dump/validate modes can read a full render job without
@@ -166,13 +174,28 @@ late report I/O failure can leave a successfully written PNG and an older report
 Consumers must check exit status and output hash. Atomic rename does not imply
 fsync durability or concurrent-input protection; do not modify inputs during a job.
 
-See [M9 validation evidence](m9-validation.md) for correctness and performance checks.
+See [configuration validation evidence](m9-validation.md) for correctness and performance checks.
 
-A network server is not required. Optional M10 batch/stdio caching or an MCP
-adapter remains conditional on a repeated-input/integration workflow and measured
-benefit. This iteration adds no service dependency.
+For repeated renders, use the [sequential JSONL worker](batch-worker.md). It
+supports validate, render, stats and clear-cache requests with bounded
+content-sensitive caching. Movie jobs use the same request interface but evict
+the still-image cache. No network server or extra service is required.
 
-## Development input formats
+## Polygon faces, bonds and cell lines
+
+Use root-level `faces: [...]` or `faces_file: "polygons.json"` in a recipe.
+Paths resolve against the containing recipe/job; stdin and worker paths use the
+working directory. Later layers replace the face array; an empty array clears
+it. `--faces FILE` is the final override. Resolved dumps contain inline faces.
+See [face file fields, offsets and limits](polygon-faces.md).
+
+`geometry.bond_radius_A` sets bond radius in angstroms; diameter is twice the
+radius. `geometry.bond_colors: "atoms"` colors halves from endpoint atoms. Both
+endpoint instances must be displayed, including any included neighboring cells;
+this rule has no override. Cell dashes, color and white contours are `overlays`
+fields; see [cell-line settings](cell-lines.md).
+
+## Supported input formats
 
 Builds with `nonperiodic: true` also accept job `format` values `xyz`, `extxyz`,
 `gaussian-input`, `gaussian-output`, `ams` and aliases `gjf`/`com`. The CLI and

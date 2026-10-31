@@ -21,7 +21,7 @@ def main():
     version=re.search(r"project\(qasr VERSION ([0-9]+\.[0-9]+\.[0-9]+)",cmake).group(1)
     top=[".gitignore",".gitattributes","CMakeLists.txt","README.md","CHANGELOG.md","LICENSE","THIRD_PARTY_NOTICES.md"]
     files=[root/name for name in top]
-    for directory in ["src","presets","schemas","docs","tests","tools","vendor",".github"]:
+    for directory in ["src","presets","schemas","docs","examples","tests","tools","vendor",".github"]:
         for path in (root/directory).rglob("*"):
             if args.without_website and path.is_relative_to(root/"docs/website"):
                 continue

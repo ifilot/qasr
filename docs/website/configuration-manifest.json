@@ -1,8 +1,8 @@
 {
-  "availability": "qasr 0.5.0 release",
-  "executable_sha256": "6726dcae67b9d34928d2c5e13c22cb879aaae1065f4deeef469a8685dca21dcb",
+  "availability": "qasr 0.6.0 release",
+  "executable_sha256": "ea3ec0902f58da57e6a3e77142025c13a9104349dad4f7dd964208c6e0a2a4be",
   "build_info": {
-    "version": "0.5.0",
+    "version": "0.6.0",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
@@ -10,33 +10,37 @@
     "batch_worker": true,
     "nonperiodic": true,
     "partial_pbc": true,
+    "polygon_faces": true,
+    "atom_colored_bonds": true,
     "xml": true,
     "openmp": true,
     "cairo": false,
     "libdeflate": true,
-    "jpeg": false,
-    "webp": false
+    "jpeg": true,
+    "webp": true,
+    "ffmpeg": true
   },
   "files": {
-    "batch.html": "2870cb162d5161622c8ea6e505db1ed65754cba6d7f27dd94a930019d9fccb01",
+    "batch.html": "d9d347907f704de2eb0aadec73b91bfec2adfd1cfbf54f178d89d4bf55a7a6e6",
     "downloads/worker-requests.jsonl": "5fcc29a169efde676dab7af98b234ddcdc1a7b07339e33756510442006e18266",
-    "schemas/config.schema.json": "5998da6d15ae72f16a9062cc30fca2638ce02c668aa274761bf225b8b55f7471",
-    "schemas/job.schema.json": "4cd98fbc42925b9b18a41cc7f81fc676715b3775cc3d49d67e06b32e74341abb",
-    "schemas/user.schema.json": "d2f8146593784f8b9dd7055d5aeaf8c0717dff65ab0cf00192190128c357e30c",
-    "schemas/worker.schema.json": "6c4e53e21e46c44dc39d43027bed8a313f45fed43b5273ed51cb5fafdeec267b",
+    "schemas/config.schema.json": "67b4a2b6baada480df1d0b47a3aadc52e716b179822343e3aec53db90ad982d6",
+    "schemas/faces.schema.json": "31d2fab25cfbdacd9b5fd65d2b60fd560941148c1ac32992896f7e486824d360",
+    "schemas/job.schema.json": "d61b1110dfddb0fdf7ab9218d18885f8c7eeb5a58626a02b9a8a4f018123beba",
+    "schemas/user.schema.json": "ddf3171d544855a5c202cf572cb6b100d457d26b7b7546752e675be09dbccc31",
+    "schemas/worker.schema.json": "3320f2e2b7cf88d1766e168bdd6607e8be9da992962c34dfb3c21466c9d3a558",
     "downloads/source-highlight.json": "3633baa106a669d188529789a09fb9acf6624bfa4b9250fcdf7ace6a3bf06764",
     "downloads/cell-highlight.json": "d455de2b095a470aca2406c0d18c2318a2c6ec5931c4ec2c55e48f1fa57190c0",
     "downloads/highlight-job.json": "322b24a99259992b109b0cdc675bfb30c16a04b558eef9533aae3306a197301c",
-    "downloads/qasr-source.tar.gz": "43025bf568c5da788dc03e53e1c47c6c48e3d426df819dd1d9d431dd655d6e0c",
-    "downloads/source-manifest.json": "96e62ce0d24d4f4af220f96240bd08827d85ccce666d4ba8b2a4780f81f1b8e1",
-    "assets/source-highlight.png": "c33b9a74d2f1b827a034d12e1a42f3d82ce7c8c5805278dec838aaadad3842dc",
-    "assets/cell-highlight.png": "441111fee064bde4b45a9585abdf9ea68ccce69f5d72b6600bbbfd63cf5b13cd"
+    "downloads/qasr-source.tar.gz": "637f7e7af25f792e1dcbf7e473193967ce3fac6a8f821409778b9c60ad6fd60c",
+    "downloads/source-manifest.json": "2c07b9629804660feebf4e4610bef23f6d254b07da45b25244af9ae249b55c48",
+    "assets/source-highlight.png": "2680c632393c34a77f7ab7a0b3172973353a16946edb65bd7dad8ee000d8f1c1",
+    "assets/cell-highlight.png": "28d952f9ecb07b4a1edb0065773efa01c0958e992014788fd0e3964971979904"
   },
   "images": [
     {
       "image": "assets/source-highlight.png",
       "recipe": "downloads/source-highlight.json",
-      "png_sha256": "c33b9a74d2f1b827a034d12e1a42f3d82ce7c8c5805278dec838aaadad3842dc",
+      "png_sha256": "2680c632393c34a77f7ab7a0b3172973353a16946edb65bd7dad8ee000d8f1c1",
       "config_sha256": "3633baa106a669d188529789a09fb9acf6624bfa4b9250fcdf7ace6a3bf06764",
       "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
       "instances": 567
@@ -44,7 +48,7 @@
     {
       "image": "assets/cell-highlight.png",
       "recipe": "downloads/cell-highlight.json",
-      "png_sha256": "441111fee064bde4b45a9585abdf9ea68ccce69f5d72b6600bbbfd63cf5b13cd",
+      "png_sha256": "28d952f9ecb07b4a1edb0065773efa01c0958e992014788fd0e3964971979904",
       "config_sha256": "d455de2b095a470aca2406c0d18c2318a2c6ec5931c4ec2c55e48f1fa57190c0",
       "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
       "instances": 567

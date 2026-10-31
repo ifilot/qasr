@@ -10,6 +10,26 @@
 #endif
 
 typedef struct { Vec3 a,u; double len,r,aa; } Cylinder;
+typedef struct {
+    double outline,inner_radius,root,projected,period;
+    size_t count;
+    bool end_on;
+    Cylinder *inner,*outer;
+} CellStroke;
+
+static bool primitive_visible(const Config *c, const Primitive *p)
+{
+    return p->color[3] || (p->kind==CYLINDER && c->bond_colors==BONDS_ATOMS && p->color_b[3]);
+}
+static const uint8_t *surface_color(const Config *c, const Primitive *p, const Cylinder *cylinder,
+                                  double x, double y, double z)
+{
+    if (p->kind==CYLINDER && c->bond_colors==BONDS_ATOMS) {
+        double along=(x-cylinder->a.x[0])*cylinder->u.x[0]+(y-cylinder->a.x[1])*cylinder->u.x[1]+(z-cylinder->a.x[2])*cylinder->u.x[2];
+        if (along>p->color_split*cylinder->len) return p->color_b;
+    }
+    return p->color;
+}
 
 static Cylinder cylinder_prepare(Vec3 a, Vec3 b, double r)
 {
@@ -55,6 +75,63 @@ static bool cylinder_hit(const Cylinder *cylinder, double x, double y, double *d
     if (best == -DBL_MAX) return false;
     *depth=best; *normal=n;
     return true;
+}
+
+/* Screen-sized cell strokes retain ray-tested surface depth. Each dash is a
+ * finite cylinder. Its white surround extends over both sides and both ends,
+ * while the black center keeps the requested width and dash interval. */
+static bool cell_line_hit(const Config *c, const Primitive *p, const Cylinder *full, const CellStroke *stroke,
+                          double x, double y, const uint8_t white[4], double *depth,
+                          Vec3 *normal, const uint8_t **color)
+{
+    *color=p->color;
+    if (c->cell_style==CELL_SOLID && c->cell_outline_width==0)
+        return cylinder_hit(full,x,y,depth,normal);
+    double scale=(double)c->aa_scale,outline=stroke ? stroke->outline : c->cell_outline_width*scale;
+    double inner_radius=stroke ? stroke->inner_radius : c->cell_width*scale/2;
+    double projected=stroke ? stroke->projected : full->len*sqrt(full->aa);
+    if (stroke ? stroke->end_on : projected<fmax(1e-6,fmax(c->cell_width*scale,2*outline))) {
+        Cylinder inner=*full;inner.r=inner_radius;
+        if (cylinder_hit(&inner,x,y,depth,normal)) return true;
+        *color=white;return outline>0 && cylinder_hit(full,x,y,depth,normal);
+    }
+    double period=stroke ? stroke->period : (c->cell_dash_length+c->cell_dash_gap)*scale;
+    size_t first=0,last=0;
+    if (c->cell_style==CELL_DASHED) {
+        size_t count=stroke ? stroke->count : (size_t)ceil(projected/period);
+        double along=((x-full->a.x[0])*full->u.x[0]+(y-full->a.x[1])*full->u.x[1])/(stroke ? stroke->root : sqrt(full->aa));
+        double low=floor((along-full->r-outline)/period)-1;
+        double high=floor((along+full->r+outline)/period)+1;
+        first=(size_t)fmax(0,fmin((double)(count-1),low));
+        last=(size_t)fmax(0,fmin((double)(count-1),high));
+    }
+    double best=-DBL_MAX;Vec3 best_normal={{0,0,0}};
+    for (size_t dash=first;dash<=last;++dash) {
+        double begin=c->cell_style==CELL_DASHED ? (double)dash*period : 0;
+        double end=c->cell_style==CELL_DASHED ? fmin(projected,begin+c->cell_dash_length*scale) : projected;
+        if (end<=begin) continue;
+        Cylinder inner_value;const Cylinder *inner;
+        if (stroke) inner=&stroke->inner[dash];
+        else {
+            inner_value=*full;
+            inner_value.a=vadd(full->a,vmul(full->u,full->len*begin/projected));
+            inner_value.len=full->len*(end-begin)/projected;inner_value.r=inner_radius;inner=&inner_value;
+        }
+        double z;Vec3 n;bool hit=cylinder_hit(inner,x,y,&z,&n),halo=false;
+        if (!hit && outline>0) {
+            Cylinder outer_value;const Cylinder *outer;
+            if (stroke) outer=&stroke->outer[dash];
+            else {
+                outer_value=*full;
+                outer_value.a=vadd(full->a,vmul(full->u,full->len*(begin-outline)/projected));
+                outer_value.len=full->len*(end-begin+2*outline)/projected;outer=&outer_value;
+            }
+            hit=cylinder_hit(outer,x,y,&z,&n);halo=hit;
+        }
+        if (hit && z>best) {best=z;best_normal=n;*color=halo ? white : p->color;}
+    }
+    if (best==-DBL_MAX) return false;
+    *depth=best;*normal=best_normal;return true;
 }
 
 static uint8_t channel(double value)
@@ -137,7 +214,7 @@ static uint8_t *adaptive_tiles(const Config *c, const Scene *s, const Camera *ca
     for (size_t k=0;k<count;++k) { owner[k]=SIZE_MAX;front[k]=second[k]=-DBL_MAX; }
     for (size_t i=0;i<s->count;++i) {
         const Primitive *p=&s->items[i];
-        if (!p->color[3]) continue;
+        if (!primitive_visible(c,p)) continue;
         Vec3 a=camera_project(camera,p->a), b=camera_project(camera,p->b);
         double r=p->kind==CELL_EDGE ? c->cell_width/2 : p->radius*camera->scale;
         double left=fmax(0,fmin((double)c->width,fmin(a.x[0],b.x[0])-r));
@@ -196,11 +273,66 @@ typedef struct {
     const Primitive *primitive;
     Vec3 a;
     Cylinder cylinder;
+    const CellStroke *stroke;
     double radius,fade;
     size_t left,right,bottom,top;
 } RasterPrimitive;
 
-static bool label_sample_visible(const RasterPrimitive *items, size_t count, size_t index,
+typedef struct {CellStroke *strokes;Cylinder *segments;} CellCache;
+/* Optional frame-local cache. Its complete allocation must fit the remaining
+ * render budget; otherwise use the original per-sample path. Publish pointers
+ * only after preparation succeeds, preserving that fallback on malloc failure. */
+static CellCache cell_cache_prepare(const Config *c,RasterPrimitive *items,size_t count,size_t available)
+{
+    CellCache cache={0};size_t cells=0,references=0;double scale=(double)c->aa_scale;
+    for (size_t i=0;i<count;++i) if (items[i].primitive->kind==CELL_EDGE) ++cells;
+    if (!cells || cells>available/sizeof(CellStroke)) return cache;
+    available-=cells*sizeof(CellStroke);
+    cache.strokes=calloc(cells,sizeof *cache.strokes);
+    if (!cache.strokes) return cache;
+    size_t index=0;
+    for (size_t i=0;i<count;++i) if (items[i].primitive->kind==CELL_EDGE) {
+        const Cylinder *full=&items[i].cylinder;CellStroke *p=&cache.strokes[index++];
+        p->outline=c->cell_outline_width*scale;p->inner_radius=c->cell_width*scale/2;
+        p->root=sqrt(full->aa);p->projected=full->len*p->root;
+        p->end_on=p->projected<fmax(1e-6,fmax(c->cell_width*scale,2*p->outline));
+        p->period=(c->cell_dash_length+c->cell_dash_gap)*scale;
+        if (p->end_on) continue;
+        double n=c->cell_style==CELL_DASHED ? ceil(p->projected/p->period) : 1;
+        size_t copies=p->outline>0 ? 2 : 1;
+        if (!isfinite(n) || n>(double)(available/sizeof(Cylinder)/copies)) goto fallback;
+        p->count=(size_t)n;size_t extra=p->count*copies;
+        if (extra>available/sizeof(Cylinder)-references) goto fallback;
+        references+=extra;
+    }
+    if (!references && available<sizeof *cache.segments) goto fallback;
+    cache.segments=malloc((references ? references : 1)*sizeof *cache.segments);
+    if (!cache.segments) goto fallback;
+    index=0;size_t cursor=0;
+    for (size_t i=0;i<count;++i) if (items[i].primitive->kind==CELL_EDGE) {
+        const Cylinder *full=&items[i].cylinder;CellStroke *p=&cache.strokes[index++];
+        p->inner=cache.segments+cursor;cursor+=p->count;
+        if (p->outline>0) {p->outer=cache.segments+cursor;cursor+=p->count;}
+        for (size_t dash=0;dash<p->count;++dash) {
+            double begin=c->cell_style==CELL_DASHED ? (double)dash*p->period : 0;
+            double end=c->cell_style==CELL_DASHED ? fmin(p->projected,begin+c->cell_dash_length*scale) : p->projected;
+            p->inner[dash]=*full;
+            p->inner[dash].a=vadd(full->a,vmul(full->u,full->len*begin/p->projected));
+            p->inner[dash].len=full->len*(end-begin)/p->projected;p->inner[dash].r=p->inner_radius;
+            if (p->outer) {
+                p->outer[dash]=*full;
+                p->outer[dash].a=vadd(full->a,vmul(full->u,full->len*(begin-p->outline)/p->projected));
+                p->outer[dash].len=full->len*(end-begin+2*p->outline)/p->projected;
+            }
+        }
+        items[i].stroke=p;
+    }
+    return cache;
+fallback:
+    free(cache.strokes);return (CellCache){0};
+}
+
+static bool label_sample_visible(const Config *c, const RasterPrimitive *items, size_t count, size_t index,
                                  double x, double y, double front)
 {
     const RasterPrimitive *target=&items[index];
@@ -215,14 +347,18 @@ static bool label_sample_visible(const RasterPrimitive *items, size_t count, siz
             double zz=1-dx*dx-dy*dy;
             if (zz<0) continue;
             z=p->a.x[2]+p->radius*sqrt(zz);
+        } else if (p->primitive->kind==CELL_EDGE) {
+            uint8_t white[4]={255,255,255,p->primitive->color[3]};const uint8_t *color;
+            if (!cell_line_hit(c,p->primitive,&p->cylinder,p->stroke,x,y,white,&z,&normal,&color)) continue;
         } else if (!cylinder_hit(&p->cylinder,x,y,&z,&normal)) continue;
+        if (!surface_color(c,p->primitive,&p->cylinder,x,y,z)[3]) continue;
         double tie=32*DBL_EPSILON*fmax(1,fmax(fabs(z),fabs(front)));
         if (z>front+tie || (fabs(z-front)<=tie && j<index)) return false;
     }
     return true;
 }
 
-static LabelAnchor label_anchor(const RasterPrimitive *items, size_t count, size_t index,
+static LabelAnchor label_anchor(const Config *c, const Scene *s, const Camera *camera, const RasterPrimitive *items, size_t count, size_t index,
                                 size_t factor, size_t height)
 {
     /* Center first, then eight points on a 55%-radius ring. These clear narrow
@@ -239,18 +375,35 @@ static LabelAnchor label_anchor(const RasterPrimitive *items, size_t count, size
         double zz=1-nx*nx-ny*ny;
         if (zz<0) continue;
         double z=p->a.x[2]+p->radius*sqrt(zz);
-        if (label_sample_visible(items,count,index,x,y,z))
+        if (label_sample_visible(c,items,count,index,x,y,z) && !faces_occlude_label(s,camera,factor,x,y,z))
             return (LabelAnchor){x/(double)factor,(double)height-y/(double)factor,z,true};
     }
     return (LabelAnchor){0,0,0,false};
 }
 
+void render_workspace_free(RenderWorkspace *workspace)
+{
+    if (!workspace) return;
+    free(workspace->depth);free(workspace->rgba);memset(workspace,0,sizeof *workspace);
+}
+static void release_samples(RenderWorkspace *workspace,double *depth,uint8_t *rgba)
+{
+    if (!workspace) {free(depth);free(rgba);}
+}
 bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t source_bytes, Image *out, Error *e)
+{
+    return render_image_workspace(c,s,camera,source_bytes,NULL,out,e);
+}
+bool render_image_workspace(const Config *c, const Scene *s, const Camera *camera, size_t source_bytes,
+                            RenderWorkspace *workspace, Image *out, Error *e)
 {
 #ifndef _OPENMP
     if (c->threads>1) return fail(e,3,"multiple threads require ENABLE_OPENMP");
 #endif
     if (c->backend==BACKEND_CAIRO) {
+        render_workspace_free(workspace);
+        if (s->triangle_count || c->bond_colors==BONDS_ATOMS)
+            return fail(e,3,"polygon faces and atom-colored bonds require the Z-buffer backend");
         if (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC)
             return fail(e,3,"ortep and balsac styles require the accurate Z-buffer backend");
         if (c->axes || c->legend || c->scale_bar || c->labels)
@@ -263,35 +416,43 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
 #endif
     }
     const size_t factor=c->aa_scale, per_pixel=factor*factor;
+    const bool styled_cell=c->cell && (s->cell_present[0] || s->cell_present[1] || s->cell_present[2]) &&
+        (c->cell_style==CELL_DASHED || c->cell_outline_width>0);
+    const bool adaptive=c->adaptive_aa && !s->triangle_count && !styled_cell;
     const double scale=(double)factor;
     size_t count=c->width*c->height, samples=count*per_pixel, retained=scene_memory_bytes(s)+source_bytes;
     size_t reserve=8u*1024u*1024u; /* PNG/zlib working-space allowance. */
     if (c->labels) reserve+=s->count*sizeof(LabelAnchor)+overlay_label_scratch_bytes(s);
-    if (c->adaptive_aa)
+    if (adaptive)
         reserve+=((c->width+AA_TILE-1)/AA_TILE)*((c->height+AA_TILE-1)/AA_TILE)*(sizeof(size_t)+2*sizeof(double)+1);
     if (retained>VR_MEMORY_BUDGET-reserve || s->count>(VR_MEMORY_BUDGET-reserve-retained)/sizeof(RasterPrimitive))
         return fail(e,6,"projected scene exceeds 1 GiB allocation budget");
     retained+=s->count*sizeof(RasterPrimitive);
     if (retained > VR_MEMORY_BUDGET-reserve || count > (VR_MEMORY_BUDGET-reserve-retained)/(12*per_pixel+4))
         return fail(e,6,"scene and supersampled image exceed 1 GiB allocation budget");
-    double *depth=malloc(samples*sizeof *depth);
-    uint8_t *rgba=malloc(samples*4), *pixels=malloc(count*4);
+    if (workspace && workspace->samples!=samples) render_workspace_free(workspace);
+    double *depth=workspace && workspace->depth ? workspace->depth : malloc(samples*sizeof *depth);
+    uint8_t *rgba=workspace && workspace->rgba ? workspace->rgba : malloc(samples*4);
+    if (workspace) {workspace->depth=depth;workspace->rgba=rgba;workspace->samples=samples;}
+    uint8_t *pixels=malloc(count*4);
     RasterPrimitive *projected=calloc(s->count,sizeof *projected);
     LabelAnchor *visible=c->labels ? calloc(s->count,sizeof *visible) : NULL;
     if (!depth || !rgba || !pixels || !projected || (c->labels && !visible)) {
-        free(depth);free(rgba);free(pixels);free(projected);free(visible);
+        release_samples(workspace,depth,rgba);free(pixels);free(projected);free(visible);
         return fail(e,6,"image allocation failed");
     }
-    uint8_t *native_tiles=c->adaptive_aa ? adaptive_tiles(c,s,camera,e) : NULL;
-    if (c->adaptive_aa && !native_tiles) { free(depth);free(rgba);free(pixels);free(projected);free(visible);return false; }
+    uint8_t *native_tiles=adaptive ? adaptive_tiles(c,s,camera,e) : NULL;
+    if (adaptive && !native_tiles) {release_samples(workspace,depth,rgba);free(pixels);free(projected);free(visible);return false; }
+    if (c->adaptive_aa && !adaptive && c->benchmark) fprintf(stderr,"adaptive_native_tiles=0 adaptive_total_tiles=%zu\n",((c->width+AA_TILE-1)/AA_TILE)*((c->height+AA_TILE-1)/AA_TILE));
     const size_t tile_columns=(c->width+AA_TILE-1)/AA_TILE;
     uint8_t background[4]; decode_color(c->background,background);
+    int workers=1;
 #ifdef _OPENMP
     int automatic=omp_get_max_threads();
     if (automatic>omp_get_num_procs()) automatic=omp_get_num_procs();
     if (automatic>8) automatic=8;
     if (count<512u*512u) automatic=1;
-    int workers=c->threads ? (int)c->threads : automatic;
+    workers=c->threads ? (int)c->threads : automatic;
 #pragma omp parallel for schedule(static) num_threads(workers) if(workers>1 && samples>=1048576)
 #endif
     for (size_t i=0;i<samples;++i) { depth[i]=-DBL_MAX; memcpy(rgba+4*i,background,4); }
@@ -312,7 +473,7 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     for (size_t i=0;i<s->count;++i) {
         const Primitive *p=&s->items[i];
         RasterPrimitive *rp=&projected[i];rp->primitive=p;
-        if (!p->color[3]) continue;
+        if (!primitive_visible(c,p)) continue;
         Vec3 a=camera_project(camera,p->a), b=camera_project(camera,p->b);
         /* Optional depth cue uses each primitive's center, leaving flat bands
          * uniform within a disk. It changes colors, not visibility or connectivity. */
@@ -320,11 +481,12 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
         /* Uniform scaling preserves intersection geometry and surface normals. */
         a.x[0]*=scale; a.x[1]*=scale; a.x[2]*=scale*camera->scale;
         b.x[0]*=scale; b.x[1]*=scale; b.x[2]*=scale*camera->scale;
-        double r=p->kind==CELL_EDGE ? c->cell_width*scale/2 : p->radius*scale*camera->scale;
-        double left=fmax(0,floor(fmin(a.x[0],b.x[0])-r));
-        double right=fmin((double)width,ceil(fmax(a.x[0],b.x[0])+r));
-        double bottom=fmax(0,floor(fmin(a.x[1],b.x[1])-r));
-        double top=fmin((double)height,ceil(fmax(a.x[1],b.x[1])+r));
+        double r=p->kind==CELL_EDGE ? (c->cell_width/2+c->cell_outline_width)*scale : p->radius*scale*camera->scale;
+        double padding=p->kind==CELL_EDGE ? r+c->cell_outline_width*scale : r;
+        double left=fmax(0,floor(fmin(a.x[0],b.x[0])-padding));
+        double right=fmin((double)width,ceil(fmax(a.x[0],b.x[0])+padding));
+        double bottom=fmax(0,floor(fmin(a.x[1],b.x[1])-padding));
+        double top=fmin((double)height,ceil(fmax(a.x[1],b.x[1])+padding));
         rp->a=a;rp->radius=r;rp->fade=fade;
         rp->left=(size_t)left;rp->right=(size_t)right;rp->bottom=(size_t)bottom;rp->top=(size_t)top;
         if (p->kind!=SPHERE) rp->cylinder=cylinder_prepare(a,b,r);
@@ -332,6 +494,8 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
     /* Each task owns a disjoint 32x32 output-pixel tile. Primitive order within
      * a tile is unchanged, so depth ties and RGBA rounding are deterministic. */
     const size_t raster_columns=(c->width+31)/32, raster_rows=(c->height+31)/32;
+    CellCache cell_cache={0};
+    if (styled_cell) cell_cache=cell_cache_prepare(c,projected,s->count,VR_MEMORY_BUDGET-retained-reserve-samples*12-count*4);
     size_t used_threads=1;
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,1) num_threads(workers) if(workers>1)
@@ -352,18 +516,28 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
             if (left>=right || bottom>=top) continue;
             Vec3 a=rp->a;double r=rp->radius,fade=rp->fade;
             const Cylinder *cylinder=&rp->cylinder;
+            double inner=fmax(0,1-scale*c->outline_width/r);
+            double alpha=(double)p->color[3]/255, bg_alpha=(double)background[3]/255;
+            double result_alpha=alpha+bg_alpha*(1-alpha);
+            uint8_t cell_white[4]={255,255,255,p->color[3]};
             for (size_t y=bottom;y<top;++y) for (size_t x=left;x<right;++x) {
                 bool native=native_tiles && native_tiles[(y/2/AA_TILE)*tile_columns+x/2/AA_TILE];
                 if (native && ((x%2) || (y%2))) continue;
                 double sx=(double)x+(native ? 1 : 0.5), sy=(double)y+(native ? 1 : 0.5);
-                double z; Vec3 normal;
+                double z; Vec3 normal;const uint8_t *color=p->color;
                 if (p->kind==SPHERE) {
                     double dx=(sx-a.x[0])/r, dy=(sy-a.x[1])/r;
                     double zz=1-dx*dx-dy*dy;
                     if (zz < 0) continue;
                     normal=(Vec3){{dx,dy,sqrt(zz)}};
                     z=a.x[2]+r*normal.x[2];
-                } else if (!cylinder_hit(cylinder,sx,sy,&z,&normal)) continue;
+                } else if (p->kind==CELL_EDGE) {
+                    if (!cell_line_hit(c,p,cylinder,rp->stroke,sx,sy,cell_white,&z,&normal,&color)) continue;
+                } else {
+                    if (!cylinder_hit(cylinder,sx,sy,&z,&normal)) continue;
+                    color=surface_color(c,p,cylinder,sx,sy,z);
+                }
+                if (!color[3]) continue;
                 size_t index=(height-1-y)*width+x;
                 /* Stable primitive order resolves numerically equal depths. */
                 double tie = 32*DBL_EPSILON*fmax(1,fmax(fabs(z),fabs(depth[index])));
@@ -385,7 +559,6 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
                         if ((dx-0.16)*(dx-0.16)+(dy-0.18)*(dy-0.18)<0.47*0.47) {
                             shade=0.45; white=0.55;
                         }
-                        double inner=fmax(0,1-scale*c->outline_width/r);
                         ink=c->outline_width>0 && dx*dx+dy*dy>=inner*inner;
                     } else if (p->kind==CYLINDER) {
                         shade=0.64;
@@ -394,7 +567,6 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
                 }
                 if (c->style==STYLE_ORTEP || c->style==STYLE_BALSAC) {
                     if (p->kind==SPHERE) {
-                        double inner=fmax(0,1-scale*c->outline_width/r);
                         ink=c->outline_width>0 && normal.x[0]*normal.x[0]+normal.x[1]*normal.x[1]>=inner*inner;
                         if (c->style==STYLE_ORTEP) {
                             shade=0;white=1;
@@ -409,7 +581,7 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
                         }
                     } else if (p->kind==CYLINDER) {
                         ink=c->outline_width>0 && cylinder_outline(cylinder,sx,sy,scale*c->outline_width);
-                        if (c->style==STYLE_ORTEP) {shade=0;white=0;}
+                        if (c->style==STYLE_ORTEP) {shade=c->bond_colors==BONDS_ATOMS ? 0.64 : 0;white=0;}
                         else {shade=0.45;white=0.55;tone_level=0.80;}
                     }
                 }
@@ -424,15 +596,30 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
                     for (size_t d=0;d<3;++d)
                         tone_rgb[d]=c->tone==TONE_MONOCOLOR ? (light_pixel ? 255 : 0) : (light_pixel ? pale[d] : dark[d]);
                 }
-                double alpha=(double)p->color[3]/255, bg_alpha=(double)background[3]/255;
-                double result_alpha=alpha+bg_alpha*(1-alpha);
-                for (int d=0;d<3;++d) rgba[4*index+(size_t)d]=result_alpha > 0 ?
-                    channel((alpha*(toned ? (double)tone_rgb[d] : (double)p->color[d]*shade+255*white)+(1-alpha)*bg_alpha*(double)background[d])/result_alpha) : 0;
-                rgba[4*index+3]=channel(255*result_alpha);
+                if (color[3]==255 || s->triangle_count) {
+                    for (size_t d=0;d<3;++d) rgba[4*index+d]=toned ? tone_rgb[d] :
+                        channel((double)color[d]*shade+255*white);
+                    rgba[4*index+3]=color[3];
+                } else {
+                    double sample_alpha=color==p->color ? alpha : (double)color[3]/255;
+                    double sample_result_alpha=color==p->color ? result_alpha : sample_alpha+bg_alpha*(1-sample_alpha);
+                    for (int d=0;d<3;++d) rgba[4*index+(size_t)d]=sample_result_alpha > 0 ?
+                        channel((sample_alpha*(toned ? (double)tone_rgb[d] : (double)color[d]*shade+255*white)+(1-sample_alpha)*bg_alpha*(double)background[d])/sample_result_alpha) : 0;
+                    rgba[4*index+3]=channel(255*sample_result_alpha);
+                }
             }
         }
     }
     if (c->benchmark) fprintf(stderr,"render_threads=%zu raster_tiles=%zu\n",used_threads,raster_columns*raster_rows);
+    /* Release optional cache before polygon scratch allocation; label visibility
+     * can use the fallback without extending these buffers' memory lifetime. */
+    if (cell_cache.strokes) {
+        for (size_t i=0;i<s->count;++i) projected[i].stroke=NULL;
+        free(cell_cache.segments);free(cell_cache.strokes);
+    }
+    if (s->triangle_count && !faces_render_samples(c,s,camera,workers,retained+reserve+samples*12+count*4,depth,rgba,e)) {
+        free(projected);free(native_tiles);release_samples(workspace,depth,rgba);free(pixels);free(visible);return false;
+    }
     /* Average premultiplied colors to avoid white/dark halos on alpha edges. */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static) num_threads(workers) if(workers>1 && count>=262144)
@@ -453,13 +640,11 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
         for (int d=0;d<3;++d) p[d]=(uint8_t)(sum_alpha ? (sums[d]+sum_alpha/2)/sum_alpha : 0u);
     }
     if (c->labels) for (size_t i=0;i<s->count;++i)
-        if (s->items[i].kind==SPHERE) visible[i]=label_anchor(projected,s->count,i,factor,c->height);
-    free(projected);free(native_tiles);free(depth); free(rgba);
+        if (s->items[i].kind==SPHERE) visible[i]=label_anchor(c,s,camera,projected,s->count,i,factor,c->height);
+    free(projected);free(native_tiles);release_samples(workspace,depth,rgba);
     out->width=c->width; out->height=c->height; out->pixels=pixels;out->threads_used=used_threads;
     bool ok=overlay_render(c,s,camera,visible,out,e);
     free(visible);
     if (!ok) image_free(out);
     return ok;
 }
-
-void image_free(Image *image) { free(image->pixels); memset(image,0,sizeof *image); }

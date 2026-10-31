@@ -93,11 +93,17 @@
       ],
       "image_colors": "normal",
       "sphere_scale": 1,
-      "bond_radius_A": 0.12
+      "bond_radius_A": 0.12,
+      "bond_colors": "uniform"
     },
     "overlays": {
       "cell": true,
       "cell_width": 2,
+      "cell_style": "solid",
+      "cell_color": "#464646",
+      "cell_outline_width": 0,
+      "cell_dash_length": 8,
+      "cell_dash_gap": 5,
       "labels": "none",
       "axes": false,
       "legend": false,

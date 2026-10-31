@@ -1,8 +1,12 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #define _POSIX_C_SOURCE 200809L
 #include "job.h"
+#include "automation.h"
+#include "sha256.h"
 #include "parse.h"
 #include "render.h"
+#include "image_io.h"
+#include "movie.h"
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -54,18 +58,22 @@ static bool scene_key(const Config *c, const char *source, char key[65], Error *
     cJSON *settings=config_settings_json(c),*j=cJSON_CreateObject();
     if (!settings || !j) {cJSON_Delete(settings);cJSON_Delete(j);return fail(e,6,"cannot allocate scene cache key");}
     bool ok=cJSON_AddStringToObject(j,"source",source)!=NULL;
-    const char *groups[]={"geometry","elements","bond_cutoffs_A","atom_overrides"};
-    for (size_t i=0;i<4;++i) {
+    const char *groups[]={"geometry","elements","bond_cutoffs_A","atom_overrides","faces"};
+    for (size_t i=0;i<5;++i) {
         cJSON *v=cJSON_DetachItemFromObjectCaseSensitive(settings,groups[i]);
         if (v && !cJSON_AddItemToObject(j,groups[i],v)) {cJSON_Delete(v);ok=false;}
     }
-    ok=ok && cJSON_AddBoolToObject(j,"cell",c->cell);cJSON_Delete(settings);
+    ok=ok && cJSON_AddBoolToObject(j,"cell",c->cell) && cJSON_AddStringToObject(j,"cell_color",c->cell_color);cJSON_Delete(settings);
     if (!ok) {cJSON_Delete(j);return fail(e,6,"cannot allocate complete scene key");}
     return hash_json(j,key,e);
 }
 
 cJSON *job_render(const Config *c, JobCache *cache, bool report, const char *version, double config_ms, Error *e)
 {
+    if (c->movie.mode) {
+        if (cache) job_cache_clear(cache);
+        return movie_render(c,version,e);
+    }
     Structure local_source={0};Scene local_scene={0};Image image={0};Camera camera={0};
     Structure *s=&local_source;Scene *scene=&local_scene;cJSON *result=NULL;
     struct timespec begin,parsed,built,rendered,written;clock_gettime(CLOCK_MONOTONIC,&begin);

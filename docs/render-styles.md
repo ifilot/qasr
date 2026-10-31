@@ -1,7 +1,12 @@
 # ORTEP spherical and BALSAC-inspired drawing
 
+For polygon faces, configurable bond thickness and atom-colored half-bonds,
+see the [feature guide](polygon-faces.md) and [zeolite examples](../examples/zeolite/README.md).
+Dashed unit-cell lines and white surrounds are described in the
+[cell-line guide](cell-lines.md).
+
 Use `--style ortep` or `--style balsac`, or set JSON `image.style`.
-Available in **v0.5.0**. See the [handbook](https://ifilot.github.io/qasr/#rendering)
+Available since **v0.5.0**. See the [handbook](https://ifilot.github.io/qasr/#rendering)
 for behavior, presets and backend limitations. Both styles use the Z-buffer
 renderer; the experimental Cairo backend rejects them. ORTEP draws spheres
 with great-circle sections, not thermal displacement ellipsoids.
@@ -36,9 +41,9 @@ done
 
 ## Validation
 
-The v0.5.0 release runs full CMake/CTest builds with XML, libdeflate and OpenMP,
+The v0.6.0 release runs full CMake/CTest builds with XML, libdeflate and OpenMP,
 with optional codecs and Cairo enabled as well as the default configuration.
-See [release validation](release-v0.5.0.md). The following records describe the
+See [release validation](release-v0.6.0.md). The following records describe the
 earlier PR environment.
 
 - Three additional test groups cover dither palette endpoints, directional

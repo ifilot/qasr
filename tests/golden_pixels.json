@@ -1,5 +1,5 @@
 {
-  "environment": "GCC 13.3.0, x86-64 Linux, double arithmetic, fixed 2x AA, atom-architect-9e73e510; decoded RGBA hashes; original 1-pixel cell width specified explicitly",
+  "environment": "GCC 13.3.0, x86-64 Linux, double arithmetic, fixed 2x AA, atom-architect-9e73e510; decoded RGBA hashes; explicit 1-pixel cell width; mandatory displayed endpoint atoms",
   "images": [
     {
       "name": "skew",
@@ -14,7 +14,11 @@
           "cell_width": 1
         }
       },
-      "rgba_sha256": "19d461cb9b1aed77310ac1718ac0e7ef0d71e6dddc4f8f28a01c5cfcd2dd4542"
+      "rgba_sha256": "6e339245fd21cd2a5abe3b5ed9089b9ee185141797e2109a1dae9e4866f91ce8",
+      "scene_counts": {
+        "atom_instances": 2,
+        "bonds": 1
+      }
     },
     {
       "name": "co-repeat",
@@ -36,7 +40,11 @@
           "cell_width": 1
         }
       },
-      "rgba_sha256": "a5b2dfe5376b329c0a794b6a56a1ff9671cf51b847bb6ba38921ec2968d1a561"
+      "rgba_sha256": "5a72381c3307731fb54e77813a3e8e4716791e224691e02ff7586a28045fbddc",
+      "scene_counts": {
+        "atom_instances": 252,
+        "bonds": 1105
+      }
     },
     {
       "name": "pd-ceria",
@@ -51,7 +59,12 @@
           "cell_width": 1
         }
       },
-      "rgba_sha256": "9acf2c8f205f9621e82318ee16f3ed3e9c06081a4c68811b791e9448cd219c50"
+      "rgba_sha256": "40b86f59a62a23bc72d82ec51235c48155faff35eee5da6f053e582fa76ae6b9",
+      "scene_counts": {
+        "atom_instances": 249,
+        "bonds": 506
+      }
     }
-  ]
+  ],
+  "reference_note": "Updated for mandatory complete bonds: every bond endpoint was checked against the rendered atom instances before recording these hashes."
 }
