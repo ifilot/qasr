@@ -4,7 +4,7 @@ QASR means **Quick Atomic Structure Renderer**; the current executable is `qasr`
 Open `index.html` directly or serve this directory using a static HTTP server.
 HTML, CSS, JavaScript, images and downloads are local; there are no runtime CDN,
 font, package or backend requirements. The command builder, search and lightbox
-also work from `file://` URLs. Configuration, batch and synthetic-workload guides
+also work from `file://` URLs. Configuration, batch, movie, options and release guides
 are included as standalone HTML pages. The options guide covers polygon files,
 periodic offsets and geometry limits; the movie guide covers builds and playback.
 Release notes summarize compatibility changes and validation.

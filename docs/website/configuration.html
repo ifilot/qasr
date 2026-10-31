@@ -1,10 +1,7 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
 <html lang="en"><head><meta name="qasr-version" content="0.6.0"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Layered configuration and atom styling — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#guide">Skip to documentation</a><main id="guide" style="margin:0 auto;max-width:1100px;padding:32px 24px;overflow-wrap:anywhere"><nav aria-label="Handbook navigation"><a href="index.html">← QASR handbook</a> · <a href="options.html">All options &amp; examples</a> · <a href="configuration.html">Defaults &amp; atom styling</a> · <a href="batch.html">Batch rendering &amp; speed</a> · <a href="movies.html">Movies &amp; reaction paths</a> · <a href="downloads/qasr-source.tar.gz" download>QASR sources</a></nav><p class="eyebrow">QASR: QUICK ATOMIC STRUCTURE RENDERER · V0.6.0 RELEASE</p><article class="doc-section"><h1 id="layered-configuration-and-automation-m9">Defaults, atom styling and automation</h1>
-<p>Available in <strong>v0.4.0</strong>. The immutable v0.3.0 tag contains XML input,
-periodic context and the original handbook; it does not contain user-preference or atom-override options.
-Check <code>--build-info</code> for <code>user_config</code>, <code>atom_overrides</code>, <code>job_requests</code> and
-<code>config_schema_version: 1</code> before using this interface.</p>
+<p>Check <code>--build-info</code> for <code>user_config</code>, <code>atom_overrides</code>, <code>job_requests</code> and <code>config_schema_version: 1</code> before using this interface.</p>
 <h2 id="defaults-and-reproducibility">Defaults and reproducibility</h2>
 <p>Rendering settings resolve in this order:</p>
 <ol>
@@ -135,7 +132,7 @@ rendering. PNG and report are individually atomic, <strong>not one transaction</
 late report I/O failure can leave a successfully written PNG and an older report.
 Consumers must check exit status and output hash. Atomic rename does not imply
 fsync durability or concurrent-input protection; do not modify inputs during a job.</p>
-<p>See <a href="https://github.com/ifilot/qasr/blob/master/docs/m9-validation.md">Configuration validation evidence</a> for correctness and performance checks.</p>
+<p>See <a href="release.html">the release guide</a> for current changes and compatibility. Historical acceptance and validation records are indexed in the source package’s <code>docs/archive/README.md</code>.</p>
 <p>For several views of the same structure, use <a href="batch.html">batch rendering</a> to retain parsed input and scene data between requests. Rendering runs locally without a network service.</p><h2 id="polygon-faces-bonds-cell-lines">Polygon faces, bonds and cell lines</h2>
 <p>Use root-level <code>faces: [...]</code> or <code>faces_file: "polygons.json"</code> in a recipe. Paths resolve against the containing recipe/job; stdin and worker paths use the working directory. Later layers replace the face array; an empty array clears it. <code>--faces FILE</code> is the final override. Resolved dumps contain inline faces. See <a href="options.html#face-fields">face fields, offsets and limits</a>.</p>
 <p><code>geometry.bond_radius_A</code> sets radius in angstroms; diameter is twice the radius. <code>geometry.bond_colors: "atoms"</code> colors halves from endpoint atoms. Both endpoint instances must be displayed, including included neighboring cells, with no override. Cell dashes, color and white contours are <code>overlays</code> fields; see <a href="options.html#annotations">cell-line controls</a>.</p>

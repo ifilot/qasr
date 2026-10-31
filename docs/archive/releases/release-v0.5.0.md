@@ -1,8 +1,12 @@
 # QASR v0.5.0 release — 2026-10-30
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../../README.md)
+> for supported behavior and setup.
+
 QASR v0.5.0 adds more geometry inputs, optional JPEG/WebP output and new drawing
 styles. The executable remains `qasr`; configuration and job schema versions
-remain 1. See the [quick start](../README.md) for installation and a first render.
+remain 1. See the [quick start](../../../README.md) for installation and a first render.
 
 ## Included since v0.4.0
 
@@ -37,12 +41,12 @@ allowance within the existing allocation budget. PNG tuning applies to PNG only.
 
 The new input readers support documented geometry subsets, not all files from
 Gaussian or AMS. Gaussian Z-matrices, ONIOM and checkpoint files, and AMS/ADF
-output/RKF files remain unsupported. See [input formats](input-formats.md).
+output/RKF files remain unsupported. See [input formats](../../input-formats.md).
 
 ORTEP depicts spheres, not thermal displacement ellipsoids. ORTEP and BALSAC
 require the default Z-buffer backend; the experimental Cairo painter rejects
 them. Dither tones apply to atoms and bonds, preserving alpha; antialiasing may
-blend palette colors at edges. See [drawing styles](render-styles.md).
+blend palette colors at edges. See [drawing styles](../../render-styles.md).
 
 ## Release validation
 

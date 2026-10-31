@@ -37,6 +37,10 @@ and periodicity. Readers retain selected/current geometry rather than the whole
 trajectory. `--species` applies only to VASP readers. `--recover` remains specific
 to OUTCAR.
 
+For XML frame/final-position selection, document limits and external-entity
+handling, see the [XML reference](xml-input.md). Bond endpoint and expanded-cell
+behavior is described in [cell lines](cell-lines.md).
+
 ## Cells and periodicity
 
 Geometry has three independent `cell_present` flags and three `pbc` flags.
@@ -51,8 +55,8 @@ scene inspection exposes both flag arrays. Internal completion vectors used for
 coordinate calculations are never exposed as physical cell vectors.
 
 Source coordinates remain unwrapped. Scene construction wraps only periodic
-axes, generates bond images only along those axes, and clips bonds only at
-periodic boundaries. Nonperiodic bonds use ordinary Cartesian distances. Cell
+axes and generates bond images only along those axes. Displayed bonds require
+both endpoint atom instances; fragments to absent periodic copies are omitted. Nonperiodic bonds use ordinary Cartesian distances. Cell
 outlines draw only the supplied vectors: no cell, a line, four slab edges or
 twelve full-cell edges. `--cell off` hides any supplied display cell.
 

@@ -1,10 +1,14 @@
 # Completed design: configuration, atom selection and automation
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../README.md)
+> for supported behavior and setup.
+
 Status: **M9–M11 closed in v0.4.0**. The v0.3.0 tag
 remains the release boundary for M7/M8 and the original handbook. The design
-rationale below is retained; see [the implemented interface](configuration.md)
-for exact flags, limits, precedence and examples. M10 implements the [persistent worker](batch-worker.md) and
-[synthetic workload comparisons](synthetic-workloads.md). M11 completes the measured
+rationale below is retained; see [the implemented interface](../configuration.md)
+for exact flags, limits, precedence and examples. M10 implements the [persistent worker](../batch-worker.md) and
+[synthetic workload comparisons](../synthetic-workloads.md). M11 completes the measured
 OpenMP review; see [implementation/validation](m10-m11-validation.md).
 MCP/HTTP remain optional integration branches when a client requires them.
 
@@ -288,5 +292,5 @@ real fixtures remain necessary to check that conclusions generalize.
 
 M9a–M9c, M10 and M11 are complete and included in v0.4.0, together with the
 canonical QASR name and `qasr` executable. The broader M0–M11 design is closed.
-See [release notes and validation](release-v0.4.0.md). No mandatory design tasks
+See [release notes and validation](releases/release-v0.4.0.md). No mandatory design tasks
 remain; MCP/HTTP remain optional integrations when a concrete client needs them.

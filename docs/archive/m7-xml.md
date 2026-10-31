@@ -1,5 +1,9 @@
 # M7: streaming vasprun.xml input (v0.3.0)
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../README.md)
+> for supported behavior and setup.
+
 M7 is included in v0.3.0, following the v0.2.0 M4–M6 checkpoint. It adds a system-libxml2
 streaming reader without changing the normalized scene or rendering pipeline.
 XML is enabled by default; `-DENABLE_XML=OFF` keeps POSCAR/OUTCAR support and
@@ -88,7 +92,7 @@ Release and leak-enabled address/undefined-behavior checks cover these cases.
 
 Three unmodified MIT-licensed pymatgen fixtures are pinned to commit
 `682bfd855dd89264b0ff8d6bee4815f8834cc5ac`; source names, compressed hashes and
-licensing are in [the fixture README](../tests/fixtures/README.md). They cover
+licensing are in [the fixture README](../../tests/fixtures/README.md). They cover
 VASP 5.2.2 relaxation (25 atoms, 29 frames), VASP 6.3.2 Si MD (64 atoms, 10 frames)
 and VASP 6.0.8 dielectric output (30 atoms, one frame). An independent ElementTree
 oracle checks metadata and first/last/final geometry. Equivalent POSCARs produce

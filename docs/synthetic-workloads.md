@@ -1,4 +1,4 @@
-# Synthetic data for M10 and M11
+# Synthetic workloads for CLI and worker comparisons
 
 `tools/generate_m10_workloads.py` creates original, seeded POSCAR and minimal
 vasprun.xml inputs, geometry oracles and request plans using only the Python
@@ -9,19 +9,20 @@ retained real fixtures; they do not establish real-world performance by themselv
 
 ## Generate and use
 
-Run from the repository root with the M9-capable executable on master:
+Run from the repository root with a QASR build supporting JSON jobs and the
+worker. Check `qasr --build-info` for `job_requests` and `batch_worker`.
 
 ```sh
 python3 tools/generate_m10_workloads.py \
-  --profile standard --seed 1729 --output artifacts/m10/data
+  --profile standard --seed 1729 --output artifacts/benchmarks/data
 
 # Check file hashes, species/order, cells, frame counts and Cartesian positions.
 python3 tools/run_m10_workloads.py build-release/qasr \
-  artifacts/m10/data --validate-only
+  artifacts/benchmarks/data --validate-only
 
-# Establish a baseline using independent CLI calls, before implementing a worker.
+# Establish the CLI baseline before comparing the existing worker.
 python3 tools/run_m10_workloads.py build-release/qasr \
-  artifacts/m10/data --output artifacts/m10/baseline \
+  artifacts/benchmarks/data --output artifacts/benchmarks/baseline \
   --samples 30 --warmups 3 --measure-rss
 ```
 
@@ -92,21 +93,22 @@ For invalidation, only the runner-owned copy is overwritten. The source corpus
 is immutable. Replacement changes the cell and coordinates while preserving text
 length; the runner verifies that its pixels change and then return exactly to the
 original pixels. The report records size, inode and nanosecond mtime so that a
-future cache cannot accidentally pass by relying only on those identity fields.
+cache cannot accidentally pass by relying only on those identity fields.
 This deliberately tests content-sensitive invalidation; it does not claim to
 solve arbitrary concurrent input modification.
 
 ## Request plans and the baseline runner
 
-`plans/*.jsonl` contain **driver envelopes**, not a currently supported renderer
-batch protocol. Each line has `id`, `action`, `requires`, an ordinary M9 `job` and
+`plans/*.jsonl` contain **driver envelopes**, distinct from the renderer’s JSONL
+worker protocol. Each line has `id`, `action`, `requires`, an ordinary render `job` and
 `expected` assertions. Paths are relative to the suite root. The runner resolves
-paths and submits each job using the existing `qasr --job -` interface.
+paths and submits jobs through the selected CLI or worker backend.
 The optional `active_input` field requests the private input-replacement scenario.
-A future M10 worker adapter can reuse these envelopes and expected outcomes.
+The implemented worker adapter translates these envelopes to worker requests;
+do not send the plan files directly to `qasr --batch`.
 
 The runner supports `--backend cli` (default, independent processes) and
-`--backend worker` (one persistent M10 session). Use `--reference` to compare
+`--backend worker` (one persistent worker session). Use `--reference` to compare
 worker results with the CLI, and `--cache-mib 0` to isolate persistence from
 caching. The worker tests additionally check bounded retention, cancellation
 and state restoration. See [the worker interface](batch-worker.md). Hard-coded expected
@@ -126,13 +128,13 @@ For a selected experiment and optional thread comparison:
 
 ```sh
 python3 tools/run_m10_workloads.py build-release/qasr \
-  artifacts/m10/data --families views styles \
-  --output artifacts/m10/one-thread --samples 30 --warmups 3 --threads 1
+  artifacts/benchmarks/data --families views styles \
+  --output artifacts/benchmarks/one-thread --samples 30 --warmups 3 --threads 1
 
 python3 tools/run_m10_workloads.py build-release/qasr \
-  artifacts/m10/data --families views styles \
-  --output artifacts/m10/auto-threads --samples 30 --warmups 3 --threads auto \
-  --reference artifacts/m10/one-thread/report.json
+  artifacts/benchmarks/data --families views styles \
+  --output artifacts/benchmarks/auto-threads --samples 30 --warmups 3 --threads auto \
+  --reference artifacts/benchmarks/one-thread/report.json
 ```
 
 Defaults are three measured samples and one warmup per request, with one render
@@ -146,7 +148,7 @@ processes. `--measure-rss` uses one separate GNU `/usr/bin/time` invocation per
 request, reporting peak RSS in KiB; it is not a steady-state worker-memory measure.
 There are no speedup confidence or cold-cache claims.
 
-## Verification and next stages
+## Verification and further comparisons
 
 Seven automated tests cover reproducibility/seed changes, destination and size
 bounds, geometry oracles, independent XML/POSCAR parsing, corpus tampering/path
@@ -154,6 +156,7 @@ confinement, all workload families, unchanged failure outputs, same-identity
 replacement and reference-comparison rejection. The same suite is exercised with
 Release, sanitizer and XML/OpenMP/libdeflate-disabled renderer builds.
 
-M10 implements the persistent worker and reference comparisons. M11 is recorded in [the detailed design](next-iteration.md#m11--review-openmp-opportunities-and-thread-policy):
-profile candidates for OpenMP, sweep thread counts/scheduling and worker/thread
-combinations, and retain improvements only when measurements justify them.
+For current comparison methods and retained results, see [performance](performance.md).
+The [original worker/threading record](archive/m10-m11-validation.md) documents
+prior decisions. For new experiments, compare the same corpus and settings,
+sweep worker/thread counts, and retain results only after output checks pass.

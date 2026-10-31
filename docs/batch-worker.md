@@ -1,6 +1,6 @@
 # Sequential JSONL worker
 
-Available in **v0.4.0**. `--build-info` reports `batch_worker: true`.
+Available since **v0.4.0**. `--build-info` reports `batch_worker: true`.
 The original single-job CLI remains supported and shares its rendering path with
 the worker. No additional runtime package, network listener or HTTP service is
 required. MCP remains an optional integration adapter when a client needs it;
@@ -120,11 +120,13 @@ Generate [the synthetic corpus](synthetic-workloads.md), then compare both
 backends using the same executable, corpus, filesystem and thread policy:
 
 ```sh
-python3 tools/run_m10_workloads.py build-release/qasr /tmp/m10-data \
-  --output /tmp/m10-cli --samples 30 --warmups 3
-python3 tools/run_m10_workloads.py build-release/qasr /tmp/m10-data \
-  --backend worker --cache-mib 64 --output /tmp/m10-worker \
-  --samples 30 --warmups 3 --reference /tmp/m10-cli/report.json
+python3 tools/generate_m10_workloads.py --profile standard \
+  --output /tmp/qasr-worker-data
+python3 tools/run_m10_workloads.py build-release/qasr /tmp/qasr-worker-data \
+  --output /tmp/qasr-cli-results --samples 30 --warmups 3
+python3 tools/run_m10_workloads.py build-release/qasr /tmp/qasr-worker-data \
+  --backend worker --cache-mib 64 --output /tmp/qasr-worker-results \
+  --samples 30 --warmups 3 --reference /tmp/qasr-cli-results/report.json
 ```
 
 The worker runner checks IDs, errors, input/output hashes, frames, counts, decoded
@@ -137,5 +139,7 @@ are separate per-request runs. Do not compare those as identical memory metrics.
 
 Eight worker test groups cover framing/errors, scene-key dependencies, disabled
 and small caches, clear/validate, synthetic CLI equivalence, bounded repeated
-use, launch/schema/default isolation and active cancellation/recovery. The broad
-release/sanitizer/fallback checks and measured results are documented with M11.
+use, launch/schema/default isolation and active cancellation/recovery.
+The [release checks](release-v0.6.0.md), [current performance guide](performance.md)
+and [original worker/threading record](archive/m10-m11-validation.md) describe
+the broader validation and measurements.

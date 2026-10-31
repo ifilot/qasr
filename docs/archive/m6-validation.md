@@ -1,5 +1,9 @@
 # M6 validation and operating scope
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../README.md)
+> for supported behavior and setup.
+
 Historical measurements below use the provisional executable name `vasp-render`.
 The current application is QASR: Quick Atomic Structure Renderer; use `qasr`
 for new builds. Retained commands and measurements are preserved as recorded.

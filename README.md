@@ -17,7 +17,8 @@ QASR turns atomic structures into images from the command line, without a graphi
 - Draw bonds between displayed atoms and style unit-cell edges with dashes and
   white contours; see the [cell-line examples](examples/cell-lines/README.md).
 
-See the [user handbook](https://ifilot.github.io/qasr/) for detailed usage,
+See the [documentation index](docs/README.md) for current guides and archived
+release/validation records. The [user handbook](https://ifilot.github.io/qasr/) covers detailed usage,
 [supported input formats](docs/input-formats.md) and [drawing styles](docs/render-styles.md).
 See the [v0.6.0 release notes](docs/release-v0.6.0.md) for changes and limitations.
 See the [feature performance report](docs/performance-features.md) for the
@@ -51,17 +52,36 @@ Clone and compile QASR:
 ```sh
 git clone https://github.com/ifilot/qasr.git
 cd qasr
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
 cmake --build build --parallel
 ```
 
-The executable is `build/qasr`. To install it for your user:
+The executable is `build/qasr`. For a system-wide installation:
+
+```sh
+cd build
+sudo make install
+qasr --version
+cd ..
+```
+
+Run `sudo make install` from the CMake build directory. With the default prefix,
+it installs `/usr/local/bin/qasr`, presets and schemas under
+`/usr/local/share/qasr/`, and documentation including [SKILL.md](SKILL.md) under
+`/usr/local/share/doc/qasr/`. Build as your ordinary user; only installation needs
+root access. A different system prefix can be selected at configuration time
+with `-DCMAKE_INSTALL_PREFIX=/your/prefix`.
+
+To install for your user instead, run from the source directory:
 
 ```sh
 cmake --install build --prefix "$HOME/.local"
 ```
 
 Add `$HOME/.local/bin` to your `PATH` to run `qasr` from any directory.
+
+[SKILL.md](SKILL.md) provides an assistant-oriented usage guide for input
+inspection, figures, faces/bonds, movies, reproducible recipes and batch jobs.
 
 For JPEG and WebP output, install the optional libraries and rebuild:
 

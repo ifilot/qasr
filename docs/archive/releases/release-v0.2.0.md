@@ -1,5 +1,9 @@
 # v0.2.0 release — 2026-10-29
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../../README.md)
+> for supported behavior and setup.
+
 This release completes design milestones M4–M6: renderer/AA/encoder/thread
 experiments, selected production defaults, annotations and hardening. The
 user-approved deployment and performance environment is WSL2 Linux x86-64
@@ -16,8 +20,8 @@ physical scale bar reserve their layout before camera fitting.
 
 All 20 unannotated baseline images retain exact decoded RGBA. Thirty-sample
 warm-cache measurements pass 34 scoped performance targets, with up to 9.9×
-median speedup over the reference. See [performance evidence](performance.md)
-and [operating limits](m6-validation.md). Generated evidence remains under
+median speedup over the reference. See [performance evidence](../performance-v0.1-v0.2.md)
+and [operating limits](../m6-validation.md). Generated evidence remains under
 Git-ignored `artifacts/m4-m6/`; archives and benchmark data are not committed.
 
 Release validation uses the versioned executable and packages:

@@ -1,7 +1,11 @@
 # M9 implementation and acceptance — 2026-10-29
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../README.md)
+> for supported behavior and setup.
+
 M9a–M9c are implemented on master after the immutable v0.3.0 release checkpoint.
-The implementation guide is [configuration.md](configuration.md); the standalone
+The implementation guide is [configuration.md](../configuration.md); the standalone
 website includes a development guide, two actual styling images, downloadable
 recipes/jobs, matching schemas and a separate development source archive.
 

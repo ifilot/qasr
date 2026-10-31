@@ -1,5 +1,9 @@
 # Architecture and contract polish
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../README.md)
+> for supported behavior and setup.
+
 This review applies `architecture-simplifier` in Refactor mode and
 `commenting-auditor` in Fix mode to the feature-complete optimization revision.
 The changes preserve the CLI, JSON schemas, rendering arithmetic and encoding

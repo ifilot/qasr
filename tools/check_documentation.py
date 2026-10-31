@@ -77,7 +77,7 @@ def main():
         assert Path(record['command'][0]).name=='qasr'
     for name,digest in examples['downloads'].items():assert sha(site/'downloads'/name)==digest,name
     with zipfile.ZipFile(site/'downloads/qasr-examples.zip') as z:
-        for name in ['CONTCAR.co','CONTCAR.pd-ceria','POSCAR.skew','OUTCAR.relax','vasprun.example.xml','illustrated.json','publication.json','LICENSE']:
+        for name in ['CONTCAR.co','CONTCAR.pd-ceria','POSCAR.skew','OUTCAR.relax','vasprun.example.xml','illustrated.json','publication.json','LICENSE','SKILL.md']:
             assert z.read(name)==(site/'downloads'/name).read_bytes(),name
     source=json.loads((site/'downloads/source-manifest.json').read_text())
     assert source['version']==version and source['archive']==f'qasr-{version}.tar.gz','stale source release'

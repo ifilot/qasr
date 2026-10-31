@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Separate current documentation from historical plans, validation reports and
+  older release notes; add a documentation index and refresh architecture,
+  benchmark, XML, style and worker/workload guidance.
+
+- Add a QASR usage skill to the source archive, offline example kit and installed
+  documentation. Document and verify system-wide `sudo make install` through
+  CMake's Unix Makefiles generator.
+
 ## [0.6.0] - 2026-10-31
 
 - Optimize polygon compositing and outlined/dashed cell strokes, reuse movie

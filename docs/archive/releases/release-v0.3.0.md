@@ -1,5 +1,9 @@
 # v0.3.0 release — 2026-10-29
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../../README.md)
+> for supported behavior and setup.
+
 v0.3.0 closes M7, M8 and the standalone handbook checkpoint. It includes:
 
 - Optional streaming libxml2 vasprun.xml input, complete-document validation,

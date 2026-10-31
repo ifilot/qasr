@@ -1,7 +1,5 @@
 # Defaults, atom styling and automation
 
-Available in **v0.4.0**. The immutable v0.3.0 tag contains XML input,
-periodic context and the original handbook; it does not contain user-preference or atom-override options.
 Check `--build-info` for `user_config`, `atom_overrides`, `job_requests` and
 `config_schema_version: 1` before using this interface.
 
@@ -174,7 +172,8 @@ late report I/O failure can leave a successfully written PNG and an older report
 Consumers must check exit status and output hash. Atomic rename does not imply
 fsync durability or concurrent-input protection; do not modify inputs during a job.
 
-See [configuration validation evidence](m9-validation.md) for correctness and performance checks.
+For initial acceptance evidence, see the [archived configuration record](archive/m9-validation.md).
+Current release checks are in [v0.6.0 validation](release-v0.6.0.md).
 
 For repeated renders, use the [sequential JSONL worker](batch-worker.md). It
 supports validate, render, stats and clear-cache requests with bounded

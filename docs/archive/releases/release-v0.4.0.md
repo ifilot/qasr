@@ -1,5 +1,9 @@
 # QASR v0.4.0 release — 2026-10-29
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../../README.md)
+> for supported behavior and setup.
+
 v0.4.0 closes the completed M9–M11 design and the application naming checkpoint.
 The application is **QASR: Quick Atomic Structure Renderer**, and its native
 executable, CMake project/target and source/binary packages are named `qasr`.
@@ -39,7 +43,7 @@ Reference PNG pixels and the handbook's images remain unchanged.
 M10/M11 retained evidence includes the 1200-request bounded-cache soak, 53 standard
 and nine selected stress requests, exact CLI/worker image comparisons, and
 OpenMP scheduling/thread/worker sweeps. Performance observations and their limits
-are in [M10/M11 validation](m10-m11-validation.md); the v0.4.0 closeout does not
+are in [M10/M11 validation](../m10-m11-validation.md); the v0.4.0 closeout does not
 relabel those historical measurements as new performance experiments.
 
 ```sh

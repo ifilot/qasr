@@ -1,9 +1,13 @@
 # M10/M11 implementation and validation — 2026-10-29
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../README.md)
+> for supported behavior and setup.
+
 M10 delivers a sequential JSONL worker with a shared CLI rendering path,
 content-sensitive bounded input/scene reuse, strict request schemas, structured
 responses, cache controls and cooperative cancellation. See
-[batch-worker.md](batch-worker.md) and [synthetic-workloads.md](synthetic-workloads.md).
+[batch-worker.md](../batch-worker.md) and [synthetic-workloads.md](../synthetic-workloads.md).
 MCP/HTTP remain optional integration layers; no service dependency was added.
 
 M11 investigated OpenMP opportunities using both synthetic and retained real

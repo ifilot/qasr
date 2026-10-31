@@ -62,6 +62,16 @@ cmake --build build-release --parallel
 ctest --test-dir build-release --output-on-failure
 cmake --install build-release --prefix "$HOME/.local"
 "$HOME/.local/bin/qasr" --version</code></pre>
+    <h3>System-wide installation with sudo make install</h3>
+    <p>Select CMake’s Unix Makefiles generator, build as your ordinary user, then run the install target from the build directory:</p><pre><code>cmake -S . -B build-system -G "Unix Makefiles" \
+  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+  -DCMAKE_INSTALL_PREFIX=/usr/local
+cmake --build build-system --parallel
+cd build-system
+sudo make install
+/usr/local/bin/qasr --version
+cd ..</code></pre>
+    <p>This installs the executable at <code>/usr/local/bin/qasr</code>, presets and schemas under <code>/usr/local/share/qasr/</code>, and documentation under <code>/usr/local/share/doc/qasr/</code>. Only the installation step needs root access. The installed documentation includes <a href="downloads/SKILL.md" download>SKILL.md, an assistant usage guide</a> for figures, polygon faces, movies and batch rendering. The guide is also included in the source archive and example kit.</p>
     <p>Installed presets live under <code>$HOME/.local/share/qasr/presets/</code>. Pass a preset’s full path with <code>--config</code>; the CLI does not search for presets by name. Installed binaries use shared system libraries. Copying the executable alone to a different host may leave unresolved runtime dependencies.</p>
     <div class="table-wrap"><table><caption>Optional build switches</caption><thead><tr><th>CMake option</th><th>Default</th><th>When to change it</th></tr></thead><tbody>
       <tr><td><code>ENABLE_OPENMP</code></td><td>ON</td><td>OFF builds a serial renderer; use <code>--threads 1</code> or <code>auto</code>.</td></tr><tr><td><code>ENABLE_LIBDEFLATE</code></td><td>ON</td><td>OFF uses the libpng encoder as its default and removes the libdeflate dependency.</td></tr><tr><td><code>ENABLE_XML</code></td><td>ON</td><td>OFF removes libxml2 and XML parsing. POSCAR and OUTCAR still work.</td></tr><tr><td><code>ENABLE_JPEG</code></td><td>OFF</td><td>ON enables JPEG output; install system libjpeg development files.</td></tr><tr><td><code>ENABLE_FFMPEG</code></td><td>OFF</td><td>ON enables MP4 movies through shared FFmpeg libraries; see the <a href="movies.html">movie guide</a>.</td></tr><tr><td><code>ENABLE_WEBP</code></td><td>OFF</td><td>ON enables lossless RGBA WebP output; install system libwebp development files.</td></tr><tr><td><code>ENABLE_CAIRO_EXPERIMENTS</code></td><td>OFF</td><td>Optional system Cairo prototypes for experiments; use the accurate Z-buffer for production geometry.</td></tr><tr><td><code>BUILD_TESTING</code></td><td>ON</td><td>OFF omits tests and their Python requirement.</td></tr><tr><td><code>ENABLE_SANITIZERS</code></td><td>OFF</td><td>ON enables address/undefined-behavior checks for a Debug development build.</td></tr>

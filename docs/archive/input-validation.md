@@ -1,7 +1,11 @@
 # Input expansion validation
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../README.md)
+> for supported behavior and setup.
+
 The v0.6.0 release validates these readers with the full CMake/CTest suite,
-including all pinned XML fixtures. See [release validation](release-v0.6.0.md).
+including all pinned XML fixtures. See [release validation](../release-v0.6.0.md).
 The records below describe the earlier PR environment and its limitations.
 
 ## Native builds

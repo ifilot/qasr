@@ -62,7 +62,7 @@ median CLI times fell 31.7% for an opaque polygon with labels, 15.3% for dashed
 cell lines with white contours, and 24.7% for a polygon-cage orbit. All encoded
 outputs, scene inspections, movie reports and independent decoded movie frames
 matched. Gains depend on the workflow and measured WSL workstation. The
-[subsequent code-polish review](code-polish.md) checked output parity across all
+[subsequent code-polish review](archive/code-polish.md) checked output parity across all
 41 workflows and found no resolved timing change from the structural cleanup.
 
 **Release checks.** The Release suite with optional movie/image codecs passed

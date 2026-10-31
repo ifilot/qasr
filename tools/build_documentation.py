@@ -29,6 +29,7 @@ def main():
         'OUTCAR.relax': fixtures/'OUTCAR.relax',
         'illustrated.json': ROOT/'presets/illustrated.json',
         'LICENSE': ROOT/'LICENSE',
+        'SKILL.md': ROOT/'SKILL.md',
         'reaction.xyz': ROOT/'examples/movies/reaction.xyz',
         'reaction.json': ROOT/'examples/movies/reaction.json',
     }
@@ -91,7 +92,15 @@ publication.json: a portable libpng example with transparent output and periodic
 Original project material and these user-provided examples: GPL-3.0-only.
 See LICENSE. Website images are program-generated examples, not AI illustrations.
 ''')
-    shutil.copyfile(fixtures/'slabs/README.md', downloads/'SLAB-PROVENANCE.md')
+    provenance=(fixtures/'slabs/README.md').read_text().replace('`manifest.json`','`SLAB-MANIFEST.json`')
+    bundled={p.relative_to(fixtures/'slabs').as_posix():name for name,p in examples.items()
+             if p.is_relative_to(fixtures/'slabs')}
+    for source in sorted((fixtures/'slabs').glob('*/CONTCAR')):
+        relative=source.relative_to(fixtures/'slabs').as_posix()
+        target=bundled.get(relative,'https://github.com/ifilot/qasr/blob/master/tests/fixtures/slabs/'+relative)
+        provenance=provenance.replace(']('+relative+')',']('+target+')')
+    provenance+='\nIn the example kit, links to the two bundled slabs open local files; other slab links open the source fixture collection.\n'
+    (downloads/'SLAB-PROVENANCE.md').write_text(provenance)
     shutil.copyfile(fixtures/'slabs/manifest.json', downloads/'SLAB-MANIFEST.json')
     with zipfile.ZipFile(downloads/'qasr-examples.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         kit = [*examples, 'vasprun.example.xml', 'publication.json', 'EXAMPLES.txt', 'SLAB-PROVENANCE.md', 'SLAB-MANIFEST.json']

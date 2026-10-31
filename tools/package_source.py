@@ -19,7 +19,7 @@ def main():
     root=Path(__file__).resolve().parents[1]
     cmake=(root/"CMakeLists.txt").read_text()
     version=re.search(r"project\(qasr VERSION ([0-9]+\.[0-9]+\.[0-9]+)",cmake).group(1)
-    top=[".gitignore",".gitattributes","CMakeLists.txt","README.md","CHANGELOG.md","LICENSE","THIRD_PARTY_NOTICES.md"]
+    top=[".gitignore",".gitattributes","CMakeLists.txt","README.md","CHANGELOG.md","SKILL.md","LICENSE","THIRD_PARTY_NOTICES.md"]
     files=[root/name for name in top]
     for directory in ["src","presets","schemas","docs","examples","tests","tools","vendor",".github"]:
         for path in (root/directory).rglob("*"):

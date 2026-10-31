@@ -66,6 +66,8 @@ def main():
     linked=run('installed-libraries',['ldd',installed])
     if 'not found' in linked:raise RuntimeError('unresolved installed shared library')
     if not (install/'share/doc/qasr/LICENSE').is_file():raise RuntimeError('installed GPL notice missing')
+    if (install/'share/doc/qasr/SKILL.md').read_bytes()!=(ROOT/'SKILL.md').read_bytes():
+        raise RuntimeError('installed QASR usage skill differs from source')
     if capabilities.get('ffmpeg'):
         installed_movie=runtime/'installed.mp4'
         run('installed-movie',[installed,source,'--no-user-config','--movie','orbit',
@@ -95,7 +97,7 @@ def main():
                      'src/movie.c','src/movie.h','src/image.c','src/image.h','src/image_io.h','src/sha256.h',
                      'src/faces.c','src/face_render.c','schemas/faces.schema.json','tests/test_movies.py',
                      f"docs/release-v{capabilities['version']}.md",'docs/polygon-faces.md','docs/movies.md',
-                     'tools/check_performance.py','tools/validate_deployment.py','LICENSE','THIRD_PARTY_NOTICES.md']:
+                     'tools/check_performance.py','tools/validate_deployment.py','SKILL.md','LICENSE','THIRD_PARTY_NOTICES.md']:
         if required not in manifest['files']:raise RuntimeError('required source content missing: '+required)
     clean_build=work/'source-build'
     feature_options=[f'-DENABLE_{name.upper()}={"ON" if capabilities.get(name) else "OFF"}'

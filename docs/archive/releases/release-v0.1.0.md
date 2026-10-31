@@ -1,5 +1,9 @@
 # v0.1.0 release — 2026-10-29
 
+> Historical record. Commands, limits and validation results describe the original
+> development/release context. Use the [current documentation index](../../README.md)
+> for supported behavior and setup.
+
 ## Scope
 
 Reference-renderer checkpoint covering M0–M3, illustrated top views, black
@@ -75,7 +79,7 @@ CLI unnecessarily. No architectural refactor is required for this release.
 - Pixel goldens target a fixed software environment. Native workstation/HPC
   builds and performance have not been verified by the laptop/WSL checks.
 
-Start the next phase using [the workstation procedure](performance.md).
+Start the next phase using [the workstation procedure](../performance-v0.1-v0.2.md).
 M4/M5 are performance experiments; M6 also contains feature completion and
 production hardening. Fresh workstation baselines replace exploratory laptop
 targets before performance decisions are made.
