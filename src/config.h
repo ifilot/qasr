@@ -91,7 +91,32 @@ typedef struct {
     FaceDefinition *faces;
     size_t face_count;
     struct cJSON *faces_json;
+    struct FaceTriangle *orbital_triangles;
+    size_t orbital_count, orbital_capacity;
+    char orbital_hashes[32][65];
+    struct cJSON *orbitals_json;
 } Config;
+
+/** @brief Replace orbital layers with bounded PLY meshes in Cartesian angstroms.
+ * @param[in,out] c Non-null initialized configuration. Owns copied metadata and
+ * decoded triangles, including partial results on failure; release with
+ * config_free or config_orbitals_free. A valid array replaces existing layers
+ * before loading; a rejected non-array leaves the previous layers intact.
+ * @param[in] array Borrowed JSON layer array, distinct from c's owned metadata.
+ * Each layer requires file and units; origin is applied in mesh units before
+ * conversion. Normals are dimensionless and normalized, never unit-scaled.
+ * @param[in] file Borrowed containing configuration path, or NULL for paths
+ * relative to the working directory. Resolved absolute paths are retained.
+ * @param[out] e Non-null error destination, set on failure.
+ * @return true on success; false on invalid metadata/PLY, I/O, cancellation or
+ * resource limits. Loading verifies file hashes before and after decoding.
+ */
+bool config_orbitals(Config *c, const struct cJSON *array, const char *file, Error *e);
+/** @brief Release orbital triangles, metadata and hashes, then reset their fields.
+ * @param[in,out] c Non-null initialized configuration; safe repeatedly. Other
+ * configuration state is preserved, including after partial orbital loading.
+ */
+void config_orbitals_free(Config *c);
 
 /** @brief Parse configuration JSON with bounded input and strict key handling.
  * @param[in] text Non-null NUL-terminated JSON, borrowed until return.

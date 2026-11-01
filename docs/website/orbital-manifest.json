@@ -1,0 +1,82 @@
+{
+  "build_info": {
+    "version": "0.7.0",
+    "config_schema_version": 1,
+    "user_config": true,
+    "atom_overrides": true,
+    "job_requests": true,
+    "batch_worker": true,
+    "nonperiodic": true,
+    "partial_pbc": true,
+    "polygon_faces": true,
+    "orbital_ply": true,
+    "atom_colored_bonds": true,
+    "xml": true,
+    "openmp": true,
+    "cairo": false,
+    "libdeflate": true,
+    "jpeg": false,
+    "webp": false,
+    "ffmpeg": false
+  },
+  "figures": [
+    {
+      "image": "assets/co-orbitals.png",
+      "sha256": "a8bba1ca40754feeef96f0b1d2ea2e598780aeb073fc732db62da8e978f831a6"
+    },
+    {
+      "image": "assets/co-orbital-rim-comparison.png",
+      "sha256": "c1f5d3083a51be27a6bcdc83fc1563928fac616ef950fbed633ae7ae9f4a28d2"
+    }
+  ],
+  "inputs": {
+    "examples/orbitals/README.md": "4b8849437ddbe3d933dc7382dd52946184e0f38876ba570351ce6e6a23a6943c",
+    "examples/orbitals/co.xyz": "96445270f85c292cc42982ed040929f619233b03f396809bc8743b4f82b038be",
+    "examples/orbitals/gallery.html": "f3fd5d64fce33f017b8c07383479d19c491de163d55c83ba64c6eac00bba46cd",
+    "examples/orbitals/gallery.png": "a8bba1ca40754feeef96f0b1d2ea2e598780aeb073fc732db62da8e978f831a6",
+    "examples/orbitals/generate.py": "5aaff3dc2f0d01d978a108c41e218f1bedc1e76385d0526311d84a03dac2e9a2",
+    "examples/orbitals/manifest.json": "6193ac4804bbed209c065f94e97f38ec855d1eaaf3c389d69b35fabb5515c2a2",
+    "examples/orbitals/meshes/co-01-negative.ply": "59a301f4a7c68d91dbb2c28966c8e7538a585cb8549a79ed8cdd192d1bfb750d",
+    "examples/orbitals/meshes/co-02-positive.ply": "aef21cd27540833c5553f872c83e7dc261fd4ba5a892374abea50da10e87fe61",
+    "examples/orbitals/meshes/co-03-negative.ply": "b5c6e1388c803b501ba36a70ab2b8cec81fd6aa03058aec63b59e24e250010b7",
+    "examples/orbitals/meshes/co-03-positive.ply": "196c948a7bdc15cfc25fc1d8daff71b3e8d84411d09ef7e64c0ccad55e00d07d",
+    "examples/orbitals/meshes/co-04-negative.ply": "852610bcdd39fcc6e3b7e8d68e42d390d545a545885d787c0048a96920940d5e",
+    "examples/orbitals/meshes/co-04-positive.ply": "1010b055ceb0e50eccc38bc4c2520662cfc2d08e36675ab2dc3156f5a4bd00ca",
+    "examples/orbitals/meshes/co-05-negative.ply": "e401a012022c40e68b5f727cc6abe085a478c72db5831414051a5eaf72676229",
+    "examples/orbitals/meshes/co-05-positive.ply": "f2e33113537d17f3e4ec3836a0093fffedf45d56cb34b6c7a8c365cd5e9643cc",
+    "examples/orbitals/meshes/co-06-negative.ply": "8f0dcea413e0f318791848aec91a1c60a23ba11a8e9f4d600bce5e8b951cc320",
+    "examples/orbitals/meshes/co-06-positive.ply": "1950855e5eadb1199bc932f8a734c60826bb784371945a578ac35a12b852ff93",
+    "examples/orbitals/meshes/co-07-negative.ply": "6700d7d74c319ac3bf7b9a0b768358e31e84e82368b319b59f5ddb962ccc1fd1",
+    "examples/orbitals/meshes/co-07-positive.ply": "3b60aa77cf0224e25a2117e89a3379821fcfd9fe39bb8421addbb1bb06e860ad",
+    "examples/orbitals/meshes/co-08-negative.ply": "840a52d24c9dca5799f29dc488ef236dddd3eb21485b23a6e218642680eda9fd",
+    "examples/orbitals/meshes/co-08-positive.ply": "444952e61e8ccb6ac4d4a84c72516f9e5ca99e8026e93e49789c097dbce40264",
+    "examples/orbitals/meshes/co-09-negative.ply": "6209cc54ebf96988f77f57241f72669518be671eabb96bd27c07be7adb8aa7da",
+    "examples/orbitals/meshes/co-09-positive.ply": "3b159702e553dd5a9d4c6fe4f4df0849517967b7079782a1631cf7631e82d004",
+    "examples/orbitals/meshes/co-10-negative.ply": "e4844f2dba9f8c597d1bd4579fe8f30c5d59dfdac0d099e40c485b64f8ebf21e",
+    "examples/orbitals/meshes/co-10-positive.ply": "99e4f3fea3c662e54a40db648768aafc3f76f87937ba5479cb6b9d027a2ec141",
+    "examples/orbitals/recipes/co-01.json": "b9c8d793db24f33c95eaad10eac2e7bb23eeb908a49360ff3c565265c6410ac8",
+    "examples/orbitals/recipes/co-02.json": "ca99cea9806f28cf095f29d314145471b20c870d8bc31017b1a1635f273f6ffa",
+    "examples/orbitals/recipes/co-03.json": "d548c6faa255152b8cee2042ad5cd6c33d54bfb01f804490a711c789b82d7f1a",
+    "examples/orbitals/recipes/co-04.json": "8e2eb96a0ab1002aa1e77217271adc99ac4b26ca88475fa1070d2e5137ff6cd0",
+    "examples/orbitals/recipes/co-05.json": "c931b1ae1fc4e07ddeadb82748f78cb9519f09a29b4ed9cd83ebe8aa74cf28e4",
+    "examples/orbitals/recipes/co-06.json": "15b4e03064196ecc32b8940d5fe958150f7ff5d52da005a4bfd50089a450bbb6",
+    "examples/orbitals/recipes/co-07.json": "8d97939fbc722e122f4826bf3a7801862c80cf070e8932795f0c7879da9fba58",
+    "examples/orbitals/recipes/co-08.json": "8a3c66e91e73ddeccb5890680dd3c3701e1d79bf65a11027ad64cce50de89894",
+    "examples/orbitals/recipes/co-09.json": "eec4c63a3cdf68e026344fece369c666caa64f48cdb50a6dfd8902a4d64fc39a",
+    "examples/orbitals/recipes/co-10.json": "d047dbda8fe177161078f97a25770fbd737df1d78e8c2e01f5576a6d56951010",
+    "examples/orbitals/renders/co-01.png": "0fbf57bf48890ce4e830bd2e1cd7924025bc73e483216b1f45ff226cc0b6f454",
+    "examples/orbitals/renders/co-02.png": "22c57738b2895d507a1255597a6ce24de078b2355f3b2ea40f3714017aed80f0",
+    "examples/orbitals/renders/co-03.png": "ca9af600004564bf2e74a5e3eef9170903f01d7ba66f71a96e4d1ef421be55f9",
+    "examples/orbitals/renders/co-04.png": "22e1988a265b6e434a809df79783f7634a365e668e8bdc3ee085a355cb3b8d7c",
+    "examples/orbitals/renders/co-05.png": "6f7d860bf24338a216f1affae9d003729889ddf2d0069ae59efe96fead470ab3",
+    "examples/orbitals/renders/co-06.png": "618d7fbf9ce5c78d1d5489fd4e2141c08fe66bf2de64ede7e7ab1251ea59a036",
+    "examples/orbitals/renders/co-07.png": "45bbe9515c9a9c5742578910b622e09fac73f0bbe14e54e1eaffcd7334baa788",
+    "examples/orbitals/renders/co-08.png": "428437c326998cdd23a099d57706424e2af364eea20602e9e33be559746e8594",
+    "examples/orbitals/renders/co-09.png": "d6d6f9d8f9aa7c3a5dfb1b6d6a0a984114206166c2b4db67f9ec42e0cd3a123d",
+    "examples/orbitals/renders/co-10.png": "a03fe7a9bd9afaf61806b583c5b64e486fdab0be0e0a173f93202a6dafde4985",
+    "examples/orbitals/requirements.txt": "90c19473d8dd4556b13117a3a9031d43a73d5360beae3398b41e8dc1036a2b04"
+  },
+  "downloads": {
+    "co-orbitals.zip": "7abce212cf104175bddb039cc84ab5612aa974db813ab2bbcaf42b0dc05430a0"
+  }
+}

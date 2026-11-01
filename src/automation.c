@@ -132,6 +132,7 @@ cJSON *render_report(const Config *c, const Structure *s, const Scene *scene, co
     cJSON_AddNumberToObject(counts,"atom_rules",(double)c->rule_count);
     cJSON_AddNumberToObject(counts,"faces",(double)scene->face_count);
     cJSON_AddNumberToObject(counts,"face_triangles",(double)scene->triangle_count);
+    cJSON_AddNumberToObject(counts,"orbital_triangles",(double)c->orbital_count);
     cJSON_AddStringToObject(root,"config_sha256",config_hash);
     const char *groups[]={"image","camera","geometry","overlays"};
     for (size_t i=0;i<4;++i) cJSON_AddItemToObject(options,groups[i],cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(settings,groups[i]),1));

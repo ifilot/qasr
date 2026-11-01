@@ -3,6 +3,7 @@
 #define VR_SCENE_H
 #include "elements.h"
 #include "atom_style.h"
+#include "surface.h"
 
 #define VR_MAX_BONDS 10000000u
 #define VR_MAX_CANDIDATES 200000000u
@@ -19,13 +20,6 @@ typedef struct {
     size_t source_a, source_b;
     int image[3], origin[3]; /* Bond displacement and start translation in base-cell units. */
 } Primitive;
-typedef struct {
-    Vec3 vertices[3];
-    uint8_t color[4], outline_color[4], edges;
-    double outline_width;
-    size_t face, instance;
-    int origin[3];
-} FaceTriangle;
 typedef struct {
     Primitive *items;
     size_t count, capacity, atom_count, bond_count, base_bond_count;

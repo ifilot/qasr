@@ -871,6 +871,44 @@
       "type": "string",
       "minLength": 1,
       "description": "Polygon JSON file; paths resolve relative to the containing config or job file."
+    },
+    "orbitals": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "units"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "units": {
+            "enum": [
+              "bohr",
+              "angstrom"
+            ]
+          },
+          "origin": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": -10000000000.0,
+              "maximum": 10000000000.0
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false,

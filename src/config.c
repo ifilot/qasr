@@ -541,6 +541,9 @@ static bool apply_config(const cJSON *root, Config *c, const char *layer, const 
             if (!strcmp(layer,"user") && (!cJSON_IsArray(j) || cJSON_GetArraySize(j)>0))
                 ok=fail_at(e,2,"user_atom_rules_forbidden",k,"per-atom selections belong in a job config, not user preferences");
             else ok=config_atom_rules(c,j,e);
+        } else if (!strcmp(k,"orbitals")) {
+            if (!strcmp(layer,"user")) ok=fail_at(e,2,"user_orbitals_forbidden",k,"orbital meshes belong in a job config, not user preferences");
+            else ok=config_orbitals(c,j,file,e);
         } else if (!strcmp(k,"faces")) {
             if (!strcmp(layer,"user") && (!cJSON_IsArray(j) || cJSON_GetArraySize(j)>0))
                 ok=fail_at(e,2,"user_faces_forbidden",k,"polygon faces belong in a job config, not user preferences");
@@ -709,7 +712,7 @@ static bool job_runtime(Config *c, const char *path, Error *e)
 static bool validate(Config *c, Error *e)
 {
     if (!config_validate_movie(c,e)) return false;
-    if (c->backend==BACKEND_CAIRO && (c->face_count || c->bond_colors==BONDS_ATOMS))
+    if (c->backend==BACKEND_CAIRO && (c->face_count || c->orbital_count || c->bond_colors==BONDS_ATOMS))
         return fail_at(e,3,"unsupported_backend","image.backend","polygon faces and atom-colored bonds require the Z-buffer backend");
     if (c->tone!=TONE_COLOR && c->style!=STYLE_ORTEP && c->style!=STYLE_BALSAC)
         return fail_at(e,2,"unsupported_tone","image.tone","monocolor and dualtone require ortep or balsac style");

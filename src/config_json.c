@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "config.h"
+#include "surface.h"
 #include "cJSON.h"
 #include <stdlib.h>
 #include <string.h>
@@ -98,6 +99,7 @@ cJSON *config_settings_json(const Config *c)
     ok &= put(root,"overlays",overlays);ok &= put(root,"elements",elements);ok &= put(root,"bond_cutoffs_A",cutoffs);
     if (c->rule_json) ok &= put(root,"atom_overrides",cJSON_Duplicate(c->rule_json,1));
     if (c->faces_json) ok &= put(root,"faces",cJSON_Duplicate(c->faces_json,1));
+    if (c->orbitals_json) ok &= put(root,"orbitals",cJSON_Duplicate(c->orbitals_json,1));
     if (!ok) {cJSON_Delete(root);return NULL;}return root;
 }
 
@@ -157,11 +159,12 @@ size_t config_memory_bytes(const Config *c)
              (c->user_path ? strlen(c->user_path)+1 : 0)+c->rule_count*sizeof(AtomRule);
     for (size_t i=0;i<c->rule_count;++i) n+=c->rules[i].index_count*sizeof(size_t);
     for (size_t i=0;i<c->face_count;++i) n+=c->faces[i].count*(c->faces[i].indices ? sizeof(size_t)+sizeof(int[3]) : sizeof(Vec3));
-    return n;
+    return n+json_bytes(c->orbitals_json)+c->orbital_capacity*sizeof *c->orbital_triangles;
 }
 void config_free(Config *c)
 {
     config_faces_free(c);
+    config_orbitals_free(c);
     for (size_t i=0;i<c->rule_count;++i) free(c->rules[i].indices);
     free(c->rules);free(c->user_path);cJSON_Delete(c->provenance);cJSON_Delete(c->sources);cJSON_Delete(c->rule_json);cJSON_Delete(c->job_json);
     memset(c,0,sizeof *c);

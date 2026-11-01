@@ -236,6 +236,19 @@ bool scene_build_retained(const Config *c, const Structure *s, size_t retained, 
         }
     }
     ok = scene_faces_build(c,s,fractional,basis,scene,scratch,e);
+    if (ok && c->orbital_count) {
+        size_t live=scene_memory_bytes(scene)+scratch;
+        if (live>VR_MEMORY_BUDGET || c->orbital_count>(VR_MEMORY_BUDGET-live)/sizeof(FaceTriangle)) {
+            ok=fail(e,6,"orbital scene exceeds 1 GiB allocation budget");goto done;
+        }
+        FaceTriangle *faces=realloc(scene->faces,(scene->triangle_count+c->orbital_count)*sizeof *faces);
+        if (!faces) {ok=fail(e,6,"cannot allocate orbital scene");goto done;}
+        scene->faces=faces;
+        for (size_t i=0;i<c->orbital_count;++i) {
+            FaceTriangle t=c->orbital_triangles[i];t.instance=scene->face_count+i;
+            scene->faces[scene->triangle_count++]=t;
+        }
+    }
 done:
     free(fractional);free(styles);
     if (!ok) scene_free(scene);

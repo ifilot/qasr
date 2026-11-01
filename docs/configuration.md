@@ -201,3 +201,11 @@ Builds with `nonperiodic: true` also accept job `format` values `xyz`, `extxyz`,
 worker use the same input layer. Inspection and report `input` include
 `cell_present`, `pbc` and `lattice_A`; a cell does not imply periodicity.
 See [format subsets and geometry rules](input-formats.md).
+
+## Molecular orbitals
+
+Use root-level `orbitals: [...]` layers with a PLY `file`, explicit `units`
+(`bohr` or `angstrom`), optional `origin` in mesh units and opaque `color`.
+Paths resolve relative to the recipe. The array replaces earlier layers; user
+preferences cannot contain orbitals. See the [MO guide](molecular-orbitals.md)
+and [CO gallery](../examples/orbitals/README.md).

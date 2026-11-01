@@ -147,11 +147,15 @@ static bool inspect_scene(const Config *c, const Scene *s, const Camera *camera)
             printf(",\"rgba_b\":[%u,%u,%u,%u],\"color_split\":%.17g",p->color_b[0],p->color_b[1],p->color_b[2],p->color_b[3],p->color_split);
         printf("}");
     }
-    printf("],\"face_count\":%zu,\"face_triangles\":[",s->face_count);
+    printf("],\"face_count\":%zu,\"orbital_triangles\":%zu,\"face_triangles\":[",s->face_count,c->orbital_count);
     for (size_t i=0;i<s->triangle_count;++i) {
         const FaceTriangle *f=&s->faces[i];if (i) putchar(',');
         printf("{\"face\":%zu,\"instance\":%zu,\"origin\":[%d,%d,%d],\"vertices\":[",f->face,f->instance,f->origin[0],f->origin[1],f->origin[2]);
         for (size_t k=0;k<3;++k) {if (k) putchar(',');print_vector(f->vertices[k]);}
+        if (f->smooth) {
+            printf("],\"normals\":[");
+            for (size_t k=0;k<3;++k) {if (k) putchar(',');print_vector(f->normals[k]);}
+        }
         printf("],\"rgba\":[%u,%u,%u,%u],\"boundary_edges\":%u,\"outline_width\":%.17g,\"outline_rgba\":[%u,%u,%u,%u]}",
                f->color[0],f->color[1],f->color[2],f->color[3],f->edges,f->outline_width,
                f->outline_color[0],f->outline_color[1],f->outline_color[2],f->outline_color[3]);
@@ -179,7 +183,7 @@ int main(int argc, char **argv)
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
     if (argc == 2 && !strcmp(argv[1], "--version")) { puts("qasr " VR_VERSION); return 0; }
     if (argc == 2 && !strcmp(argv[1],"--build-info")) {
-        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"nonperiodic\":true,\"partial_pbc\":true,\"polygon_faces\":true,\"atom_colored_bonds\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s,\"jpeg\":%s,\"webp\":%s,\"ffmpeg\":%s}\n",VR_VERSION,
+        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"nonperiodic\":true,\"partial_pbc\":true,\"polygon_faces\":true,\"orbital_ply\":true,\"atom_colored_bonds\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s,\"jpeg\":%s,\"webp\":%s,\"ffmpeg\":%s}\n",VR_VERSION,
 #ifdef VR_HAVE_XML
                "true",
 #else

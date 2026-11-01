@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "image": {
+    "width": 480,
+    "height": 400,
+    "style": "illustrated",
+    "aa": "4x",
+    "outline_width": 1.5
+  },
+  "camera": {
+    "view": [
+      1,
+      0.65,
+      0.28
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "margin": 0.12
+  },
+  "overlays": {
+    "cell": false,
+    "scale_bar": true
+  },
+  "geometry": {
+    "bond_radius_A": 0.065,
+    "bond_colors": "atoms"
+  },
+  "elements": {
+    "C": {
+      "radius_A": 0.2
+    },
+    "O": {
+      "radius_A": 0.2
+    }
+  },
+  "orbitals": [
+    {
+      "file": "../meshes/co-05-positive.ply",
+      "units": "bohr",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "color": "#4c9cdb"
+    },
+    {
+      "file": "../meshes/co-05-negative.ply",
+      "units": "bohr",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "color": "#ed9163"
+    }
+  ]
+}

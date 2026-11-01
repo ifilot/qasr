@@ -1,0 +1,87 @@
+{
+  "molecule": "CO",
+  "method": "RHF/STO-3G",
+  "bond_length_A": 1.128,
+  "energy_hartree": -111.22451513125827,
+  "bohr_A": 0.529177210903,
+  "grid": {
+    "shape": [
+      121,
+      121,
+      121
+    ],
+    "half_width_bohr": 7.0,
+    "endpoint": false,
+    "order": "x fastest, z slowest",
+    "spacing_bohr": 0.11570247933884298
+  },
+  "isovalue_bohr^-3/2": 0.03,
+  "normals": "normalized analytic PyQInt orbital gradients",
+  "versions": {
+    "pyqint": "1.4.3",
+    "pytessel": "1.3.0",
+    "numpy": "2.5.4"
+  },
+  "orbitals": [
+    {
+      "mo": 1,
+      "energy_hartree": -20.424343125947388,
+      "occupation": 2,
+      "config": "recipes/co-01.json"
+    },
+    {
+      "mo": 2,
+      "energy_hartree": -11.093418149445986,
+      "occupation": 2,
+      "config": "recipes/co-02.json"
+    },
+    {
+      "mo": 3,
+      "energy_hartree": -1.4601259255932821,
+      "occupation": 2,
+      "config": "recipes/co-03.json"
+    },
+    {
+      "mo": 4,
+      "energy_hartree": -0.6994757253376941,
+      "occupation": 2,
+      "config": "recipes/co-04.json"
+    },
+    {
+      "mo": 5,
+      "energy_hartree": -0.5512230598134711,
+      "occupation": 2,
+      "config": "recipes/co-05.json"
+    },
+    {
+      "mo": 6,
+      "energy_hartree": -0.5512230596823439,
+      "occupation": 2,
+      "config": "recipes/co-06.json"
+    },
+    {
+      "mo": 7,
+      "energy_hartree": -0.4464723355003549,
+      "occupation": 2,
+      "config": "recipes/co-07.json"
+    },
+    {
+      "mo": 8,
+      "energy_hartree": 0.3134921688033308,
+      "occupation": 0,
+      "config": "recipes/co-08.json"
+    },
+    {
+      "mo": 9,
+      "energy_hartree": 0.31349216880516495,
+      "occupation": 0,
+      "config": "recipes/co-09.json"
+    },
+    {
+      "mo": 10,
+      "energy_hartree": 1.0404020151525766,
+      "occupation": 0,
+      "config": "recipes/co-10.json"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
-  "executable_sha256": "ea3ec0902f58da57e6a3e77142025c13a9104349dad4f7dd964208c6e0a2a4be",
+  "executable_sha256": "f291a754601c6d49578eb873c9eef37b83106de3b26fb7e6572cb981299a3a64",
   "build_info": {
-    "version": "0.6.0",
+    "version": "0.7.0",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
@@ -10,16 +10,17 @@
     "nonperiodic": true,
     "partial_pbc": true,
     "polygon_faces": true,
+    "orbital_ply": true,
     "atom_colored_bonds": true,
     "xml": true,
     "openmp": true,
     "cairo": false,
     "libdeflate": true,
-    "jpeg": true,
-    "webp": true,
-    "ffmpeg": true
+    "jpeg": false,
+    "webp": false,
+    "ffmpeg": false
   },
-  "availability": "qasr 0.6.0 release",
+  "availability": "qasr 0.7.0 release",
   "images": [
     {
       "id": "co-shaded",
@@ -434,11 +435,11 @@
     "ortep-monocolor.json": "15b1b1d9bc8e37d32babf6fcb8242900903923538ae93c46a72597bfa134164e",
     "ortep.json": "c0e3bb3df182478227cdad4d9c242e9007c07836763cd86892f7913b4ddac945",
     "publication.json": "50f5e7207c0708b0683d5f4482cce801d9451f5c948a0391e5a97b38f5628165",
-    "qasr-examples.zip": "c47a2b867488172626f2c4926dee4924d82080fb53c577cb331decb9c5743f1c",
-    "qasr-source.tar.gz": "ac5277b62e3ff39247dd72f32c1bcca739498604ab519589b43bfd0939513c30",
+    "qasr-examples.zip": "2445700a64febc4347b0ea46d6f515dd8f1cf7491744a7e033a3103c71b87b35",
+    "qasr-source.tar.gz": "d3da7e97e593a8156d771b91c0f543cd09f00e09990d3cf7c32e8e1c84c29045",
     "reaction.json": "9dd1e39670a98342f067dbb62de8cadb3ef4123b84f07625f25de6b3f87b804a",
     "reaction.xyz": "661461d03037ae8e797a563e93435b28b03686f491441d3cb71a5f6d7896644c",
-    "source-manifest.json": "002d3c6027446b4f737d3692cd6254229454175e3483450e5f4117caa3d33206",
+    "source-manifest.json": "19d3de86272826ce7685d814374fa5637d97eb4224f9452182e06da3868a6924",
     "vasp-render-source.tar.gz": "cfa4540401c6c7e5f658fc02d12f7834fcf1c99170af8fb285a366dad78e91c1",
     "vasprun.example.xml": "07044e51565165a8bad4dd24d5bbe1ecc679d651b6f61268296fa8d61188de6f",
     "cage.xyz": "a8716236ccec1ce35b438cf2ea44422eca1a0e4cdc671f3efff00db8689b99af",

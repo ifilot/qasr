@@ -229,6 +229,11 @@ EXTRA_FIELDS = {
     'species': ('Supply ordered element symbols for otherwise unlabeled input species.', '["Si","O"]'),
     'faces': ('Embed polygon faces directly in a recipe; see the face-field reference below.', '[{"vertices":[[0,0,0],[3,0,0],[0,3,0]],"color":"#54b6d880"}]'),
     'faces_file': ('Load faces from a separate JSON file, relative to the recipe file.', '"tiles.json"'),
+    'orbitals': ('Load up to 32 opaque PLY mesh layers; see the molecular orbital guide for examples and limits.', '[{"file":"positive.ply","units":"bohr","color":"#4c9cdb"}]'),
+    'orbitals[].file': ('PLY path relative to the containing recipe; ASCII or binary little-endian triangles.', '"meshes/positive.ply"'),
+    'orbitals[].units': ('Required physical length units; bohr or angstrom. Normals are dimensionless.', '"bohr"'),
+    'orbitals[].origin': ('Optional translation in mesh units, applied before conversion to angstroms.', '[0,0,0]'),
+    'orbitals[].color': ('Opaque phase color #RRGGBB; default blue.', '"#4c9cdb"'),
     'elements.<symbol>.color': ('Set an element display color, including optional alpha.', '"#70a9d2"'),
     'elements.<symbol>.radius_A': ('Set an element display radius in Å, before sphere scaling.', '0.32'),
     'atom_overrides[].select.element': ('Match a source element; combines with other selector criteria.', '"Si"'),
@@ -299,7 +304,7 @@ def main():
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Every QASR command-line option explained, with searchable topics, defaults, copyable examples and visual recipes for atoms, bonds, polygon faces and cell lines."><title>All options &amp; examples — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><script src="options.js" defer></script></head>
 <body><a class="skip" href="#guide">Skip to options</a><main id="guide" class="standalone-guide">
-<nav class="guide-nav" aria-label="Handbook navigation"><a href="index.html">← QASR handbook</a><a href="configuration.html">Defaults &amp; atom styling</a><a href="batch.html">Batch rendering &amp; speed</a><a href="movies.html">Movies &amp; reaction paths</a></nav>
+<nav class="guide-nav" aria-label="Handbook navigation"><a href="index.html">← QASR handbook</a><a href="configuration.html">Defaults &amp; atom styling</a><a href="batch.html">Batch rendering &amp; speed</a><a href="orbitals.html">Molecular orbitals</a><a href="movies.html">Movies &amp; reaction paths</a></nav>
 <header class="guide-header"><p class="eyebrow">FIND THE CONTROL YOU NEED</p><h1>All options &amp; examples</h1><p class="lede">Choose what to draw, how it looks, and how to save it. Browse every command-line control, then open an option for its values, default and a practical example.</p></header>
 <div class="callout"><strong>Run the examples</strong><p>Build or install <code>qasr</code> and place it on your PATH, or replace <code>qasr</code> below with <code>build-release/qasr</code>. Extract the <a href="downloads/qasr-examples.zip" download>example kit</a> into <code>examples/</code> and run from its parent directory. The examples skip personal preferences for reproducibility. Explicit command-line flags override a JSON recipe.</p></div>
 <section id="visual-recipes" class="doc-section"><h2>Start with a visual recipe</h2><p>These are actual renders from the downloadable inputs and recipes. Each recipe fixes the palette, camera and dimensions shown.</p><div class="options-recipes">'''
@@ -329,6 +334,7 @@ def main():
         chunks.append('</section>')
     chunks.append('</section><section id="json-reference" class="doc-section"><h2>JSON settings, including the extra controls</h2><p>A recipe is an object with sections such as <code>image</code>, <code>camera</code> and <code>geometry</code>. The table lists every top-level rendering setting and its nested fields. Open the linked option for its explanation; JSON-only controls include layer fading, framing margins, element palettes, bond cutoffs and individual atom styles.</p><p>Use <code>qasr --schema config</code> for complete structural limits and <code>--validate-config</code> for input-dependent checks. Runtime paths, frame selection and threads belong in a <a href="schemas/job.schema.json">job</a>, rather than a rendering recipe. <a href="configuration.html">Read the configuration guide →</a></p><div class="table-wrap"><table><thead><tr><th>JSON setting</th><th>Purpose</th><th>Example value</th></tr></thead><tbody>')
     schema=json.loads((ROOT/'schemas/config.schema.json').read_text());defaults=json.loads(subprocess.check_output([exe,'--no-user-config','--dump-config']))['config']
+    assert {f'orbitals[].{name}' for name in schema['properties']['orbitals']['items']['properties']}<=set(EXTRA_FIELDS), 'Undocumented orbital fields'
     for name,prop in schema['properties'].items():
         fields=[(name+'.'+k,v) for k,v in prop['properties'].items()] if 'properties' in prop else [(name,prop)]
         for path,field in fields:

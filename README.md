@@ -1,6 +1,6 @@
 [![Compilation status](https://github.com/ifilot/qasr/actions/workflows/image-libs.yml/badge.svg?branch=master)](https://github.com/ifilot/qasr/actions/workflows/image-libs.yml)
 [![Language: C11](https://img.shields.io/badge/language-C11-blue.svg)](CMakeLists.txt)
-[![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-blue.svg)](https://github.com/ifilot/qasr/tree/v0.6.0)
+[![Version: 0.7.0](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/ifilot/qasr/tree/v0.7.0)
 
 # QASR: Quick Atomic Structure Renderer
 
@@ -14,13 +14,15 @@ QASR turns atomic structures into images from the command line, without a graphi
 - Automate repeated renders with JSON settings and batch jobs.
 - Add polygon faces and atom-colored bond halves; see the
   [zeolite examples](examples/zeolite/README.md) and [feature guide](docs/polygon-faces.md).
+- Render PyTessel PLY molecular orbital surfaces with illustrated shading; see the
+  [CO gallery](examples/orbitals/README.md) and [MO guide](docs/molecular-orbitals.md).
 - Draw bonds between displayed atoms and style unit-cell edges with dashes and
   white contours; see the [cell-line examples](examples/cell-lines/README.md).
 
 See the [documentation index](docs/README.md) for current guides and archived
 release/validation records. The [user handbook](https://ifilot.github.io/qasr/) covers detailed usage,
 [supported input formats](docs/input-formats.md) and [drawing styles](docs/render-styles.md).
-See the [v0.6.0 release notes](docs/release-v0.6.0.md) for changes and limitations.
+See the [v0.7.0 release notes](docs/release-v0.7.0.md) for changes and limitations.
 See the [feature performance report](docs/performance-features.md) for the
 polygon, cell-line and movie optimization measurements and reproduction steps.
 

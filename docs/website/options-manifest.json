@@ -1,6 +1,6 @@
 {
-  "version": "0.6.0",
-  "executable_sha256": "ea3ec0902f58da57e6a3e77142025c13a9104349dad4f7dd964208c6e0a2a4be",
+  "version": "0.7.0",
+  "executable_sha256": "f291a754601c6d49578eb873c9eef37b83106de3b26fb7e6572cb981299a3a64",
   "documented_flags": [
     "--",
     "--aa",
@@ -818,7 +818,7 @@
     }
   ],
   "files": {
-    "options.html": "a3625d96f7f0a651624581a44a2de1e01fc2b7da86815107b2eb01713bf674ce",
+    "options.html": "55105f6361438ce38f2ff0a8f0e3b7836c5347d6d14ad8cf1700190183367c5c",
     "options.js": "b23888142db0896afec9bbe58fc4964bef719ba42f70186f410e4198d98033ea",
     "downloads/cage.xyz": "a8716236ccec1ce35b438cf2ea44422eca1a0e4cdc671f3efff00db8689b99af",
     "downloads/ring.xyz": "db8aef80e27ff164c4bf90257128331fbc7bc6daebfb89ad45dfb48c33907639",

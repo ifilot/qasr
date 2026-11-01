@@ -2,13 +2,23 @@
 
 ## Unreleased
 
-- Separate current documentation from historical plans, validation reports and
-  older release notes; add a documentation index and refresh architecture,
-  benchmark, XML, style and worker/workload guidance.
+## [0.7.0] - 2026-11-01
 
-- Add a QASR usage skill to the source archive, offline example kit and installed
-  documentation. Document and verify system-wide `sudo make install` through
-  CMake's Unix Makefiles generator.
+- Import PyTessel ASCII/binary little-endian PLY molecular orbital meshes with
+  explicit bohr/angstrom units, translations, phase colors and smooth normals.
+- Add illustrated orbital shading and antialiased silhouettes, phase boundaries
+  and depth-aware self-occlusion rims. Preserve the recessed CO HOMO feature.
+- Include all ten CO RHF/STO-3G orbitals generated with PyQInt/PyTessel, analytic
+  wavefunction normals, physical scale bars and reproducible generation.
+- Separate shared surface values, mesh contour policy and polygon compositing;
+  centralize orbital cleanup and document ownership, units and failure contracts.
+- Optimize packed PLY reads and finite contour-distance minima, reuse normal
+  lengths and skip contour storage/passes when outlines are disabled. Compare
+  interleaved timings and require identical encoded images across nine workflows.
+- Organize CO inputs, recipes and final renders into dedicated directories;
+  move development snapshots out of examples and regression images into fixtures.
+- Separate current documentation from historical records and include an installed
+  assistant usage guide. Refresh the handbook, release downloads and schemas.
 
 ## [0.6.0] - 2026-10-31
 

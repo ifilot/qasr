@@ -1,0 +1,20 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en"><head><meta charset="utf-8"><meta name="qasr-version" content="0.7.0"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Molecular orbitals — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head>
+<body><main class="standalone-guide" style="max-width:1200px;margin:auto;padding:32px"><nav><a href="index.html">QASR handbook</a> · <a href="configuration.html">Configuration</a> · <a href="release.html">v0.7.0 release</a></nav>
+<h1>Molecular orbitals in the illustrated style</h1>
+<p>QASR reads PyTessel triangle PLY meshes alongside atomic geometry. PyQInt calculates these ten CO RHF/STO-3G orbitals; PyTessel constructs the isosurfaces; QASR draws the atoms and surfaces.</p>
+<a href="assets/co-orbitals.png"><img src="assets/co-orbitals.png" style="width:100%" alt="Ten illustrated CO molecular orbitals with energies and physical scale bars"></a>
+<p>Blue and orange denote opposite phases at ±0.03 bohr<sup>−3/2</sup>. The C–O bond is 1.128 Å. Orbitals 1–7 are occupied; 7 is the HOMO and 8–9 are degenerate LUMOs. Each panel fits its own bounds; use the scale bars when comparing sizes.</p>
+<p><a href="downloads/co-orbitals.zip" download>Download the runnable CO example</a>, containing meshes, recipes, final renders, galleries, scientific provenance and a generation script. From its extracted directory:</p>
+<pre><code>qasr orbitals/co.xyz --no-user-config --config orbitals/recipes/co-07.json -o homo.png</code></pre>
+<h2>Units and dimensions</h2><p>PLY does not contain unit metadata. Every <code>orbitals</code> layer requires a <code>file</code> and explicit <code>units</code>: <code>bohr</code> or <code>angstrom</code>. One bohr equals 0.529177210903 Å. Optional <code>origin</code> translates the vertices in mesh units before conversion. Normals are dimensionless and are normalized without length conversion. XYZ geometry and atom/bond radii use ångströms.</p>
+<pre><code>{"image":{"style":"illustrated","aa":"4x"},"orbitals":[
+  {"file":"positive.ply","units":"bohr","color":"#4c9cdb"},
+  {"file":"negative.ply","units":"bohr","color":"#ed9163"}
+]}</code></pre>
+<p>File paths resolve relative to the containing recipe. ASCII and binary little-endian PLY 1.0 are accepted, with ordered float/double x/y/z and optional nx/ny/nz properties, and triangular uchar/uint (or int) index lists. Surfaces are opaque, require the Z-buffer backend, remain in world coordinates and are not repeated with the unit cell. Limits include 32 layers, 200,000 input triangles and the 64 MiB configuration budget. See the source package’s <code>docs/molecular-orbitals.md</code> for the complete subset.</p>
+<h2>Smooth contours that preserve recessed rims</h2><p>The example uses a 121³ endpoint-exclusive sampling grid, 4× antialiasing and analytic PyQInt wavefunction-gradient normals. Geometric depth-aware contours retain folds within one phase while the smooth lighting normals keep highlight boundaries clean.</p>
+<a href="assets/co-orbital-rim-comparison.png"><img src="assets/co-orbital-rim-comparison.png" style="width:100%" alt="Original noisy contours, first smooth version missing a rim, and accepted depth-aware rendering"></a>
+<p>The middle and right use identical meshes, normals and camera settings. Depth-aware rendering restores the rim below the blue HOMO lobe. The smooth core control remains pixel-for-pixel unchanged. See the source package’s <code>docs/orbital-review.md</code> for optimization evidence and review scope.</p>
+<footer><p>QASR v0.7.0 · GPL-3.0-only · Works offline.</p></footer></main></body></html>

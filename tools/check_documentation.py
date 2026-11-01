@@ -117,7 +117,16 @@ def main():
                 assert kit.read(name)==(site/'downloads'/name).read_bytes(),name
         for name in ['tiles.json','single-face.json','worker-requests.jsonl','highlight-job.json']:
             assert kit.read(name)==(site/'downloads'/name).read_bytes(),name
-    image_paths=[record['image'] for record in examples['images']+config['images']+options['images']]
+    orbitals=json.loads((site/'orbital-manifest.json').read_text())
+    assert orbitals['build_info']['version']==version,'stale orbital version'
+    for record in orbitals['figures']:assert sha(site/record['image'])==record['sha256']
+    for name,digest in orbitals['inputs'].items():assert sha(ROOT/name)==digest,name
+    for name,digest in orbitals['downloads'].items():assert sha(site/'downloads'/name)==digest,name
+    with zipfile.ZipFile(site/'downloads/co-orbitals.zip') as bundle:
+        for name,digest in orbitals['inputs'].items():
+            bundled='orbitals/'+Path(name).relative_to('examples/orbitals').as_posix()
+            assert hashlib.sha256(bundle.read(bundled)).hexdigest()==digest,bundled
+    image_paths=[record['image'] for record in examples['images']+config['images']+options['images']]+[record['image'] for record in orbitals['figures']]
     assert len(image_paths)==len(set(image_paths)), 'duplicate image provenance'
     assert set(image_paths)=={str(p.relative_to(site)) for p in (site/'assets').glob('*.png')}, 'untracked rendered image'
     flags=set()

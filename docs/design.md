@@ -22,7 +22,9 @@ options. `qasr --build-info` reports the compiled capabilities.
 | Layered settings, validation and serialization | `src/config.c`, `src/config_json.c`, `src/config.h` |
 | Input-only reading and normalized geometry | `src/parse.c`, `src/input_readers.c`, `src/xml_parse.c`, `src/input.h`, `src/structure.h` |
 | Atom rules, periodic instances, bonds, faces and camera fit | `src/atom_style.c`, `src/scene.c`, `src/faces.c`, `src/scene.h` |
+| PLY orbital loading, unit conversion and immutable surface definitions | `src/orbitals.c`, `src/config.h`, `src/surface.h` |
 | Depth-buffer rendering, polygon composition and annotations | `src/render.c`, `src/face_render.c`, `src/overlay.c`, `src/render.h` |
+| Mesh contour policy and private projected surface values | `src/mesh_contours.c`, `src/surface_render.h` |
 | RGBA ownership and image encoding | `src/image.h`, `src/image.c`, `src/image_io.h`, `src/png_io.c`, `src/image_io.c` |
 | Still-image jobs, content-sensitive cache and JSONL lifecycle | `src/job.c`, `src/worker.c`, `src/job.h` |
 | Movie scheduling and private FFmpeg encoder | `src/movie.c`, `src/movie.h` |
@@ -106,3 +108,9 @@ paths. Build/test commands are in the [quick start](../README.md), and compariso
 methods are in [performance](performance.md). The dated
 [architecture/contract review](archive/code-polish.md) records the cleanup that
 established the narrower image/hash/configuration boundaries.
+
+Shared world-space triangles live in `surface.h`, independent of configuration
+and scene APIs. The PLY loader owns configuration-layer imports and their cleanup;
+scene construction takes independent copies. `surface_render.h` is private raster
+data shared by polygon compositing and the geometric contour policy. It is not
+an installed C API. Contour storage/passes are omitted when no stroke is drawn.
