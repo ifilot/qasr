@@ -239,4 +239,29 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual(*outputs)
 
 
+    def test_fixed_extent_and_center(self):
+        camera={'view':[0,0,1],'up':[0,1,0],'margin':0.1}
+        base={'image':{'width':400,'height':300},'overlays':{'cell':False}}
+        fitted=self.scene({**base,'camera':camera})['camera']
+        fixed=self.scene({**base,'camera':{**camera,'extent_A':10,'center_A':[1,2,3]}})['camera']
+        # 2 px antialiasing guard; the shorter usable side (300 * 0.8 - 2) spans 10 A
+        self.assertAlmostEqual(fixed['scale'],(300*0.8-2)/10)
+        self.assertNotAlmostEqual(fixed['scale'],fitted['scale'])
+        self.assertEqual(fixed['center'],[1,2])
+        # an extent alone keeps the fitted centre; a centre alone keeps the fitted scale
+        only_extent=self.scene({**base,'camera':{**camera,'extent_A':10}})['camera']
+        self.assertEqual(only_extent['center'],fitted['center'])
+        only_center=self.scene({**base,'camera':{**camera,'center_A':[1,2,3]}})['camera']
+        self.assertAlmostEqual(only_center['scale'],fitted['scale'])
+        # inherited from preferences, dumped, and reset by the invocation layer
+        self.write({'camera':{'extent_A':12.5,'center_A':[0,0,1]}},self.user)
+        d=self.dump()
+        self.assertEqual(d['config']['camera']['extent_A'],12.5)
+        self.assertEqual(d['config']['camera']['center_A'],[0,0,1])
+        d=self.dump('--config',self.write({'camera':{'extent_A':0,'center_A':None}}))
+        self.assertNotIn('extent_A',d['config']['camera'])
+        self.assertNotIn('center_A',d['config']['camera'])
+        self.error({'camera':{'extent_A':-1}},path='camera.extent_A')
+        self.error({'camera':{'center_A':[0,1]}},path='camera.center_A')
+
 if __name__=='__main__': unittest.main()

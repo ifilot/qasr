@@ -267,10 +267,12 @@ static bool fit_finish(Movie *m,bool sphere,Error *e)
     double width=m->hi[0]-m->lo[0],height=m->hi[1]-m->lo[1];
     if (sphere) {double depth=m->hi[2]-m->lo[2];width=height=hypot(hypot(width,height),depth);}
     double guard=c->cell && m->has_cell ? c->cell_width+4*c->cell_outline_width+1 : 2;
-    cam->scale=fmin(fmax((double)cam->viewport_width*(1-2*c->margin)-guard,.5)/width,
-                    fmax((double)cam->viewport_height*(1-2*c->margin)-guard,.5)/height);
+    double usable_x=fmax((double)cam->viewport_width*(1-2*c->margin)-guard,.5);
+    double usable_y=fmax((double)cam->viewport_height*(1-2*c->margin)-guard,.5);
+    cam->scale=c->extent>0 ? fmin(usable_x,usable_y)/c->extent : fmin(usable_x/width,usable_y/height);
     if (!isfinite(cam->scale) || cam->scale<=0) return fail(e,5,"invalid global movie camera bounds");
     cam->center_x=(m->lo[0]+m->hi[0])/2;cam->center_y=(m->lo[1]+m->hi[1])/2;
+    if (c->center_set) {cam->center_x=dot(c->center,cam->right);cam->center_y=dot(c->center,cam->up);}
     return overlay_scale_bar(c,cam,e);
 }
 static void center_camera(const Config *c,Camera *cam,double x,double y)
@@ -333,6 +335,7 @@ cJSON *movie_render(const Config *c,const char *version,Error *e)
         if (m.frames!=fitted_frames) {fail(e,5,"movie frame count changed during rendering");goto done;}
     } else {
         Camera initial=m.camera;Vec3 target={{(m.lo[0]+m.hi[0])/2,(m.lo[1]+m.hi[1])/2,(m.lo[2]+m.hi[2])/2}};
+        if (c->center_set) target=c->center;
         Vec3 axis=mul(c->movie.axis,1/hypot(hypot(c->movie.axis.x[0],c->movie.axis.x[1]),c->movie.axis.x[2]));
         double denominator=(double)(fabs(remainder(c->movie.angle,360))<1e-9 ? c->movie.frames : c->movie.frames-1);
         for (size_t i=0;i<c->movie.frames;++i) {

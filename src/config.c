@@ -351,6 +351,19 @@ static bool settings_group(const cJSON *group, const char *name, Config *c, Erro
                 valid = cJSON_IsNumber(j) && isfinite(j->valuedouble) && j->valuedouble >= 0 && j->valuedouble < 0.5;
                 if (valid) c->margin = j->valuedouble;
             }
+            else if (!strcmp(k, "extent_A")) {
+                /* 0 restores automatic fitting, e.g. over an inherited value. */
+                valid = cJSON_IsNumber(j) && isfinite(j->valuedouble) && j->valuedouble >= 0 && j->valuedouble <= 1e6;
+                if (valid) c->extent = j->valuedouble;
+            }
+            else if (!strcmp(k, "center_A")) {
+                if (cJSON_IsNull(j)) { c->center_set = false; valid = true; }
+                else {
+                    valid = vector_json(j, &c->center);
+                    for (int d = 0; valid && d < 3; ++d) valid = fabs(c->center.x[d]) <= 1e6;
+                    if (valid) c->center_set = true;
+                }
+            }
         } else if (!strcmp(name, "geometry")) {
             if (!strcmp(k, "sphere_scale")) valid = positive_json(j, &c->sphere_scale);
             else if (!strcmp(k, "bond_radius_A")) valid = positive_json(j, &c->bond_radius);

@@ -32,7 +32,8 @@ For development and measurements:
 - [Handbook maintenance](website/README.md): regenerate images, downloads and
   provenance, validate the offline site and publish through GitHub Pages.
 
-The latest release record is [v0.7.0](release-v0.7.0.md).
+The latest release record is [v0.7.1](release-v0.7.1.md); the molecular-orbital
+release is recorded in [v0.7.0](release-v0.7.0.md).
 The [v0.6.0 record](release-v0.6.0.md) covers faces, bonds, cell edges and movies.
 [Earlier releases, completed plans and historical validation](archive/README.md)
 are kept separately. Their commands, environment limitations and measurements

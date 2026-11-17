@@ -58,6 +58,12 @@ typedef struct {
     BondColors bond_colors;
     CellLineStyle cell_style;
     Vec3 view, up;
+    /* Fixed framing: extent > 0 maps that many angstrom onto the shorter
+     * usable viewport side instead of fitting the scene; center_set places
+     * the world point center at the middle of the image. */
+    Vec3 center;
+    double extent;
+    bool center_set;
     double margin, sphere_scale, bond_radius, depth_fade, outline_width, cell_width;
     double cell_outline_width, cell_dash_length, cell_dash_gap;
     char cell_color[10];

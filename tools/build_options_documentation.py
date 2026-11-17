@@ -223,6 +223,8 @@ EXTRA_FIELDS = {
     'image.depth_fade': ('Fade deeper illustrated layers toward white, from 0 to 1.', '0.6'),
     'camera.projection': ('Projection model; orthographic is the supported value.', '"orthographic"'),
     'camera.margin': ('Fractional fitting space on each side; at least 0 and less than 0.5.', '0.06'),
+    'camera.extent_A': ('Fixed zoom: ångström spanned by the shorter side of the area inside the margins, instead of fitting the scene. 0 restores fitting.', '20'),
+    'camera.center_A': ('Fixed world point (Å) at the image centre, instead of the centre of the scene bounds; null restores it.', '[0, 0, 0]'),
     'elements': ('Map element symbols to display color and/or radius_A. Unspecified elements use built-in styles.', '{"Si":{"color":"#70a9d2","radius_A":0.32}}'),
     'bond_cutoffs_A': ('Map element pairs to connectivity cutoffs in Å. This sets connectivity, independently of cylinder radius.', '{"Si-O":1.9}'),
     'atom_overrides': ('Apply ordered source-index, element and optional cell-specific display overrides. Indices are zero-based.', '[{"select":{"source_indices":[6]},"color":"#ee6633","radius_A":0.95}]'),

@@ -62,6 +62,21 @@ also contribute to the aggregate triangle count in render reports. Batch worker
 scene keys include mesh content hashes, so editing a PLY file invalidates its
 cached scene.
 
+## Comparable panels
+
+By default every render fits its own bounds, so lobe sizes in separate images
+cannot be compared directly. Fix the framing to give a series of renders one
+scale and position:
+
+```json
+{"camera": {"view": [1, 0.65, 0.28], "up": [0, 0, 1],
+            "extent_A": 12.0, "center_A": [0, 0, 0]}}
+```
+
+`extent_A` is the number of ångströms spanned by the shorter side of the image
+area inside the margins; `center_A` is the world point placed at the image
+centre. Either key can be used alone. Content outside the frame is clipped.
+
 ## Units and sampling
 
 PLY contains no unit metadata. QASR requires explicit units and converts bohr to

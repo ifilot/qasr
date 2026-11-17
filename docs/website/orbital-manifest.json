@@ -1,6 +1,6 @@
 {
   "build_info": {
-    "version": "0.7.0",
+    "version": "0.7.1",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,

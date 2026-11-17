@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## [0.7.1] - 2026-11-17
+
+- Add fixed framing with `camera.extent_A` (angstrom spanned by the shorter
+  usable image side) and `camera.center_A` (world point at the image centre),
+  so that separate renders share one scale and position. `extent_A: 0` and
+  `center_A: null` restore automatic fitting. Movies honour both keys.
+
 ## [0.7.0] - 2026-11-01
 
 - Import PyTessel ASCII/binary little-endian PLY molecular orbital meshes with

@@ -298,12 +298,13 @@ bool camera_fit(const Config *c, const Scene *s, Camera *camera, Error *e)
     if (!isfinite(width) || !isfinite(height) || width <= 0 || height <= 0)
         return fail(e,5,"scene has invalid projected bounds");
     camera->center_x = lo[0]+width/2; camera->center_y = lo[1]+height/2;
+    if (c->center_set) { camera->center_x = dot(c->center,camera->right); camera->center_y = dot(c->center,camera->up); }
     /* Reserve the full line width plus an AA guard even with a zero margin. */
     bool has_cell=s->cell_present[0] || s->cell_present[1] || s->cell_present[2];
     double guard=c->cell && has_cell ? c->cell_width+4*c->cell_outline_width+1 : 2;
     double usable_x = fmax((double)camera->viewport_width*(1-2*c->margin)-guard,0.5);
     double usable_y = fmax((double)camera->viewport_height*(1-2*c->margin)-guard,0.5);
-    camera->scale = fmin(usable_x/width,usable_y/height);
+    camera->scale = c->extent>0 ? fmin(usable_x,usable_y)/c->extent : fmin(usable_x/width,usable_y/height);
     if (!isfinite(camera->scale) || camera->scale<=0) return fail(e,5,"unrepresentable camera scale");
     if (c->labels || c->axes || c->legend || c->scale_bar) {
         camera->center_x+=((double)c->width/2-((double)camera->viewport_x+(double)camera->viewport_width/2))/camera->scale;

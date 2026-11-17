@@ -136,6 +136,28 @@
           "type": "number",
           "minimum": 0,
           "exclusiveMaximum": 0.5
+        },
+        "extent_A": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "center_A": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": -1000000,
+                "maximum": 1000000
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
