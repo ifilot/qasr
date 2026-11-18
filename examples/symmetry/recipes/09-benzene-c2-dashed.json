@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "image": {
+    "width": 800,
+    "height": 800,
+    "background": "#ffffff",
+    "style": "illustrated",
+    "outline_width": 1.5
+  },
+  "overlays": {
+    "cell": false
+  },
+  "camera": {
+    "view": [
+      2,
+      -5,
+      4
+    ]
+  },
+  "symmetry": {
+    "operation": "C2",
+    "axis_atoms": [
+      3,
+      0
+    ],
+    "axis_style": "dashed",
+    "label": "C_2'"
+  }
+}

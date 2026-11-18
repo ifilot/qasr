@@ -14,7 +14,7 @@
 bool config_validate_movie(const Config *c, Error *e)
 {
     if (!c->movie.mode) {
-        if (c->movie.explicit_fields) return fail_at(e,2,"movie_mode_required","movie","movie options require --movie orbit or trajectory");
+        if (c->movie.explicit_fields) return fail_at(e,2,"movie_mode_required","movie","movie options require --movie orbit, trajectory or symmetry");
         return true;
     }
 #ifndef VR_HAVE_FFMPEG
@@ -31,6 +31,10 @@ bool config_validate_movie(const Config *c, Error *e)
     if (c->movie.mode==MOVIE_TRAJECTORY) {
         if (c->frame_explicit || (c->movie.explicit_fields & (MOVIE_FIELD_FRAMES|MOVIE_FIELD_AXIS|MOVIE_FIELD_ANGLE)))
             return fail(e,2,"trajectory movies use all input frames; omit frame selection and orbit frames/axis/angle");
+    } else if (c->movie.mode==MOVIE_SYMMETRY) {
+        if (!c->symmetry.kind) return fail_at(e,2,"movie_symmetry_required","symmetry","symmetry movies animate one operation; add --symmetry OPERATION or a symmetry object");
+        if (c->movie.explicit_fields & (MOVIE_FIELD_AXIS|MOVIE_FIELD_ANGLE|MOVIE_FIELD_INTERPOLATE))
+            return fail(e,2,"symmetry movies take their motion from the operation; omit movie axis, angle and interpolation");
     } else {
         double n=hypot(hypot(c->movie.axis.x[0],c->movie.axis.x[1]),c->movie.axis.x[2]);
         if (!isfinite(n) || n<1e-12) return fail(e,2,"movie orbit axis must be a finite nonzero vector");
@@ -564,6 +568,10 @@ static bool apply_config(const cJSON *root, Config *c, const char *layer, const 
         } else if (!strcmp(k,"faces_file")) {
             if (!strcmp(layer,"user")) ok=fail_at(e,2,"user_faces_forbidden",k,"polygon files belong in a job config, not user preferences");
             else ok=cJSON_IsString(j) && load_faces(c,j->valuestring,file,layer,e);
+        } else if (!strcmp(k,"symmetry")) {
+            if (!strcmp(layer,"user") && !cJSON_IsNull(j))
+                ok=fail_at(e,2,"user_symmetry_forbidden",k,"symmetry operations belong in a job config, not user preferences");
+            else ok=config_symmetry(c,j,e);
         } else if (!strcmp(k,"species") && cJSON_IsArray(j)) {
             int count=cJSON_GetArraySize(j);ok=count>0 && count<=(int)VR_MAX_SPECIES;c->species_count=(size_t)count;
             size_t i=0;
@@ -625,6 +633,7 @@ static const char *cli_path(const char *k)
         {"--cell-outline-width","overlays.cell_outline_width"},{"--cell-dash-length","overlays.cell_dash_length"},{"--cell-dash-gap","overlays.cell_dash_gap"},
         {"--axes","overlays.axes"},{"--legend","overlays.legend"},{"--scale-bar","overlays.scale_bar"},
         {"--species","species"},{"--frame","runtime.frame"},{"--format","runtime.format"},{"--threads","runtime.threads"},
+        {"--symmetry","symmetry.operation"},{"--symmetry-axis","symmetry.axis"},{"--symmetry-origin","symmetry.origin_A"},
         {"--movie","runtime.movie.mode"},{"--movie-fps","runtime.movie.fps"},{"--movie-frames","runtime.movie.frames"},
         {"--movie-axis","runtime.movie.axis"},{"--movie-angle","runtime.movie.angle"},
         {"--movie-interpolate","runtime.movie.interpolate"},{"--movie-codec","runtime.movie.codec"},
@@ -637,6 +646,7 @@ static bool movie_mode(const char *v, MovieMode *mode)
 {
     if (!strcmp(v,"orbit")) *mode=MOVIE_ORBIT;
     else if (!strcmp(v,"trajectory")) *mode=MOVIE_TRAJECTORY;
+    else if (!strcmp(v,"symmetry")) *mode=MOVIE_SYMMETRY;
     else return false;
     return true;
 }
@@ -651,7 +661,7 @@ static bool movie_codec(const char *v, MovieCodec *codec)
 static bool movie_json(Config *c, const cJSON *object, Error *e)
 {
     if (!cJSON_IsObject(object) || !cJSON_HasObjectItem(object,"mode"))
-        return fail_at(e,2,"invalid_movie","movie","movie requires an object with mode orbit or trajectory");
+        return fail_at(e,2,"invalid_movie","movie","movie requires an object with mode orbit, trajectory or symmetry");
     for (const cJSON *j=object->child;j;j=j->next) {
         const char *k=j->string;bool ok=false;
         if (!strcmp(k,"mode")) ok=cJSON_IsString(j) && movie_mode(j->valuestring,&c->movie.mode);
@@ -724,7 +734,7 @@ static bool job_runtime(Config *c, const char *path, Error *e)
 
 static bool validate(Config *c, Error *e)
 {
-    if (!config_validate_movie(c,e)) return false;
+    if (!config_validate_movie(c,e) || !config_symmetry_validate(c,e)) return false;
     if (c->backend==BACKEND_CAIRO && (c->face_count || c->orbital_count || c->bond_colors==BONDS_ATOMS))
         return fail_at(e,3,"unsupported_backend","image.backend","polygon faces and atom-colored bonds require the Z-buffer backend");
     if (c->tone!=TONE_COLOR && c->style!=STYLE_ORTEP && c->style!=STYLE_BALSAC)
@@ -782,6 +792,7 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
     c->cell_dash_length=8;c->cell_dash_gap=5;
     strcpy(c->cell_color,"#464646");
     strcpy(c->background, "#ffffff"); c->cell = true; c->final_frame = true;
+    config_symmetry_defaults(c);
     c->provenance=cJSON_CreateObject();c->sources=cJSON_CreateArray();
     if (!c->provenance || !c->sources || !source(c,"built-in",NULL,e)) return fail(e,6,"cannot allocate configuration metadata");
     const char *config_path=NULL,*job_path=request ? "-" : NULL;
@@ -846,6 +857,13 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
         else if (!strcmp(k,"--movie-interpolate")) {ok=integer(v,1000,&c->movie.interpolate);c->movie.explicit_fields|=MOVIE_FIELD_INTERPOLATE;}
         else if (!strcmp(k,"--movie-codec")) {ok=movie_codec(v,&c->movie.codec);c->movie.explicit_fields|=MOVIE_FIELD_CODEC;}
         else if (!strcmp(k,"--faces")) ok=load_faces(c,v,NULL,"cli",e);
+        else if (!strcmp(k,"--symmetry")) ok=config_symmetry_operation(c,v);
+        else if (!strcmp(k,"--symmetry-axis")) {
+            ok=vector_text(v,&c->symmetry.axis) && hypot(hypot(c->symmetry.axis.x[0],c->symmetry.axis.x[1]),c->symmetry.axis.x[2])>=1e-9;
+            c->symmetry.axis_set=true;c->symmetry.axis_atom_count=c->symmetry.plane_atom_count=0;
+        } else if (!strcmp(k,"--symmetry-origin")) {
+            ok=vector_text(v,&c->symmetry.origin);c->symmetry.origin_set=true;c->symmetry.origin_atom_count=0;
+        }
         else if (!strcmp(k,"--report")) {c->report=v;explicit_report=true;ok=*v!=0;}
         else if (!strcmp(k, "-o") || !strcmp(k, "--output")) { c->output = v;explicit_output=true; ok = *v && strcmp(v, "-"); }
         else if (!strcmp(k, "--width")) ok = integer(v, 16384, &c->width) && c->width;

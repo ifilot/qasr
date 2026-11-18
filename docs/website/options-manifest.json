@@ -1,6 +1,6 @@
 {
-  "version": "0.7.1",
-  "executable_sha256": "e3eff6ab937bc40234fceab22288d0bc6bb973b40d0660ba3e48afc68eb2b155",
+  "version": "0.8.0",
+  "executable_sha256": "96077547587dff1063814bcdb0ea85c9b8b0e85ee6260667edf853ef48074418",
   "documented_flags": [
     "--",
     "--aa",
@@ -58,6 +58,9 @@
     "--species",
     "--sphere-scale",
     "--style",
+    "--symmetry",
+    "--symmetry-axis",
+    "--symmetry-origin",
     "--threads",
     "--tone",
     "--up",
@@ -343,6 +346,39 @@
       "description": "Load an ordered polygon boundary from explicit vertices or zero-based atom indices. A single face is sufficient; a complete cage is optional. Alpha in the face color controls translucency.",
       "example": "qasr examples/cage.xyz --no-user-config --config examples/zeolite-faces.json --faces examples/tiles.json -o structure.png",
       "note": "For visible oxygen atoms, include the bridging O positions in the polygon loop. CIF input requires conversion first."
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--symmetry"
+      ],
+      "title": "Show where a symmetry operation lies",
+      "values": "E, i, Cn, Sn, sigma, sigma_h, sigma_v, sigma_d; off by default",
+      "description": "Draw the element of one point-group operation: a rod for a rotation axis, a translucent mirror plane, both for an improper rotation, a ringed dot for an inversion centre, or only a label for identity. QASR first checks that the operation maps every atom onto a like atom.",
+      "example": "qasr examples/nh3.xyz --no-user-config --style illustrated --cell off --view 3,-5,2 --symmetry C3 --symmetry-axis 0,0,1 -o structure.png",
+      "note": "A wrong axis, origin or order fails with exit code 5. Atom-defined axes, dashed axes, colors and labels are set in a recipe; see the symmetry guide."
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--symmetry-axis"
+      ],
+      "title": "Direct a rotation axis or mirror plane",
+      "values": "X,Y,Z; required for Cn, Sn and sigma",
+      "description": "Give the rotation axis, or the normal of a mirror plane, as a Cartesian vector. The length is ignored.",
+      "example": "qasr examples/benzene.xyz --no-user-config --style illustrated --cell off --view 3,-5,3 --symmetry sigma_h --symmetry-axis 0,0,1 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "annotations",
+      "flags": [
+        "--symmetry-origin"
+      ],
+      "title": "Place the symmetry element",
+      "values": "X,Y,Z in \u00c5; default is the centroid of the atoms",
+      "description": "Give one point on the axis or plane, or the inversion centre. Needed only when the element does not pass through the centroid of the displayed atoms.",
+      "example": "qasr examples/ethane.xyz --no-user-config --style illustrated --cell off --view 3,-5,1.5 --symmetry i --symmetry-origin 0,0,0 -o structure.png",
+      "note": ""
     },
     {
       "group": "annotations",
@@ -671,7 +707,7 @@
         "--movie"
       ],
       "title": "Make a camera orbit or reaction movie",
-      "values": "orbit, trajectory; no movie by default",
+      "values": "orbit, trajectory, symmetry; no movie by default",
       "description": "Stream rendered frames directly into an MP4. Orbit moves the camera around one structure; trajectory plays all snapshots with fixed framing.",
       "example": "qasr examples/cage.xyz --no-user-config --movie orbit --movie-frames 60 --movie-fps 24 --cell off -o orbit.mp4",
       "note": "Requires ENABLE_FFMPEG=ON. Use even image dimensions and an opaque background. See the movie guide for input and codec requirements."
@@ -815,10 +851,58 @@
       "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
       "config_sha256": "f4d021cbddd81b32bf8874594226533a60738df5a071ec8cb9d4de117d817b86",
       "command": "qasr examples/CONTCAR.co --no-user-config --config examples/cell-contour.json -o cell-contour.png"
+    },
+    {
+      "id": "symmetry-axis",
+      "title": "Rotation axis",
+      "caption": "The C3 axis of ammonia, hidden where it passes behind the nitrogen atom.",
+      "source": "nh3.xyz",
+      "image": "assets/symmetry-axis.png",
+      "recipe": "downloads/symmetry-axis.json",
+      "png_sha256": "7ccbcd01f92634100da95c4956b8cf3f1982377958309f8bbb13e032126d37c8",
+      "input_sha256": "4f0a654103b6c7ae9e7a5fd27c21f109e32895c414b8d950a43e093bac684c36",
+      "config_sha256": "808887bc058af26b7086f38af76a88767654d4793a177f247d8aa852c22fcb00",
+      "command": "qasr examples/nh3.xyz --no-user-config --config examples/symmetry-axis.json -o symmetry-axis.png"
+    },
+    {
+      "id": "symmetry-plane",
+      "title": "Mirror plane",
+      "caption": "The horizontal mirror plane of benzene tints the half of each atom behind it.",
+      "source": "benzene.xyz",
+      "image": "assets/symmetry-plane.png",
+      "recipe": "downloads/symmetry-plane.json",
+      "png_sha256": "08372c7e08fbc8e67ba0882f44cc89b2f5e8ed6fa239848e0cceacd27ad84167",
+      "input_sha256": "a86b5cb8839de29cd91fe68dd678c8c381c05b89a5c9dedcdb2ab231b7256c34",
+      "config_sha256": "ed5bbc0218a3a9e80afb1931cc09613799844c8029de716e13fbd1ab29728e11",
+      "command": "qasr examples/benzene.xyz --no-user-config --config examples/symmetry-plane.json -o symmetry-plane.png"
+    },
+    {
+      "id": "symmetry-improper",
+      "title": "Improper rotation",
+      "caption": "The S6 operation of staggered ethane combines an axis with its perpendicular plane.",
+      "source": "ethane.xyz",
+      "image": "assets/symmetry-improper.png",
+      "recipe": "downloads/symmetry-improper.json",
+      "png_sha256": "4c16893d90bd1ef722ffc72747ab502cafc4c718ea3f28099be4d05f28478392",
+      "input_sha256": "dd9a51b62fffcb1635ec66201cfdf4b7f06781cfeb3ece38190606f307547030",
+      "config_sha256": "1837bb93a971dabd785e0e18dbe154328e64bca85f7b96f21022cba52a94d651",
+      "command": "qasr examples/ethane.xyz --no-user-config --config examples/symmetry-improper.json -o symmetry-improper.png"
+    },
+    {
+      "id": "symmetry-inversion",
+      "title": "Inversion centre",
+      "caption": "A ringed dot marks the inversion centre and stays visible in front of the C\u2013C bond.",
+      "source": "ethane.xyz",
+      "image": "assets/symmetry-inversion.png",
+      "recipe": "downloads/symmetry-inversion.json",
+      "png_sha256": "6ed0e1f190e0d7c864f207b07f454b7135e30128e0ff1b8d7a59e1424e390778",
+      "input_sha256": "dd9a51b62fffcb1635ec66201cfdf4b7f06781cfeb3ece38190606f307547030",
+      "config_sha256": "9f31d71d93d36dac213d6219602d93811b9e0a6f0242378d737a4fd6472a27db",
+      "command": "qasr examples/ethane.xyz --no-user-config --config examples/symmetry-inversion.json -o symmetry-inversion.png"
     }
   ],
   "files": {
-    "options.html": "f8441694e016de1642c85354dab716a8eaf16e8f04b3b281838a503727a16163",
+    "options.html": "2b8a7ae0b1065d75ab4e8e839da2b3fefbf47969f1967389d52531919ef0ea41",
     "options.js": "b23888142db0896afec9bbe58fc4964bef719ba42f70186f410e4198d98033ea",
     "downloads/cage.xyz": "a8716236ccec1ce35b438cf2ea44422eca1a0e4cdc671f3efff00db8689b99af",
     "downloads/ring.xyz": "db8aef80e27ff164c4bf90257128331fbc7bc6daebfb89ad45dfb48c33907639",

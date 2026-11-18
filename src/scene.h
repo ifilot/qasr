@@ -8,7 +8,8 @@
 #define VR_MAX_BONDS 10000000u
 #define VR_MAX_CANDIDATES 200000000u
 
-typedef enum { SPHERE, CYLINDER, CELL_EDGE } PrimitiveKind;
+/* SYMMETRY_AXIS is a flat-colored world-space rod, not a bond. */
+typedef enum { SPHERE, CYLINDER, CELL_EDGE, SYMMETRY_AXIS } PrimitiveKind;
 typedef struct {
     Vec3 a, b;
     double radius, distance;
@@ -20,6 +21,19 @@ typedef struct {
     size_t source_a, source_b;
     int image[3], origin[3]; /* Bond displacement and start translation in base-cell units. */
 } Primitive;
+#define VR_SYMMETRY_ANCHORS 32u
+/* Resolved symmetry element in world angstroms. Anchors are candidate label
+ * positions: both axis tips, or points on the mirror-plane boundary. */
+typedef struct {
+    SymmetryKind kind;
+    unsigned order;
+    Vec3 origin, axis;
+    Vec3 anchors[VR_SYMMETRY_ANCHORS];
+    size_t anchor_count;
+    double deviation; /* Largest atom-to-image distance; negative when unverified. */
+    size_t deviation_atom;
+    char label[32];
+} SymmetryMark;
 typedef struct {
     Primitive *items;
     size_t count, capacity, atom_count, bond_count, base_bond_count;
@@ -28,7 +42,32 @@ typedef struct {
     RuleStamp *style_rules; /* Optional winning per-property IDs, one per sphere. */
     FaceTriangle *faces;
     size_t triangle_count, face_count;
+    SymmetryMark symmetry;
 } Scene;
+/** @brief Resolve, verify and add the configured symmetry element to a scene.
+ * @param[in] c Validated configuration with at most one operation.
+ * @param[in] s Parsed input, borrowed until return.
+ * @param[in] fractional Wrapped fractional positions, one per source atom.
+ * @param[in] basis Completed lattice rows used for Cartesian conversion.
+ * @param[in,out] scene Scene with atoms and faces; gains rods and plane triangles.
+ * @param[in] scratch Bytes already charged to the aggregate allocation budget.
+ * @param[out] e Non-null diagnostic destination, set on failure.
+ * @return true on success or without an operation; false on unresolved geometry,
+ * a structure that the operation does not map onto itself, or allocation limits.
+ */
+bool scene_symmetry_build(const Config *c, const Structure *s, const Vec3 *fractional,
+                          const Vec3 basis[3], Scene *scene, size_t scratch, Error *e);
+/** @brief Carry a point part of the way through a symmetry operation.
+ * @param[in] mark Resolved element with origin, unit axis, kind and order.
+ * @param[in] rotation Fraction 0..1 of the 2*pi/n rotation (Cn and Sn only).
+ * @param[in] reflection Fraction 0..1 of the reflection or inversion: each
+ * atom moves on a straight line through the plane (sigma, Sn) or centre (i).
+ * @param[in] point World position in angstroms.
+ * @return The intermediate position; both fractions at 1 give the full image.
+ */
+Vec3 symmetry_pose(const SymmetryMark *mark, double rotation, double reflection, Vec3 point);
+/** Append one primitive under the scene allocation budget. */
+bool scene_append(Scene *s, Primitive p, size_t scratch, Error *e);
 bool scene_faces_build(const Config *c, const Structure *s, const Vec3 *fractional,
                        const Vec3 basis[3], Scene *scene, size_t scratch, Error *e);
 size_t scene_memory_bytes(const Scene *s);
@@ -81,4 +120,14 @@ bool camera_fit(const Config *c, const Scene *scene, Camera *camera, Error *e);
  * @return x/y centered pixel coordinates with y increasing upward; z toward camera.
  */
 Vec3 camera_project(const Camera *camera, Vec3 point);
+/** @brief Finish a fit from projected geometry bounds on an oriented camera.
+ * @param[in] c Configuration with margin, fixed framing and annotations.
+ * @param[in] scene Scene supplying cell flags and any symmetry label anchors.
+ * @param[in,out] camera Camera already oriented and laid out by camera_fit.
+ * @param[in] lo Lower bounds along camera right/up in angstroms.
+ * @param[in] hi Upper bounds along camera right/up in angstroms.
+ * @param[out] e Error for invalid or unrepresentable extents.
+ * @return true on success; sets scale, centre and the scale bar.
+ */
+bool camera_fit_bounds(const Config *c, const Scene *scene, Camera *camera, const double lo[2], const double hi[2], Error *e);
 #endif

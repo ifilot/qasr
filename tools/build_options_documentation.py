@@ -105,6 +105,16 @@ add('geometry', '--bond-colors', 'Color both halves from their atoms', 'uniform 
 add('geometry', '--faces', 'Fill a polygon or zeolite tile', 'Path to a polygon-face JSON file',
     'Load an ordered polygon boundary from explicit vertices or zero-based atom indices. A single face is sufficient; a complete cage is optional. Alpha in the face color controls translucency.',
     render('--config examples/zeolite-faces.json --faces examples/tiles.json', 'cage.xyz'), 'For visible oxygen atoms, include the bridging O positions in the polygon loop. CIF input requires conversion first.')
+add('annotations', '--symmetry', 'Show where a symmetry operation lies', 'E, i, Cn, Sn, sigma, sigma_h, sigma_v, sigma_d; off by default',
+    'Draw the element of one point-group operation: a rod for a rotation axis, a translucent mirror plane, both for an improper rotation, a ringed dot for an inversion centre, or only a label for identity. QASR first checks that the operation maps every atom onto a like atom.',
+    render('--style illustrated --cell off --view 3,-5,2 --symmetry C3 --symmetry-axis 0,0,1', 'nh3.xyz'),
+    'A wrong axis, origin or order fails with exit code 5. Atom-defined axes, dashed axes, colors and labels are set in a recipe; see the symmetry guide.')
+add('annotations', '--symmetry-axis', 'Direct a rotation axis or mirror plane', 'X,Y,Z; required for Cn, Sn and sigma',
+    'Give the rotation axis, or the normal of a mirror plane, as a Cartesian vector. The length is ignored.',
+    render('--style illustrated --cell off --view 3,-5,3 --symmetry sigma_h --symmetry-axis 0,0,1', 'benzene.xyz'))
+add('annotations', '--symmetry-origin', 'Place the symmetry element', 'X,Y,Z in Å; default is the centroid of the atoms',
+    'Give one point on the axis or plane, or the inversion centre. Needed only when the element does not pass through the centroid of the displayed atoms.',
+    render('--style illustrated --cell off --view 3,-5,1.5 --symmetry i --symmetry-origin 0,0,0', 'ethane.xyz'))
 add('annotations', '--cell', 'Show the unit-cell edges', 'on (default), off',
     'Draw depth-tested cell edges. Hiding them also removes cell and vacuum extents from auto-framing.',
     render('--view top --cell off'))
@@ -192,7 +202,7 @@ add('performance', '--max-jobs', 'Stop a batch after a chosen count', '1–10000
     'Exit after this many nonblank requests. Useful when supervising or periodically replacing a worker.',
     'cd examples\nqasr --batch --max-jobs 3 < worker-requests.jsonl')
 
-add('movies', '--movie', 'Make a camera orbit or reaction movie', 'orbit, trajectory; no movie by default',
+add('movies', '--movie', 'Make a camera orbit or reaction movie', 'orbit, trajectory, symmetry; no movie by default',
     'Stream rendered frames directly into an MP4. Orbit moves the camera around one structure; trajectory plays all snapshots with fixed framing.',
     render('--movie orbit --movie-frames 60 --movie-fps 24 --cell off', 'cage.xyz', 'orbit.mp4'),
     'Requires ENABLE_FFMPEG=ON. Use even image dimensions and an opaque background. See the movie guide for input and codec requirements.')
@@ -231,6 +241,7 @@ EXTRA_FIELDS = {
     'species': ('Supply ordered element symbols for otherwise unlabeled input species.', '["Si","O"]'),
     'faces': ('Embed polygon faces directly in a recipe; see the face-field reference below.', '[{"vertices":[[0,0,0],[3,0,0],[0,3,0]],"color":"#54b6d880"}]'),
     'faces_file': ('Load faces from a separate JSON file, relative to the recipe file.', '"tiles.json"'),
+    'symmetry': ('Draw the element of one point-group operation; fields are listed in the symmetry guide. null clears an inherited operation.', '{"operation":"C3","axis":[0,0,1]}'),
     'orbitals': ('Load up to 32 opaque PLY mesh layers; see the molecular orbital guide for examples and limits.', '[{"file":"positive.ply","units":"bohr","color":"#4c9cdb"}]'),
     'orbitals[].file': ('PLY path relative to the containing recipe; ASCII or binary little-endian triangles.', '"meshes/positive.ply"'),
     'orbitals[].units': ('Required physical length units; bohr or angstrom. Normals are dimensionless.', '"bohr"'),
@@ -270,6 +281,8 @@ def main():
     assert flags<=covered, 'Missing CLI options: '+str(flags-covered)
     for name in ['cage.xyz','ring.xyz','tiles.json','single-face.json','LTA.cif']:
         shutil.copyfile(ROOT/'examples/zeolite'/name, downloads/name)
+    for name in ['nh3.xyz','benzene.xyz','ethane.xyz']:
+        shutil.copyfile(ROOT/'examples/symmetry'/name, downloads/name)
     recipes=[
         ('zeolite-faces','Polygon faces on a complete cage','cage.xyz', ROOT/'examples/zeolite/renders/02-lta-polygon-tiles.json',
          'A complete LTA alpha cage with translucent faces spanning both Si and O atoms.', 'tiles.json'),
@@ -283,6 +296,14 @@ def main():
          'The same atoms and connectivity with a larger display radius for bonds.', None),
         ('cell-contour','Dashed cell with a white contour','CONTCAR.co', ROOT/'examples/cell-lines/05-dashed-white-contour.json',
          'Black dashes remain legible over atoms thanks to the white surround.', None),
+        ('symmetry-axis','Rotation axis','nh3.xyz', ROOT/'examples/symmetry/recipes/04-ammonia-c3.json',
+         'The C3 axis of ammonia, hidden where it passes behind the nitrogen atom.', None),
+        ('symmetry-plane','Mirror plane','benzene.xyz', ROOT/'examples/symmetry/recipes/08-benzene-sigma-h.json',
+         'The horizontal mirror plane of benzene tints the half of each atom behind it.', None),
+        ('symmetry-improper','Improper rotation','ethane.xyz', ROOT/'examples/symmetry/recipes/11-ethane-s6.json',
+         'The S6 operation of staggered ethane combines an axis with its perpendicular plane.', None),
+        ('symmetry-inversion','Inversion centre','ethane.xyz', ROOT/'examples/symmetry/recipes/12-ethane-inversion.json',
+         'A ringed dot marks the inversion centre and stays visible in front of the C–C bond.', None),
     ]
     visuals=[]
     for name,title,source,path,caption,faces in recipes:
@@ -306,7 +327,7 @@ def main():
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Every QASR command-line option explained, with searchable topics, defaults, copyable examples and visual recipes for atoms, bonds, polygon faces and cell lines."><title>All options &amp; examples — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><script src="options.js" defer></script></head>
 <body><a class="skip" href="#guide">Skip to options</a><main id="guide" class="standalone-guide">
-<nav class="guide-nav" aria-label="Handbook navigation"><a href="index.html">← QASR handbook</a><a href="configuration.html">Defaults &amp; atom styling</a><a href="batch.html">Batch rendering &amp; speed</a><a href="orbitals.html">Molecular orbitals</a><a href="movies.html">Movies &amp; reaction paths</a></nav>
+<nav class="guide-nav" aria-label="Handbook navigation"><a href="index.html">← QASR handbook</a><a href="configuration.html">Defaults &amp; atom styling</a><a href="batch.html">Batch rendering &amp; speed</a><a href="orbitals.html">Molecular orbitals</a><a href="symmetry.html">Symmetry elements</a><a href="movies.html">Movies &amp; reaction paths</a></nav>
 <header class="guide-header"><p class="eyebrow">FIND THE CONTROL YOU NEED</p><h1>All options &amp; examples</h1><p class="lede">Choose what to draw, how it looks, and how to save it. Browse every command-line control, then open an option for its values, default and a practical example.</p></header>
 <div class="callout"><strong>Run the examples</strong><p>Build or install <code>qasr</code> and place it on your PATH, or replace <code>qasr</code> below with <code>build-release/qasr</code>. Extract the <a href="downloads/qasr-examples.zip" download>example kit</a> into <code>examples/</code> and run from its parent directory. The examples skip personal preferences for reproducibility. Explicit command-line flags override a JSON recipe.</p></div>
 <section id="visual-recipes" class="doc-section"><h2>Start with a visual recipe</h2><p>These are actual renders from the downloadable inputs and recipes. Each recipe fixes the palette, camera and dimensions shown.</p><div class="options-recipes">'''
@@ -397,7 +418,7 @@ The renderer fills the supplied polygons; it does not infer zeolite tilings
 or import CIF directly. The original CIF is included as source attribution.
 ''')
     extra_files=['cage.xyz','ring.xyz','tiles.json','single-face.json','LTA.cif','zeolite-provenance.md',
-                 'reaction.xyz','reaction.json',
+                 'reaction.xyz','reaction.json','nh3.xyz','benzene.xyz','ethane.xyz',
                  'source-highlight.json','cell-highlight.json','highlight-job.json','worker-requests.jsonl',
                  *[r['id']+'.json' for r in visuals]]
     kit=downloads/'qasr-examples.zip'

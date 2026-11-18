@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 import collections
 import json
+import os
 import math
 from pathlib import Path
 import re
@@ -89,6 +90,41 @@ class OverlayTests(unittest.TestCase):
         self.settings['bond_cutoffs_A']={'C-O':0.01}
         _,stderr=self.render('--labels','element')
         self.assertIn('overlay_labels=1',stderr)  # coincident surfaces retain input-order ties
+
+    def test_label_glides_and_fades_as_its_atom_is_covered(self):
+        # A black atom slides in front of a white one under a fixed camera. The
+        # white atom's label must follow the centroid of its visible part in
+        # small steps and fade out, never jump or pop.
+        self.settings['camera'].update(extent_A=8,center_A=[50,50,50])
+        self.settings['elements']={'C':{'color':'#ffffff','radius_A':1},'O':{'color':'#000000','radius_A':1}}
+        self.settings['image'].update(background='#808080',aa='2x')
+        track=[]
+        for step in range(18):
+            offset=2.3-0.1*step
+            self.source.write_text(poscar(['C','O'],[[50,50,49],[50+offset,50,51]]))
+            labelled,_=self.render('--labels','index');plain,_=self.render('--labels','none')
+            w,h,pixels=labelled;weight=0;moment=0
+            for i in range(w*h):
+                base=plain[2][4*i:4*i+3]
+                if max(base)<60:continue  # skip lettering on the black occluder
+                ink=sum(abs(x-y) for x,y in zip(pixels[4*i:4*i+3],base))
+                weight+=ink;moment+=ink*(i%w)
+            track.append((weight,moment/weight if weight else None))
+        self.assertGreater(track[0][0],2000)
+        if os.environ.get('QASR_LABEL_TRACK'):print([(w,p and round(p,2)) for w,p in track])
+        centre=track[0][1]
+        self.assertAlmostEqual(centre,192,delta=1.5)  # uncovered: on the atom centre
+        self.assertEqual(track[1][1],centre)           # still uncovered: no jitter at all
+        previous=centre;moved=0
+        for weight,position in track[1:]:
+            if position is None:continue
+            self.assertLessEqual(position,previous+0.6)   # away from the occluder only
+            self.assertGreaterEqual(position,previous-3.0) # under one occluder step per frame
+            moved=max(moved,centre-position);previous=position
+        self.assertGreater(moved,5)
+        weights=[weight for weight,_ in track]
+        for before,after in zip(weights,weights[1:]):self.assertLessEqual(after,before*1.05+50)
+        self.assertLess(weights[-1],0.5*weights[0])  # fading out as the visible part shrinks
 
     def test_index_labels_repeat_and_thread_determinism(self):
         self.settings['overlays'].update(labels='index',axes=True,legend=True,scale_bar=True)

@@ -1,6 +1,6 @@
 {
   "build_info": {
-    "version": "0.7.1",
+    "version": "0.8.0",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
@@ -11,6 +11,7 @@
     "polygon_faces": true,
     "orbital_ply": true,
     "atom_colored_bonds": true,
+    "symmetry_elements": true,
     "xml": true,
     "openmp": true,
     "cairo": false,
@@ -22,7 +23,7 @@
   "figures": [
     {
       "image": "assets/co-orbitals.png",
-      "sha256": "a8bba1ca40754feeef96f0b1d2ea2e598780aeb073fc732db62da8e978f831a6"
+      "sha256": "cf648ab73fb425b8931b54811fae7a175ce8e82e37df0af47229f80eccfcd1b3"
     },
     {
       "image": "assets/co-orbital-rim-comparison.png",
@@ -33,7 +34,7 @@
     "examples/orbitals/README.md": "4b8849437ddbe3d933dc7382dd52946184e0f38876ba570351ce6e6a23a6943c",
     "examples/orbitals/co.xyz": "96445270f85c292cc42982ed040929f619233b03f396809bc8743b4f82b038be",
     "examples/orbitals/gallery.html": "f3fd5d64fce33f017b8c07383479d19c491de163d55c83ba64c6eac00bba46cd",
-    "examples/orbitals/gallery.png": "a8bba1ca40754feeef96f0b1d2ea2e598780aeb073fc732db62da8e978f831a6",
+    "examples/orbitals/gallery.png": "cf648ab73fb425b8931b54811fae7a175ce8e82e37df0af47229f80eccfcd1b3",
     "examples/orbitals/generate.py": "5aaff3dc2f0d01d978a108c41e218f1bedc1e76385d0526311d84a03dac2e9a2",
     "examples/orbitals/manifest.json": "6193ac4804bbed209c065f94e97f38ec855d1eaaf3c389d69b35fabb5515c2a2",
     "examples/orbitals/meshes/co-01-negative.ply": "59a301f4a7c68d91dbb2c28966c8e7538a585cb8549a79ed8cdd192d1bfb750d",
@@ -64,19 +65,19 @@
     "examples/orbitals/recipes/co-08.json": "8a3c66e91e73ddeccb5890680dd3c3701e1d79bf65a11027ad64cce50de89894",
     "examples/orbitals/recipes/co-09.json": "eec4c63a3cdf68e026344fece369c666caa64f48cdb50a6dfd8902a4d64fc39a",
     "examples/orbitals/recipes/co-10.json": "d047dbda8fe177161078f97a25770fbd737df1d78e8c2e01f5576a6d56951010",
-    "examples/orbitals/renders/co-01.png": "0fbf57bf48890ce4e830bd2e1cd7924025bc73e483216b1f45ff226cc0b6f454",
-    "examples/orbitals/renders/co-02.png": "22c57738b2895d507a1255597a6ce24de078b2355f3b2ea40f3714017aed80f0",
-    "examples/orbitals/renders/co-03.png": "ca9af600004564bf2e74a5e3eef9170903f01d7ba66f71a96e4d1ef421be55f9",
-    "examples/orbitals/renders/co-04.png": "22e1988a265b6e434a809df79783f7634a365e668e8bdc3ee085a355cb3b8d7c",
-    "examples/orbitals/renders/co-05.png": "6f7d860bf24338a216f1affae9d003729889ddf2d0069ae59efe96fead470ab3",
-    "examples/orbitals/renders/co-06.png": "618d7fbf9ce5c78d1d5489fd4e2141c08fe66bf2de64ede7e7ab1251ea59a036",
-    "examples/orbitals/renders/co-07.png": "45bbe9515c9a9c5742578910b622e09fac73f0bbe14e54e1eaffcd7334baa788",
-    "examples/orbitals/renders/co-08.png": "428437c326998cdd23a099d57706424e2af364eea20602e9e33be559746e8594",
-    "examples/orbitals/renders/co-09.png": "d6d6f9d8f9aa7c3a5dfb1b6d6a0a984114206166c2b4db67f9ec42e0cd3a123d",
-    "examples/orbitals/renders/co-10.png": "a03fe7a9bd9afaf61806b583c5b64e486fdab0be0e0a173f93202a6dafde4985",
+    "examples/orbitals/renders/co-01.png": "b3671f65d2ad76a15a074afa946a62a200c6cf16ccdc826c645ae00e7e221b4f",
+    "examples/orbitals/renders/co-02.png": "2a070622198ba005e55d7d6987013b44deb3ebe8bd97baa8823fac94adfd3cc1",
+    "examples/orbitals/renders/co-03.png": "f6693df6c6eb8c7fceb3bfe8bfda3702296eda5566236585ad385446f40cf7d7",
+    "examples/orbitals/renders/co-04.png": "d0fc1083c34520a5a38059043477ccdfe1549a70a0f9aed11638593e032f39f4",
+    "examples/orbitals/renders/co-05.png": "7abd07db788e66e83adb5ad19be9001cd68feed74adf507df63baf89204500a4",
+    "examples/orbitals/renders/co-06.png": "8ae81fedb7a24393bd7a981c21574b4c7ed647201206e611f1b55dc4617b63a1",
+    "examples/orbitals/renders/co-07.png": "f75d966c1c581bfc2912275acb38d9cb9ca0a4f1037bdb8f0f8db240f2292223",
+    "examples/orbitals/renders/co-08.png": "97660f0c701cbc6dc0b5de21e9e8dd6dc2e14e4d3240eb93b4a65e3d4ba903e2",
+    "examples/orbitals/renders/co-09.png": "e69bd14f1c0a71f7c95b6e073b1320de727d95a3b73f57d732c36d0d0e4e7cfb",
+    "examples/orbitals/renders/co-10.png": "5a489fd25f193b5673a1e1ccb7ad8d903b68057c13c8b74a4e780d8cabca6962",
     "examples/orbitals/requirements.txt": "90c19473d8dd4556b13117a3a9031d43a73d5360beae3398b41e8dc1036a2b04"
   },
   "downloads": {
-    "co-orbitals.zip": "7abce212cf104175bddb039cc84ab5612aa974db813ab2bbcaf42b0dc05430a0"
+    "co-orbitals.zip": "b1d21eae337e309510bfe785c4559ff2b93f4dc9a43ec7b0172d6d0f28d9dcdd"
   }
 }

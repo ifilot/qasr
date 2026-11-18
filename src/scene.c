@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static bool append(Scene *s, Primitive p, size_t scratch, Error *e)
+bool scene_append(Scene *s, Primitive p, size_t scratch, Error *e)
 {
     if (s->count == s->capacity) {
         size_t next = s->capacity ? s->capacity + s->capacity/2 : 256;
@@ -21,6 +21,7 @@ static bool append(Scene *s, Primitive p, size_t scratch, Error *e)
     s->items[s->count++] = p;
     return true;
 }
+static bool append(Scene *s, Primitive p, size_t scratch, Error *e) {return scene_append(s,p,scratch,e);}
 
 static bool image_bounds(Vec3 delta, double cutoff, const double reciprocal_lengths[3], const bool pbc[3], int lo[3], int hi[3], size_t *work, Error *e)
 {
@@ -235,7 +236,8 @@ bool scene_build_retained(const Config *c, const Structure *s, size_t retained, 
             if (!append(scene,p,scratch,e)) goto done;
         }
     }
-    ok = scene_faces_build(c,s,fractional,basis,scene,scratch,e);
+    ok = scene_faces_build(c,s,fractional,basis,scene,scratch,e) &&
+         scene_symmetry_build(c,s,fractional,basis,scene,scratch,e);
     if (ok && c->orbital_count) {
         size_t live=scene_memory_bytes(scene)+scratch;
         if (live>VR_MEMORY_BUDGET || c->orbital_count>(VR_MEMORY_BUDGET-live)/sizeof(FaceTriangle)) {
@@ -294,18 +296,38 @@ bool camera_fit(const Config *c, const Scene *s, Camera *camera, Error *e)
         Vec3 p=s->faces[i].vertices[k];double x=dot(p,camera->right),y=dot(p,camera->up);
         lo[0]=fmin(lo[0],x);hi[0]=fmax(hi[0],x);lo[1]=fmin(lo[1],y);hi[1]=fmax(hi[1],y);
     }
-    double width = hi[0]-lo[0], height = hi[1]-lo[1];
-    if (!isfinite(width) || !isfinite(height) || width <= 0 || height <= 0)
-        return fail(e,5,"scene has invalid projected bounds");
-    camera->center_x = lo[0]+width/2; camera->center_y = lo[1]+height/2;
-    if (c->center_set) { camera->center_x = dot(c->center,camera->right); camera->center_y = dot(c->center,camera->up); }
+    return camera_fit_bounds(c,s,camera,lo,hi,e);
+}
+
+bool camera_fit_bounds(const Config *c, const Scene *s, Camera *camera, const double bounds_lo[2], const double bounds_hi[2], Error *e)
+{
+    double lo[2]={bounds_lo[0],bounds_lo[1]},hi[2]={bounds_hi[0],bounds_hi[1]};
     /* Reserve the full line width plus an AA guard even with a zero margin. */
     bool has_cell=s->cell_present[0] || s->cell_present[1] || s->cell_present[2];
     double guard=c->cell && has_cell ? c->cell_width+4*c->cell_outline_width+1 : 2;
     double usable_x = fmax((double)camera->viewport_width*(1-2*c->margin)-guard,0.5);
     double usable_y = fmax((double)camera->viewport_height*(1-2*c->margin)-guard,0.5);
-    camera->scale = c->extent>0 ? fmin(usable_x,usable_y)/c->extent : fmin(usable_x/width,usable_y/height);
-    if (!isfinite(camera->scale) || camera->scale<=0) return fail(e,5,"unrepresentable camera scale");
+    const double geometry_lo[2]={lo[0],lo[1]},geometry_hi[2]={hi[0],hi[1]};
+    /* A symmetry label has a fixed pixel size beside a world-space anchor, so
+     * its world extent depends on the scale it influences. A few fixed-point
+     * passes include it in an automatic fit; the last pass only refits. */
+    for (int pass=0;;++pass) {
+        double width = hi[0]-lo[0], height = hi[1]-lo[1];
+        if (!isfinite(width) || !isfinite(height) || width <= 0 || height <= 0)
+            return fail(e,5,"scene has invalid projected bounds");
+        camera->center_x = lo[0]+width/2; camera->center_y = lo[1]+height/2;
+        if (c->center_set) { camera->center_x = dot(c->center,camera->right); camera->center_y = dot(c->center,camera->up); }
+        camera->scale = c->extent>0 ? fmin(usable_x,usable_y)/c->extent : fmin(usable_x/width,usable_y/height);
+        if (!isfinite(camera->scale) || camera->scale<=0) return fail(e,5,"unrepresentable camera scale");
+        double box[4];
+        if (pass==4 || c->extent>0 || !overlay_symmetry_label_box(c,s,camera,true,box)) break;
+        double left=(box[0]-(double)camera->width/2)/camera->scale+camera->center_x;
+        double right_edge=(box[2]-(double)camera->width/2)/camera->scale+camera->center_x;
+        double top=((double)camera->height/2-box[1])/camera->scale+camera->center_y;
+        double bottom=((double)camera->height/2-box[3])/camera->scale+camera->center_y;
+        lo[0]=fmin(geometry_lo[0],left);hi[0]=fmax(geometry_hi[0],right_edge);
+        lo[1]=fmin(geometry_lo[1],bottom);hi[1]=fmax(geometry_hi[1],top);
+    }
     if (c->labels || c->axes || c->legend || c->scale_bar) {
         camera->center_x+=((double)c->width/2-((double)camera->viewport_x+(double)camera->viewport_width/2))/camera->scale;
         camera->center_y+=((double)c->height/2-((double)camera->viewport_y+(double)camera->viewport_height/2))/camera->scale;

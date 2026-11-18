@@ -1,0 +1,53 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="en"><head><meta charset="utf-8"><meta name="qasr-version" content="0.8.0"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Draw rotation axes, mirror planes, improper rotations and inversion centres of molecules with QASR."><title>Symmetry elements — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head>
+<body><main class="standalone-guide" style="max-width:1200px;margin:auto;padding:32px"><nav><a href="index.html">QASR handbook</a> · <a href="options.html#option-symmetry">Options</a> · <a href="configuration.html">Configuration</a> · <a href="release.html">v0.8.0 release</a></nav>
+<h1>Point-group symmetry elements</h1>
+<p>QASR draws where one symmetry operation of a molecule lies: the axis of a rotation, the plane of a reflection, both for an improper rotation, or the centre of an inversion. One image shows one operation. The element is part of the scene, so atoms hide the part of an axis behind them and a translucent plane tints only what lies behind it.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px"><figure style="margin:0"><a href="assets/symmetry-axis.png"><img src="assets/symmetry-axis.png" style="width:100%" alt="Ammonia with a purple rod along its threefold axis, labelled C3" loading="lazy"></a><figcaption class="small"><strong>Rotation.</strong> The C<sub>3</sub> axis of ammonia. <a href="downloads/symmetry-axis.json" download>Recipe ↓</a></figcaption></figure><figure style="margin:0"><a href="assets/symmetry-plane.png"><img src="assets/symmetry-plane.png" style="width:100%" alt="Benzene lying in a translucent amber disc labelled sigma h" loading="lazy"></a><figcaption class="small"><strong>Reflection.</strong> The σ<sub>h</sub> plane of benzene. <a href="downloads/symmetry-plane.json" download>Recipe ↓</a></figcaption></figure><figure style="margin:0"><a href="assets/symmetry-improper.png"><img src="assets/symmetry-improper.png" style="width:100%" alt="Staggered ethane with an axis along the C–C bond and a perpendicular disc, labelled S6" loading="lazy"></a><figcaption class="small"><strong>Improper rotation.</strong> S<sub>6</sub> of staggered ethane. <a href="downloads/symmetry-improper.json" download>Recipe ↓</a></figcaption></figure><figure style="margin:0"><a href="assets/symmetry-inversion.png"><img src="assets/symmetry-inversion.png" style="width:100%" alt="Staggered ethane with a ringed dot at the middle of the C–C bond, labelled i" loading="lazy"></a><figcaption class="small"><strong>Inversion.</strong> The centre of staggered ethane. <a href="downloads/symmetry-inversion.json" download>Recipe ↓</a></figcaption></figure></div>
+<p>Inputs: <a href="downloads/nh3.xyz" download>nh3.xyz</a>, <a href="downloads/benzene.xyz" download>benzene.xyz</a> and <a href="downloads/ethane.xyz" download>ethane.xyz</a>. The source package has six molecules and fourteen recipes in <code>examples/symmetry/</code>.</p>
+<h2>Name the operation</h2>
+<pre><code>qasr examples/nh3.xyz --no-user-config --style illustrated --cell off --view 3,-5,2 --symmetry C3 --symmetry-axis 0,0,1 -o ammonia-c3.png</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Operation</th><th>Drawn element</th><th>Direction</th></tr></thead><tbody>
+<tr><td><code>E</code> (also <code>C1</code>)</td><td>Label only</td><td>None</td></tr>
+<tr><td><code>Cn</code>, n = 2–99</td><td>Rod along the axis</td><td>Axis</td></tr>
+<tr><td><code>sigma</code>, <code>sigma_h</code>, <code>sigma_v</code>, <code>sigma_d</code> (also <code>S1</code>)</td><td>Translucent plane</td><td>Plane normal</td></tr>
+<tr><td><code>Sn</code>, n = 3–99</td><td>Rod and the perpendicular plane</td><td>Axis</td></tr>
+<tr><td><code>i</code> (also <code>S2</code>)</td><td>Ringed dot at the centre</td><td>None</td></tr>
+</tbody></table></div>
+<p><code>--symmetry-axis X,Y,Z</code> gives the direction and <code>--symmetry-origin X,Y,Z</code> a point on the element in ångströms. Without an origin, the element passes through the centroid of the atoms. The suffix of a mirror plane only selects its label.</p>
+<h2>QASR checks the operation first</h2>
+<p>Before drawing, every atom is transformed and compared with the nearest atom of the same element. If the largest distance exceeds 0.1 Å, the render fails with exit code 5 and names the worst atom, so a wrong axis, origin or order does not reach a figure:</p>
+<pre><code>qasr: symmetry: C4 does not map the structure onto itself: atom 2 (H) lands 0.485 A from the nearest like atom (tolerance_A 0.1). Check the axis/origin, raise tolerance_A, or set verify false</code></pre>
+<p>Raise <code>tolerance_A</code> for an imperfectly relaxed geometry, or set <code>verify</code> to <code>false</code> to draw the element regardless. Reports and <code>--inspect-scene</code> record the resolved origin, axis and largest deviation.</p>
+<h2>Use atoms and styling in a recipe</h2>
+<pre><code>{"image":{"style":"illustrated"},"overlays":{"cell":false},
+ "symmetry":{"operation":"C2","axis_atoms":[3,0],"axis_style":"dashed","label":"C_2'"}}</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Default</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>operation</code></td><td>Required</td><td>One of the operations above.</td></tr>
+<tr><td><code>axis</code> / <code>normal</code></td><td>—</td><td>Direction as a Cartesian vector.</td></tr>
+<tr><td><code>axis_atoms</code></td><td>—</td><td>Two zero-based atom indices; the axis runs through both.</td></tr>
+<tr><td><code>plane_atoms</code></td><td>—</td><td>Three atom indices; the direction is normal to their plane, and a mirror plane passes through them.</td></tr>
+<tr><td><code>origin_A</code> / <code>origin_atoms</code></td><td>Centroid</td><td>A point in Å, or the centroid of 1–64 chosen atoms.</td></tr>
+<tr><td><code>verify</code>, <code>tolerance_A</code></td><td><code>true</code>, <code>0.1</code></td><td>The check described above.</td></tr>
+<tr><td><code>label</code>, <code>show_label</code></td><td>Automatic, <code>true</code></td><td>Replacement text; an underscore starts a subscript.</td></tr>
+<tr><td><code>label_font</code>, <code>label_scale</code>, <code>label_color</code></td><td><code>italic</code>, <code>1</code>, <code>#181c20</code></td><td><code>italic</code> or <code>sans</code> lettering, its size factor and color.</td></tr>
+<tr><td><code>axis_style</code>, <code>axis_radius_A</code>, <code>axis_color</code></td><td><code>solid</code>, <code>0.045</code>, <code>#7a2f8f</code></td><td>Solid or dashed rod, its radius and color.</td></tr>
+<tr><td><code>plane_shape</code>, <code>plane_color</code></td><td><code>auto</code>, <code>#f0a63a59</code></td><td><code>auto</code>, <code>rectangle</code> or <code>disc</code>; fill with optional alpha.</td></tr>
+<tr><td><code>plane_outline_color</code>, <code>plane_outline_width</code></td><td><code>#b8741a</code>, <code>1.5</code></td><td>Boundary color and width in pixels.</td></tr>
+<tr><td><code>padding_A</code></td><td><code>0.7</code></td><td>How far the axis and plane extend beyond the atoms.</td></tr>
+</tbody></table></div>
+<p>Exactly one direction is required for rotations, improper rotations and mirror planes. A higher configuration layer replaces the whole object and <code>"symmetry": null</code> clears it. The complete constraints are in <a href="schemas/config.schema.json">the configuration schema</a>.</p>
+<h2 id="animation">Animate the operation</h2>
+<p>With an FFmpeg build, <code>--movie symmetry</code> writes an MP4 in which the atoms and bonds carry out the operation while the axis, plane, marker and label stay in place. The camera is fixed and fitted to every pose.</p>
+<pre><code>qasr examples/ethane.xyz --no-user-config --style illustrated --cell off --view 3,-5,1.5 --symmetry S6 --symmetry-axis 0,0,1 --labels index --movie symmetry --movie-frames 150 -o ethane-s6.mp4</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Operation</th><th>Motion</th></tr></thead><tbody>
+<tr><td><code>Cn</code></td><td>Rotation by 360°/n about the axis.</td></tr>
+<tr><td><code>sigma</code></td><td>Each atom moves straight through the plane to its mirror image.</td></tr>
+<tr><td><code>Sn</code></td><td>The rotation, a short pause, then the reflection.</td></tr>
+<tr><td><code>i</code></td><td>Each atom moves straight through the centre to the opposite side.</td></tr>
+</tbody></table></div>
+<p>The first and last pose are held briefly and the motion eases in and out. Because the operation maps the molecule onto itself, the last frame looks like the first; <code>--labels index</code> lets you follow individual atoms. Bonds are found once and then follow their atoms. <code>--movie-frames</code> sets the length and <code>--movie-fps</code> the rate; see <a href="movies.html">movies</a> for codecs and limits.</p>
+<h2>Limits</h2>
+<p>Operations are specified, not detected: QASR does not determine a point group. The operation acts on the atoms of the primary cell as displayed; for a molecule in a simulation box, add <code>--cell off</code>. Fixed framing with <code>camera.extent_A</code> and orbit or trajectory movies do not reserve room for the label. Symmetry elements require the Z-buffer backend. See the source package’s <code>docs/symmetry.md</code> for the full guide.</p>
+<footer><p>QASR v0.8.0 · GPL-3.0-only · Works offline.</p></footer></main></body></html>

@@ -89,9 +89,9 @@ has no calculated energies, forces, transition state or physical time scale.
 
 | Option | Values and default |
 | --- | --- |
-| `--movie` | `orbit` or `trajectory`; no movie by default. |
+| `--movie` | `orbit`, `trajectory` or `symmetry`; no movie by default. |
 | `--movie-fps` | Integer 1–120; default 30. |
-| `--movie-frames` | Orbit only, 2–100000; default 120. |
+| `--movie-frames` | Orbit and symmetry, 2–100000; default 120. |
 | `--movie-axis` | Orbit only, finite nonzero X,Y,Z; default 0,0,1. |
 | `--movie-angle` | Orbit only, nonzero degrees from −3600 to 3600; default 360. |
 | `--movie-interpolate` | Trajectory only, 0–1000 inserted frames per interval; default 0. |
@@ -108,6 +108,8 @@ Part 2. Explicit `h264` requires the linked FFmpeg build to contain `libx264`;
 explicit `mpeg4` requests the native encoder. Unavailable encoders fail clearly.
 Encoding uses YUV 4:2:0, BT.709 limited-range color; it is not lossless RGB.
 
+Symmetry mode animates the configured [symmetry operation](symmetry.md#animation)
+with a fixed camera and rejects the axis, angle and interpolation controls.
 Trajectory mode rejects `--frame` and the orbit-only controls. Orbit mode may
 select its source snapshot with `--frame` but rejects interpolation controls.
 PNG encoding options affect still images, rather than the movie encoder.

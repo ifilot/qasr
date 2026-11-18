@@ -931,6 +931,171 @@
         },
         "additionalProperties": false
       }
+    },
+    "symmetry": {
+      "description": "One point-group symmetry operation whose element (axis, mirror plane or inversion centre) is drawn in the image; null clears an inherited operation.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation"
+          ],
+          "properties": {
+            "operation": {
+              "type": "string",
+              "pattern": "^([Ee]|[Ii]|[CcSs][1-9][0-9]?|(sigma|\u03c3)(_?[hvd])?)$",
+              "description": "E, i, Cn, Sn, sigma, sigma_h, sigma_v or sigma_d. S1 draws a mirror plane, S2 an inversion centre and C1 the identity."
+            },
+            "axis": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "description": "Rotation axis direction, or mirror-plane normal."
+            },
+            "normal": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "description": "Alias of axis for mirror planes."
+            },
+            "axis_atoms": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 999999
+              },
+              "minItems": 2,
+              "maxItems": 2,
+              "uniqueItems": true,
+              "description": "Axis through two atoms (zero-based source indices)."
+            },
+            "plane_atoms": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 999999
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "uniqueItems": true,
+              "description": "Direction normal to the plane through three atoms; mirror planes pass through them."
+            },
+            "origin_A": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "description": "Point on the element; defaults to the centroid of the atoms."
+            },
+            "origin_atoms": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 999999
+              },
+              "minItems": 1,
+              "maxItems": 64,
+              "uniqueItems": true,
+              "description": "Use the centroid of these atoms as the origin."
+            },
+            "label": {
+              "type": "string",
+              "maxLength": 31,
+              "description": "Replaces the automatic label; an underscore starts a subscript."
+            },
+            "show_label": {
+              "type": "boolean"
+            },
+            "verify": {
+              "type": "boolean",
+              "description": "Require the operation to map every atom onto a like atom within tolerance_A."
+            },
+            "tolerance_A": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 10
+            },
+            "axis_radius_A": {
+              "type": "number",
+              "minimum": 0.001,
+              "maximum": 10
+            },
+            "axis_style": {
+              "enum": [
+                "solid",
+                "dashed"
+              ]
+            },
+            "axis_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "plane_shape": {
+              "enum": [
+                "auto",
+                "rectangle",
+                "disc"
+              ]
+            },
+            "plane_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "plane_outline_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$"
+            },
+            "plane_outline_width": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "padding_A": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Extension of the axis and plane beyond the atoms."
+            },
+            "label_scale": {
+              "type": "number",
+              "minimum": 0.25,
+              "maximum": 8
+            },
+            "label_font": {
+              "enum": [
+                "italic",
+                "sans"
+              ],
+              "description": "Serif italic (default) or upright sans label lettering."
+            },
+            "label_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          }
+        }
+      ]
     }
   },
   "additionalProperties": false,

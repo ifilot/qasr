@@ -9,14 +9,15 @@ cJSON *config_movie_json(const Config *c)
 {
     cJSON *j=cJSON_CreateObject();
     if (!j) return NULL;
-    bool ok=cJSON_AddStringToObject(j,"mode",c->movie.mode==MOVIE_ORBIT ? "orbit" : "trajectory") &&
+    bool ok=cJSON_AddStringToObject(j,"mode",c->movie.mode==MOVIE_ORBIT ? "orbit" : c->movie.mode==MOVIE_SYMMETRY ? "symmetry" : "trajectory") &&
         cJSON_AddNumberToObject(j,"fps",(double)c->movie.fps) &&
         cJSON_AddStringToObject(j,"codec",c->movie.codec==MOVIE_CODEC_H264 ? "h264" : c->movie.codec==MOVIE_CODEC_MPEG4 ? "mpeg4" : "auto");
     if (c->movie.mode==MOVIE_ORBIT) {
         cJSON *axis=cJSON_CreateDoubleArray(c->movie.axis.x,3);
         if (!axis || !cJSON_AddItemToObject(j,"axis",axis)) {cJSON_Delete(axis);ok=false;}
         ok=ok && cJSON_AddNumberToObject(j,"frames",(double)c->movie.frames) && cJSON_AddNumberToObject(j,"angle",c->movie.angle);
-    } else ok=ok && cJSON_AddNumberToObject(j,"interpolate",(double)c->movie.interpolate);
+    } else if (c->movie.mode==MOVIE_SYMMETRY) ok=ok && cJSON_AddNumberToObject(j,"frames",(double)c->movie.frames);
+    else ok=ok && cJSON_AddNumberToObject(j,"interpolate",(double)c->movie.interpolate);
     if (!ok) {cJSON_Delete(j);return NULL;}
     return j;
 }
@@ -102,6 +103,7 @@ cJSON *config_settings_json(const Config *c)
     if (c->rule_json) ok &= put(root,"atom_overrides",cJSON_Duplicate(c->rule_json,1));
     if (c->faces_json) ok &= put(root,"faces",cJSON_Duplicate(c->faces_json,1));
     if (c->orbitals_json) ok &= put(root,"orbitals",cJSON_Duplicate(c->orbitals_json,1));
+    if (c->symmetry.kind) ok &= put(root,"symmetry",config_symmetry_json(c));
     if (!ok) {cJSON_Delete(root);return NULL;}return root;
 }
 

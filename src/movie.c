@@ -275,6 +275,29 @@ static bool fit_finish(Movie *m,bool sphere,Error *e)
     if (c->center_set) {cam->center_x=dot(c->center,cam->right);cam->center_y=dot(c->center,cam->up);}
     return overlay_scale_bar(c,cam,e);
 }
+/* Fractions of the rotation and of the reflection/inversion at frame i of n.
+ * Every movie holds the start and end; an improper rotation first rotates,
+ * pauses, then reflects. Motion eases in and out. */
+static double ease(double x,double begin,double span)
+{
+    double s=fmax(0,fmin(1,(x-begin)/span));return s*s*(3-2*s);
+}
+static void symmetry_timeline(SymmetryKind kind,size_t i,size_t n,double *rotation,double *reflection)
+{
+    double x=(double)i/(double)(n-1);*rotation=*reflection=0;
+    if (kind==SYMMETRY_IMPROPER) {*rotation=ease(x,0.10,0.35);*reflection=ease(x,0.55,0.35);}
+    else if (kind==SYMMETRY_ROTATION) *rotation=ease(x,0.15,0.70);
+    else if (kind==SYMMETRY_MIRROR || kind==SYMMETRY_INVERSION) *reflection=ease(x,0.15,0.70);
+}
+/* Atoms and bonds follow the operation; the element, cell and faces stay. */
+static void symmetry_frame(const Scene *base,double rotation,double reflection,Primitive *items)
+{
+    memcpy(items,base->items,base->count*sizeof *items);
+    for (size_t k=0;k<base->count;++k) if (items[k].kind==SPHERE || items[k].kind==CYLINDER) {
+        items[k].a=symmetry_pose(&base->symmetry,rotation,reflection,items[k].a);
+        items[k].b=symmetry_pose(&base->symmetry,rotation,reflection,items[k].b);
+    }
+}
 static void center_camera(const Config *c,Camera *cam,double x,double y)
 {
     cam->center_x=x+((double)c->width/2-((double)cam->viewport_x+(double)cam->viewport_width/2))/cam->scale;
@@ -293,6 +316,7 @@ cJSON *movie_render(const Config *c,const char *version,Error *e)
     int previous_log_level=av_log_get_level();av_log_set_level(AV_LOG_QUIET);
     struct timespec begin,fitted,finished;clock_gettime(CLOCK_MONOTONIC,&begin);
     Movie m={.config=c,.fitting=true};Structure source={0};Scene scene={0};Image image={0};cJSON *result=NULL;
+    Primitive *pose=NULL;
     char input_hash[65],output_hash[65];bool ok=false;size_t fitted_frames=0;
     struct stat in,out;
     if (!config_validate_movie(c,e) || !report_preflight(c,e) || !check_cancel(e)) goto done;
@@ -318,6 +342,23 @@ cJSON *movie_render(const Config *c,const char *version,Error *e)
         if (!pass(&m,e) || !fit_finish(&m,false,e)) goto done;
         fitted_frames=m.frames;
         center_camera(c,&m.camera,m.camera.center_x,m.camera.center_y);
+    } else if (c->movie.mode==MOVIE_SYMMETRY) {
+        /* One scene fixes the bond topology and the verified element. The fixed
+         * camera covers every pose, the element and its label. */
+        if (!scene_build_retained(c,&source,m.scene_retained,&scene,e) || !camera_fit(c,&scene,&m.camera,e)) goto done;
+        size_t live=scene_memory_bytes(&scene)+m.source_bytes;
+        if (live>VR_MEMORY_BUDGET || scene.count>(VR_MEMORY_BUDGET-live)/sizeof(Primitive)) {fail(e,6,"symmetry movie poses exceed memory budget");goto done;}
+        m.source_bytes+=scene.count*sizeof(Primitive);
+        pose=malloc((scene.count ? scene.count : 1)*sizeof *pose);
+        if (!pose) {fail(e,6,"cannot allocate symmetry movie pose");goto done;}
+        for (size_t i=0;i<c->movie.frames;++i) {
+            if (!check_cancel(e)) goto done;
+            double rotation,reflection;symmetry_timeline(scene.symmetry.kind,i,c->movie.frames,&rotation,&reflection);
+            symmetry_frame(&scene,rotation,reflection,pose);
+            for (size_t k=0;k<scene.count;++k) {bounds_point(&m,pose[k].a,pose[k].radius,true);bounds_point(&m,pose[k].b,pose[k].radius,true);}
+        }
+        for (size_t i=0;i<scene.triangle_count;++i) for (int k=0;k<3;++k) bounds_point(&m,scene.faces[i].vertices[k],0,true);
+        if (!camera_fit_bounds(c,&scene,&m.camera,m.lo,m.hi,e)) goto done;
     } else {
         if (!scene_build(c,&source,&scene,e) || !camera_fit(c,&scene,&m.camera,e)) goto done;
         for (size_t i=0;i<scene.count;++i) {
@@ -333,6 +374,15 @@ cJSON *movie_render(const Config *c,const char *version,Error *e)
         m.fitting=false;
         if (!pass(&m,e)) goto done;
         if (m.frames!=fitted_frames) {fail(e,5,"movie frame count changed during rendering");goto done;}
+    } else if (c->movie.mode==MOVIE_SYMMETRY) {
+        Scene frame=scene;frame.items=pose;
+        for (size_t i=0;i<c->movie.frames;++i) {
+            if (!check_cancel(e)) goto done;
+            double rotation,reflection;symmetry_timeline(scene.symmetry.kind,i,c->movie.frames,&rotation,&reflection);
+            symmetry_frame(&scene,rotation,reflection,pose);
+            if (!render_image_workspace(c,&frame,&m.camera,m.source_bytes,&m.workspace,&image,e) || !encoder_frame(&m.encoder,&image,e)) goto done;
+            image_free(&image);
+        }
     } else {
         Camera initial=m.camera;Vec3 target={{(m.lo[0]+m.hi[0])/2,(m.lo[1]+m.hi[1])/2,(m.lo[2]+m.hi[2])/2}};
         if (c->center_set) target=c->center;
@@ -358,7 +408,7 @@ cJSON *movie_render(const Config *c,const char *version,Error *e)
     cJSON_AddStringToObject(result,"output",c->output);cJSON_AddStringToObject(result,"output_sha256",output_hash);
     cJSON_AddNumberToObject(movie,"encoded_frames",(double)m.encoder.frames);cJSON_AddNumberToObject(movie,"duration_s",(double)m.encoder.frames/(double)c->movie.fps);
     cJSON_AddStringToObject(movie,"encoder",m.encoder.codec->codec->name);
-    cJSON_AddBoolToObject(camera,"fixed",c->movie.mode==MOVIE_TRAJECTORY);cJSON_AddNumberToObject(camera,"scale",m.camera.scale);
+    cJSON_AddBoolToObject(camera,"fixed",c->movie.mode!=MOVIE_ORBIT);cJSON_AddNumberToObject(camera,"scale",m.camera.scale);
     cJSON_AddNumberToObject(camera,"center_x",m.camera.center_x);cJSON_AddNumberToObject(camera,"center_y",m.camera.center_y);
     cJSON_AddItemToObject(camera,"view",cJSON_CreateDoubleArray(m.camera.view.x,3));
     cJSON_AddNumberToObject(result,"width",(double)c->width);cJSON_AddNumberToObject(result,"height",(double)c->height);
@@ -374,7 +424,7 @@ cJSON *movie_render(const Config *c,const char *version,Error *e)
  done:
     if (!ok) {cJSON_Delete(result);result=NULL;}
     encoder_free(&m.encoder);structure_free(&m.previous);structure_free(&m.interpolated);
-    render_workspace_free(&m.workspace);
+    render_workspace_free(&m.workspace);free(pose);
     image_free(&image);scene_free(&scene);structure_free(&source);
     av_log_set_level(previous_log_level);return result;
 }

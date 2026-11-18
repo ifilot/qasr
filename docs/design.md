@@ -22,6 +22,7 @@ options. `qasr --build-info` reports the compiled capabilities.
 | Layered settings, validation and serialization | `src/config.c`, `src/config_json.c`, `src/config.h` |
 | Input-only reading and normalized geometry | `src/parse.c`, `src/input_readers.c`, `src/xml_parse.c`, `src/input.h`, `src/structure.h` |
 | Atom rules, periodic instances, bonds, faces and camera fit | `src/atom_style.c`, `src/scene.c`, `src/faces.c`, `src/scene.h` |
+| Symmetry operation parsing, verification and axis/plane geometry | `src/symmetry.c`, `src/config.h`, `src/scene.h` |
 | PLY orbital loading, unit conversion and immutable surface definitions | `src/orbitals.c`, `src/config.h`, `src/surface.h` |
 | Depth-buffer rendering, polygon composition and annotations | `src/render.c`, `src/face_render.c`, `src/overlay.c`, `src/render.h` |
 | Mesh contour policy and private projected surface values | `src/mesh_contours.c`, `src/surface_render.h` |

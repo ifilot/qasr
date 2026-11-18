@@ -58,8 +58,8 @@ static bool scene_key(const Config *c, const char *source, char key[65], Error *
     cJSON *settings=config_settings_json(c),*j=cJSON_CreateObject();
     if (!settings || !j) {cJSON_Delete(settings);cJSON_Delete(j);return fail(e,6,"cannot allocate scene cache key");}
     bool ok=cJSON_AddStringToObject(j,"source",source)!=NULL;
-    const char *groups[]={"geometry","elements","bond_cutoffs_A","atom_overrides","faces","orbitals"};
-    for (size_t i=0;i<6;++i) {
+    const char *groups[]={"geometry","elements","bond_cutoffs_A","atom_overrides","faces","orbitals","symmetry"};
+    for (size_t i=0;i<sizeof groups/sizeof *groups;++i) {
         cJSON *v=cJSON_DetachItemFromObjectCaseSensitive(settings,groups[i]);
         if (v && !cJSON_AddItemToObject(j,groups[i],v)) {cJSON_Delete(v);ok=false;}
     }

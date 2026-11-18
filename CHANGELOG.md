@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+## [0.8.0] - 2026-11-18
+
+- Draw the element of one point-group symmetry operation per image: a rod for
+  `Cn`, a translucent plane for mirrors, both for `Sn`, a ringed dot for
+  inversion and a label for identity. Use `--symmetry`, `--symmetry-axis` and
+  `--symmetry-origin`, or a `symmetry` object with atom-defined axes, planes
+  and origins, dashed axes, plane shapes, colors and subscripted labels.
+- Verify that the operation maps every atom onto a like atom within
+  `tolerance_A` before drawing, and report the largest deviation in render
+  reports and `--inspect-scene`.
+- Animate the operation with `--movie symmetry`: atoms and bonds rotate, pass
+  through the mirror plane or inversion centre, or rotate then reflect, under
+  a fixed camera that keeps the element and its label in frame.
+- Letter symmetry labels with outline glyphs embedded in the executable: STIX
+  General Italic by default, DejaVu Sans with `label_font: "sans"`.
+- Draw atom labels, the legend, axis letters and the scale-bar label with the
+  same smooth DejaVu Sans outlines instead of the 5×7 bitmap font. Atom labels
+  drop their white plate, scale with the smallest labelled atom and the image,
+  and switch between dark and light lettering according to what lies beneath.
+  Annotated images therefore differ from v0.7.1.
+- Place each atom label at the centroid of its atom's visible area and fade it
+  as that area is covered, instead of choosing among nine fixed points. Labels
+  glide through movies without jumping or popping, no longer overhang an
+  occluding atom, and keep one size across frames. Collision filtering between
+  labels is unchanged.
+- Include a fourteen-image symmetry gallery for water, ammonia, benzene,
+  ethane, methane and boron trifluoride.
+
 ## [0.7.1] - 2026-11-17
 
 - Add fixed framing with `camera.extent_A` (angstrom spanned by the shorter

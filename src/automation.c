@@ -133,6 +133,15 @@ cJSON *render_report(const Config *c, const Structure *s, const Scene *scene, co
     cJSON_AddNumberToObject(counts,"faces",(double)scene->face_count);
     cJSON_AddNumberToObject(counts,"face_triangles",(double)scene->triangle_count);
     cJSON_AddNumberToObject(counts,"orbital_triangles",(double)c->orbital_count);
+    if (scene->symmetry.kind) {
+        const SymmetryMark *m=&scene->symmetry;cJSON *symmetry=cJSON_AddObjectToObject(root,"symmetry");
+        cJSON_AddStringToObject(symmetry,"operation",c->symmetry.operation);
+        cJSON_AddItemToObject(symmetry,"origin_A",cJSON_CreateDoubleArray(m->origin.x,3));
+        if (m->kind==SYMMETRY_ROTATION || m->kind==SYMMETRY_IMPROPER || m->kind==SYMMETRY_MIRROR)
+            cJSON_AddItemToObject(symmetry,"axis",cJSON_CreateDoubleArray(m->axis.x,3));
+        if (m->deviation>=0) cJSON_AddNumberToObject(symmetry,"max_deviation_A",m->deviation);
+        else cJSON_AddNullToObject(symmetry,"max_deviation_A");
+    }
     cJSON_AddStringToObject(root,"config_sha256",config_hash);
     const char *groups[]={"image","camera","geometry","overlays"};
     for (size_t i=0;i<4;++i) cJSON_AddItemToObject(options,groups[i],cJSON_Duplicate(cJSON_GetObjectItemCaseSensitive(settings,groups[i]),1));

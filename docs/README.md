@@ -14,6 +14,7 @@ release are listed under Unreleased in the [changelog](../CHANGELOG.md).
 | Supply zeolite faces or colored/thicker bonds | [Polygon faces and bonds](polygon-faces.md) |
 | Style cell edges and understand bond boundaries | [Cell lines and endpoint rules](cell-lines.md) |
 | Render molecular orbitals exported by PyTessel | [MO surfaces](molecular-orbitals.md) and [CO gallery](../examples/orbitals/README.md) |
+| Show a rotation axis, mirror plane or inversion centre | [Symmetry elements](symmetry.md) and [gallery](../examples/symmetry/README.md) |
 | Make camera orbits or reaction movies | [Movies](movies.md) |
 | Automate repeated renders | [Sequential JSONL worker](batch-worker.md) |
 
@@ -32,7 +33,8 @@ For development and measurements:
 - [Handbook maintenance](website/README.md): regenerate images, downloads and
   provenance, validate the offline site and publish through GitHub Pages.
 
-The latest release record is [v0.7.1](release-v0.7.1.md); the molecular-orbital
+The latest release record is [v0.8.0](release-v0.8.0.md), which adds symmetry
+elements; [v0.7.1](release-v0.7.1.md) added fixed camera framing and the molecular-orbital
 release is recorded in [v0.7.0](release-v0.7.0.md).
 The [v0.6.0 record](release-v0.6.0.md) covers faces, bonds, cell edges and movies.
 [Earlier releases, completed plans and historical validation](archive/README.md)

@@ -71,6 +71,12 @@ compression controls affect PNG output only.
 - `--faces faces.json` fills user-supplied ordered loops. One independent face is
   sufficient; QASR does not infer zeolite cages or tilings. For Si–O rings with
   visible oxygen atoms, include the bridging oxygen positions in the boundary.
+- `--symmetry C3 --symmetry-axis 0,0,1` draws the element of one point-group
+  operation (`E`, `i`, `Cn`, `Sn`, `sigma[_h|_v|_d]`): an axis, a mirror plane or
+  an inversion centre. QASR fails with exit code 5 unless the operation maps the
+  structure onto itself; recipes accept atom-defined axes and styling in a
+  `symmetry` object. With FFmpeg, `--movie symmetry` animates the operation; add
+  `--labels index` to follow atoms. See `docs/symmetry.md`.
 
 A face file contains a `faces` array, for example:
 

@@ -27,9 +27,11 @@ int main(void)
     if (png_write_options_atomic("/nonexistent-qasr-budget/output.png",&image,&fast,300u*1024u*1024u,&e) || e.code!=6)
         return 1;
 #endif
+    /* Label visibility now costs the pixels under each sphere, bounded while
+     * rendering; laying out labels for many atoms is not itself a limit. */
     Config config={0};config.width=config.height=512;config.labels=2;
     Scene scene={0};scene.count=scene.atom_count=20001;
     Camera camera={0};e=(Error){0};
-    if (overlay_layout(&config,&scene,&camera,&e) || e.code!=6) return 1;
-    puts("PNG allocation and annotation work limits passed");return 0;
+    if (!overlay_layout(&config,&scene,&camera,&e)) return 1;
+    puts("PNG allocation and annotation layout limits passed");return 0;
 }

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "image": {
+    "width": 800,
+    "height": 800,
+    "background": "#ffffff",
+    "style": "illustrated",
+    "outline_width": 1.5
+  },
+  "overlays": {
+    "cell": false
+  },
+  "camera": {
+    "view": [
+      4,
+      -3,
+      1.5
+    ]
+  },
+  "symmetry": {
+    "operation": "sigma_v",
+    "plane_atoms": [
+      0,
+      1,
+      2
+    ],
+    "label": "σ_v'"
+  }
+}

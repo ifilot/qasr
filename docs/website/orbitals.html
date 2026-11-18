@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only -->
-<html lang="en"><head><meta charset="utf-8"><meta name="qasr-version" content="0.7.1"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Molecular orbitals — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head>
-<body><main class="standalone-guide" style="max-width:1200px;margin:auto;padding:32px"><nav><a href="index.html">QASR handbook</a> · <a href="configuration.html">Configuration</a> · <a href="release.html">v0.7.0 release</a></nav>
+<html lang="en"><head><meta charset="utf-8"><meta name="qasr-version" content="0.8.0"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Molecular orbitals — QASR</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"></head>
+<body><main class="standalone-guide" style="max-width:1200px;margin:auto;padding:32px"><nav><a href="index.html">QASR handbook</a> · <a href="configuration.html">Configuration</a> · <a href="symmetry.html">Symmetry elements</a> · <a href="release.html">v0.8.0 release</a></nav>
 <h1>Molecular orbitals in the illustrated style</h1>
 <p>QASR reads PyTessel triangle PLY meshes alongside atomic geometry. PyQInt calculates these ten CO RHF/STO-3G orbitals; PyTessel constructs the isosurfaces; QASR draws the atoms and surfaces.</p>
 <a href="assets/co-orbitals.png"><img src="assets/co-orbitals.png" style="width:100%" alt="Ten illustrated CO molecular orbitals with energies and physical scale bars"></a>
@@ -17,4 +17,4 @@
 <h2>Smooth contours that preserve recessed rims</h2><p>The example uses a 121³ endpoint-exclusive sampling grid, 4× antialiasing and analytic PyQInt wavefunction-gradient normals. Geometric depth-aware contours retain folds within one phase while the smooth lighting normals keep highlight boundaries clean.</p>
 <a href="assets/co-orbital-rim-comparison.png"><img src="assets/co-orbital-rim-comparison.png" style="width:100%" alt="Original noisy contours, first smooth version missing a rim, and accepted depth-aware rendering"></a>
 <p>The middle and right use identical meshes, normals and camera settings. Depth-aware rendering restores the rim below the blue HOMO lobe. The smooth core control remains pixel-for-pixel unchanged. See the source package’s <code>docs/orbital-review.md</code> for optimization evidence and review scope.</p>
-<footer><p>QASR v0.7.1 · GPL-3.0-only · Works offline.</p></footer></main></body></html>
+<footer><p>QASR v0.8.0 · GPL-3.0-only · Works offline.</p></footer></main></body></html>

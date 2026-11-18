@@ -1,0 +1,130 @@
+{
+  "images": [
+    {
+      "name": "01-water-c2",
+      "molecule": "h2o.xyz",
+      "caption": "Water: C2 axis",
+      "recipe": "recipes/01-water-c2.json",
+      "image": "renders/01-water-c2.png",
+      "operation": "C2",
+      "max_deviation_A": 9.26996394614589e-17
+    },
+    {
+      "name": "02-water-sigma-v",
+      "molecule": "h2o.xyz",
+      "caption": "Water: mirror plane bisecting H-O-H",
+      "recipe": "recipes/02-water-sigma-v.json",
+      "image": "renders/02-water-sigma-v.png",
+      "operation": "sigma_v",
+      "max_deviation_A": 1.3877787807814457e-17
+    },
+    {
+      "name": "03-water-sigma-v-molecular",
+      "molecule": "h2o.xyz",
+      "caption": "Water: molecular mirror plane, from its three atoms",
+      "recipe": "recipes/03-water-sigma-v-molecular.json",
+      "image": "renders/03-water-sigma-v-molecular.png",
+      "operation": "sigma_v",
+      "max_deviation_A": 1.3877787807814457e-17
+    },
+    {
+      "name": "04-ammonia-c3",
+      "molecule": "nh3.xyz",
+      "caption": "Ammonia: C3 axis",
+      "recipe": "recipes/04-ammonia-c3.json",
+      "image": "renders/04-ammonia-c3.png",
+      "operation": "C3",
+      "max_deviation_A": 4.330127019046709e-07
+    },
+    {
+      "name": "05-ammonia-sigma-v",
+      "molecule": "nh3.xyz",
+      "caption": "Ammonia: one of three vertical mirror planes",
+      "recipe": "recipes/05-ammonia-sigma-v.json",
+      "image": "renders/05-ammonia-sigma-v.png",
+      "operation": "sigma_v",
+      "max_deviation_A": 0
+    },
+    {
+      "name": "06-ammonia-identity",
+      "molecule": "nh3.xyz",
+      "caption": "Ammonia: identity",
+      "recipe": "recipes/06-ammonia-identity.json",
+      "image": "renders/06-ammonia-identity.png",
+      "operation": "E",
+      "max_deviation_A": null
+    },
+    {
+      "name": "07-benzene-c6",
+      "molecule": "benzene.xyz",
+      "caption": "Benzene: principal C6 axis",
+      "recipe": "recipes/07-benzene-c6.json",
+      "image": "renders/07-benzene-c6.png",
+      "operation": "C6",
+      "max_deviation_A": 4.89086860891026e-07
+    },
+    {
+      "name": "08-benzene-sigma-h",
+      "molecule": "benzene.xyz",
+      "caption": "Benzene: horizontal mirror plane",
+      "recipe": "recipes/08-benzene-sigma-h.json",
+      "image": "renders/08-benzene-sigma-h.png",
+      "operation": "sigma_h",
+      "max_deviation_A": 0
+    },
+    {
+      "name": "09-benzene-c2-dashed",
+      "molecule": "benzene.xyz",
+      "caption": "Benzene: in-plane C2' through two carbon atoms, dashed",
+      "recipe": "recipes/09-benzene-c2-dashed.json",
+      "image": "renders/09-benzene-c2-dashed.png",
+      "operation": "C2",
+      "max_deviation_A": 2.6312871344691952e-16
+    },
+    {
+      "name": "10-benzene-inversion",
+      "molecule": "benzene.xyz",
+      "caption": "Benzene: inversion centre",
+      "recipe": "recipes/10-benzene-inversion.json",
+      "image": "renders/10-benzene-inversion.png",
+      "operation": "i",
+      "max_deviation_A": 0
+    },
+    {
+      "name": "11-ethane-s6",
+      "molecule": "ethane.xyz",
+      "caption": "Staggered ethane: S6 improper rotation",
+      "recipe": "recipes/11-ethane-s6.json",
+      "image": "renders/11-ethane-s6.png",
+      "operation": "S6",
+      "max_deviation_A": 2.8947836903177816e-09
+    },
+    {
+      "name": "12-ethane-inversion",
+      "molecule": "ethane.xyz",
+      "caption": "Staggered ethane: inversion centre",
+      "recipe": "recipes/12-ethane-inversion.json",
+      "image": "renders/12-ethane-inversion.png",
+      "operation": "i",
+      "max_deviation_A": 1.1102230246251565e-16
+    },
+    {
+      "name": "13-methane-s4",
+      "molecule": "methane.xyz",
+      "caption": "Methane: S4 improper rotation",
+      "recipe": "recipes/13-methane-s4.json",
+      "image": "renders/13-methane-s4.png",
+      "operation": "S4",
+      "max_deviation_A": 1.1102230246251565e-16
+    },
+    {
+      "name": "14-bf3-sigma-h",
+      "molecule": "bf3.xyz",
+      "caption": "Boron trifluoride: horizontal mirror plane, sans label",
+      "recipe": "recipes/14-bf3-sigma-h.json",
+      "image": "renders/14-bf3-sigma-h.png",
+      "operation": "sigma_h",
+      "max_deviation_A": 0
+    }
+  ]
+}

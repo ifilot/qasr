@@ -79,6 +79,48 @@ class MovieTests(unittest.TestCase):
         self.assertFalse(self.output.exists())
 
     @unittest.skipUnless(ENABLED,'FFmpeg build only')
+    def test_symmetry_operation_animation(self):
+        molecules=ROOT/'examples/symmetry'
+        def animate(molecule,*flags,frames=9,code=0):
+            self.base[1]=str(molecules/molecule)
+            self.source=molecules/molecule
+            args=['--movie','symmetry','--movie-fps','12','--movie-frames',frames,'--movie-codec','mpeg4','--report',self.report,'-o',self.output]
+            if code:return self.call(*args,*flags,'--json-errors',code=code)
+            self.call(*args,*flags)
+            return json.loads(self.report.read_text())
+        self.base=self.base[:-4]+['--view','3,-5,2']
+        report=animate('nh3.xyz','--symmetry','C3','--symmetry-axis','0,0,1')
+        self.assertEqual(report['movie']['mode'],'symmetry')
+        self.assertEqual(report['movie']['encoded_frames'],9)
+        self.assertTrue(report['camera']['fixed'])
+        self.assertNotIn('axis',report['movie'])
+        frames=self.pixels();self.assertEqual(len(frames),9)
+        def difference(a,b):return sum(abs(x-y)>48 for x,y in zip(a[::3],b[::3]))
+        # Held start and end, motion between; a symmetry operation ends where it began.
+        self.assertLess(difference(frames[0],frames[1]),40)
+        self.assertGreater(difference(frames[0],frames[4]),150)
+        self.assertLess(difference(frames[0],frames[8]),40)
+        # The purple axis stays put while the atoms move: a column of axis pixels above the molecule.
+        def purple(frame):return {i for i in range(128*128) if frame[3*i]>90 and frame[3*i+1]<90 and frame[3*i+2]>100}
+        self.assertGreater(len(purple(frames[0])&purple(frames[4])),40)
+        # An improper rotation rotates first and reflects afterwards.
+        animate('ethane.xyz','--symmetry','S6','--symmetry-axis','0,0,1',frames=21)
+        frames=self.pixels()
+        self.assertGreater(difference(frames[0],frames[5]),100)
+        self.assertGreater(difference(frames[10],frames[15]),100)
+        self.assertLess(difference(frames[0],frames[20]),40)
+        for operation in (['--symmetry','sigma_h','--symmetry-axis','0,0,1'],['--symmetry','i'],['--symmetry','E']):
+            animate('ethane.xyz' if operation[1]!='sigma_h' else 'bf3.xyz',*operation,frames=4)
+            self.assertEqual(len(self.pixels()),4)
+        # Requires an operation, verifies it, and rejects orbit/trajectory controls.
+        self.output.write_bytes(b'keep')
+        self.assertEqual(json.loads(animate('nh3.xyz',code=2).stderr)['error']['code'],'movie_symmetry_required')
+        self.assertEqual(json.loads(animate('nh3.xyz','--symmetry','C4','--symmetry-axis','0,0,1',code=5).stderr)['error']['code'],'symmetry_mismatch')
+        animate('nh3.xyz','--symmetry','C3','--symmetry-axis','0,0,1','--movie-angle','90',code=2)
+        animate('nh3.xyz','--symmetry','C3','--symmetry-axis','0,0,1','--movie-interpolate','2',code=2)
+        self.assertEqual(self.output.read_bytes(),b'keep')
+
+    @unittest.skipUnless(ENABLED,'FFmpeg build only')
     def test_orbit_timestamps_frames_and_motion(self):
         report=self.movie('orbit','--movie-codec','mpeg4')
         self.assertEqual(report['movie']['encoded_frames'],8)

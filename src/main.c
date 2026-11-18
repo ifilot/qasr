@@ -75,7 +75,11 @@ static void help(void)
          "  --report FILE|-             Compact successful render manifest\n"
          "  --schema [config|user|job|worker|faces]   Print JSON Schema; run alone\n"
          "  --faces FILE                JSON polygon faces (vertices or atom_indices)\n"
-         "  --movie orbit|trajectory    Stream MP4; requires ENABLE_FFMPEG=ON\n"
+         "  --symmetry E|i|Cn|Sn|sigma[_h|_v|_d]  Draw one point-group symmetry element\n"
+         "  --symmetry-axis X,Y,Z       Rotation axis or mirror-plane normal\n"
+         "  --symmetry-origin X,Y,Z     Point on the element in angstroms (default centroid)\n"
+         "  --movie orbit|trajectory|symmetry  Stream MP4; requires ENABLE_FFMPEG=ON\n"
+         "                              symmetry animates the --symmetry operation\n"
          "  --movie-fps N --movie-frames N   Default 30 fps; orbit defaults to 120 frames\n"
          "  --movie-axis X,Y,Z --movie-angle DEGREES  Orbit axis/angle; defaults 0,0,1 / 360\n"
          "  --movie-interpolate N       Intermediate frames per trajectory interval (default 0)\n"
@@ -128,7 +132,7 @@ static bool inspect_scene(const Config *c, const Scene *s, const Camera *camera)
     for (size_t i=0;i<s->count;++i) {
         const Primitive *p=&s->items[i];
         if (i) putchar(',');
-        printf("{\"kind\":\"%s\",\"a\":",p->kind==SPHERE ? "sphere" : p->kind==CYLINDER ? "bond" : "cell");
+        printf("{\"kind\":\"%s\",\"a\":",p->kind==SPHERE ? "sphere" : p->kind==CYLINDER ? "bond" : p->kind==SYMMETRY_AXIS ? "symmetry_axis" : "cell");
         print_vector(p->a);printf(",\"b\":");print_vector(p->b);
         printf(",\"radius\":%.17g,\"rgba\":[%u,%u,%u,%u],\"source\":[%zu,%zu],\"image\":[%d,%d,%d],\"origin\":[%d,%d,%d],\"distance\":%.17g",
                p->kind==CELL_EDGE ? 0.5*c->cell_width/camera->scale : p->radius,(unsigned)p->color[0],(unsigned)p->color[1],(unsigned)p->color[2],(unsigned)p->color[3],
@@ -160,7 +164,16 @@ static bool inspect_scene(const Config *c, const Scene *s, const Camera *camera)
                f->color[0],f->color[1],f->color[2],f->color[3],f->edges,f->outline_width,
                f->outline_color[0],f->outline_color[1],f->outline_color[2],f->outline_color[3]);
     }
-    puts("]}"); return fflush(stdout)==0 && !ferror(stdout);
+    putchar(']');
+    if (s->symmetry.kind) {
+        const SymmetryMark *m=&s->symmetry;
+        printf(",\"symmetry\":{\"operation\":\"%s\",\"origin_A\":",c->symmetry.operation);print_vector(m->origin);
+        if (m->kind==SYMMETRY_ROTATION || m->kind==SYMMETRY_IMPROPER || m->kind==SYMMETRY_MIRROR) {printf(",\"axis\":");print_vector(m->axis);}
+        if (m->deviation>=0) printf(",\"max_deviation_A\":%.17g,\"max_deviation_atom\":%zu",m->deviation,m->deviation_atom);
+        else printf(",\"max_deviation_A\":null");
+        putchar('}');
+    }
+    puts("}"); return fflush(stdout)==0 && !ferror(stdout);
 }
 
 static double elapsed_ms(struct timespec a, struct timespec b)
@@ -183,7 +196,7 @@ int main(int argc, char **argv)
     if (argc == 2 && !strcmp(argv[1], "--help")) { help(); return 0; }
     if (argc == 2 && !strcmp(argv[1], "--version")) { puts("qasr " VR_VERSION); return 0; }
     if (argc == 2 && !strcmp(argv[1],"--build-info")) {
-        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"nonperiodic\":true,\"partial_pbc\":true,\"polygon_faces\":true,\"orbital_ply\":true,\"atom_colored_bonds\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s,\"jpeg\":%s,\"webp\":%s,\"ffmpeg\":%s}\n",VR_VERSION,
+        printf("{\"version\":\"%s\",\"config_schema_version\":1,\"user_config\":true,\"atom_overrides\":true,\"job_requests\":true,\"batch_worker\":true,\"nonperiodic\":true,\"partial_pbc\":true,\"polygon_faces\":true,\"orbital_ply\":true,\"atom_colored_bonds\":true,\"symmetry_elements\":true,\"xml\":%s,\"openmp\":%s,\"cairo\":%s,\"libdeflate\":%s,\"jpeg\":%s,\"webp\":%s,\"ffmpeg\":%s}\n",VR_VERSION,
 #ifdef VR_HAVE_XML
                "true",
 #else
@@ -252,7 +265,7 @@ int main(int argc, char **argv)
         AtomStyle *styles=NULL;
         if (c.input && !atom_styles_resolve(&c,&s,&styles,&e)) goto failure;
         free(styles);
-        if (c.input && c.face_count && !scene_build(&c,&s,&scene,&e)) goto failure;
+        if (c.input && (c.face_count || c.symmetry.kind) && !scene_build(&c,&s,&scene,&e)) goto failure;
         cJSON *result=cJSON_CreateObject();cJSON_AddBoolToObject(result,"ok",1);cJSON_AddNumberToObject(result,"schema_version",1);
         cJSON_AddBoolToObject(result,"input_validated",c.input!=NULL);cJSON_AddBoolToObject(result,"selectors_validated",c.input!=NULL);
         cJSON_AddNumberToObject(result,"atom_rules",(double)c.rule_count);

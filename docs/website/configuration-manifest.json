@@ -1,8 +1,8 @@
 {
-  "availability": "qasr 0.7.1 release",
-  "executable_sha256": "e3eff6ab937bc40234fceab22288d0bc6bb973b40d0660ba3e48afc68eb2b155",
+  "availability": "qasr 0.8.0 release",
+  "executable_sha256": "96077547587dff1063814bcdb0ea85c9b8b0e85ee6260667edf853ef48074418",
   "build_info": {
-    "version": "0.7.1",
+    "version": "0.8.0",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
@@ -13,6 +13,7 @@
     "polygon_faces": true,
     "orbital_ply": true,
     "atom_colored_bonds": true,
+    "symmetry_elements": true,
     "xml": true,
     "openmp": true,
     "cairo": false,
@@ -22,26 +23,26 @@
     "ffmpeg": false
   },
   "files": {
-    "batch.html": "4b462e9559fc39338e963b64039991fa3d40cd89f57bffbb45324a382c79aaf0",
+    "batch.html": "f5504fc3475119b829c4b60afe837581250ac018e68b794383ac36b2a3e7d792",
     "downloads/worker-requests.jsonl": "5fcc29a169efde676dab7af98b234ddcdc1a7b07339e33756510442006e18266",
-    "schemas/config.schema.json": "0b640f86f38f5f8e42a98a7b64e6c0ba277ef633e0aba3cc9d9a978d63df64f6",
+    "schemas/config.schema.json": "fb210ef8230a7ea553b65993c0f496850a3ca07bfa3879462379829e8ab97a05",
     "schemas/faces.schema.json": "31d2fab25cfbdacd9b5fd65d2b60fd560941148c1ac32992896f7e486824d360",
-    "schemas/job.schema.json": "d782137949d1e1bc233d6eebcaa9c89eea00961bdcff5d6eb0adfe4bb0ce5014",
+    "schemas/job.schema.json": "88a2b45ebc270fd72806f566a1665f720c2dd0fc0a2c77d87e7c677eb0fb186b",
     "schemas/user.schema.json": "1d15b879ec1c80693c2423dd7e4719787e1d08baf60ab2e067788828bd30193a",
-    "schemas/worker.schema.json": "17ec855d5a888f3595930a793dcd6f0f8e3491794332dae4047498adca400597",
+    "schemas/worker.schema.json": "adcf9939f0d7b800390ae5636286170899c4146c866083145c655ebff48f65a1",
     "downloads/source-highlight.json": "3633baa106a669d188529789a09fb9acf6624bfa4b9250fcdf7ace6a3bf06764",
     "downloads/cell-highlight.json": "d455de2b095a470aca2406c0d18c2318a2c6ec5931c4ec2c55e48f1fa57190c0",
     "downloads/highlight-job.json": "322b24a99259992b109b0cdc675bfb30c16a04b558eef9533aae3306a197301c",
-    "downloads/qasr-source.tar.gz": "c38c7a8690f3f6ab7fda0f91ab7b29a930111020a0ddc59d1b6c970f6591b9e3",
-    "downloads/source-manifest.json": "b47ef343dcb57eec2d6f90aee651b4ca467ad57dfc0861f3f7d57d5651adf045",
-    "assets/source-highlight.png": "2680c632393c34a77f7ab7a0b3172973353a16946edb65bd7dad8ee000d8f1c1",
-    "assets/cell-highlight.png": "28d952f9ecb07b4a1edb0065773efa01c0958e992014788fd0e3964971979904"
+    "downloads/qasr-source.tar.gz": "159655e2bd69dca5fa7f34ebdd63ad76cb9cbcb46c7d1b67581837ecfef0f74e",
+    "downloads/source-manifest.json": "bd7ec93b8f93b4b35561212232d4d9a5039e661388fb043b1798f9c1fd80af46",
+    "assets/source-highlight.png": "90785b1765cf0a7a0f759450c4e44dcd1c867e1db27bc8306a162d2ad34a7398",
+    "assets/cell-highlight.png": "449a56f6443abc7665baed5224bcf64d7ae53e5e16fc42085e6e6fa5988698aa"
   },
   "images": [
     {
       "image": "assets/source-highlight.png",
       "recipe": "downloads/source-highlight.json",
-      "png_sha256": "2680c632393c34a77f7ab7a0b3172973353a16946edb65bd7dad8ee000d8f1c1",
+      "png_sha256": "90785b1765cf0a7a0f759450c4e44dcd1c867e1db27bc8306a162d2ad34a7398",
       "config_sha256": "3633baa106a669d188529789a09fb9acf6624bfa4b9250fcdf7ace6a3bf06764",
       "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
       "instances": 567
@@ -49,7 +50,7 @@
     {
       "image": "assets/cell-highlight.png",
       "recipe": "downloads/cell-highlight.json",
-      "png_sha256": "28d952f9ecb07b4a1edb0065773efa01c0958e992014788fd0e3964971979904",
+      "png_sha256": "449a56f6443abc7665baed5224bcf64d7ae53e5e16fc42085e6e6fa5988698aa",
       "config_sha256": "d455de2b095a470aca2406c0d18c2318a2c6ec5931c4ec2c55e48f1fa57190c0",
       "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
       "instances": 567

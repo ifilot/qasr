@@ -332,53 +332,58 @@ fallback:
     free(cache.strokes);return (CellCache){0};
 }
 
-static bool label_sample_visible(const Config *c, const RasterPrimitive *items, size_t count, size_t index,
-                                 double x, double y, double front)
+/* Label placement that is continuous in time. The depth buffer says where the
+ * sphere itself is the nearest surface. The anchor is the centroid of that
+ * visible area, and the label's opacity follows how much of a half-radius
+ * neighbourhood of the anchor is visible, so a label glides and fades as its
+ * atom is covered instead of jumping between fixed candidate points.
+ * One sample per output pixel is read; native adaptive tiles hold exactly
+ * those samples. A sample counts as this sphere when its depth matches the
+ * sphere surface within the half-sample offset of native tiles. */
+static double label_fade(double fraction)
 {
-    const RasterPrimitive *target=&items[index];
-    if (!target->primitive->color[3]) return false;
-    for (size_t j=0;j<count;++j) {
-        const RasterPrimitive *p=&items[j];
-        if (j==index || x<(double)p->left || x>=(double)p->right ||
-            y<(double)p->bottom || y>=(double)p->top) continue;
-        double z;Vec3 normal;
-        if (p->primitive->kind==SPHERE) {
-            double dx=(x-p->a.x[0])/p->radius,dy=(y-p->a.x[1])/p->radius;
-            double zz=1-dx*dx-dy*dy;
-            if (zz<0) continue;
-            z=p->a.x[2]+p->radius*sqrt(zz);
-        } else if (p->primitive->kind==CELL_EDGE) {
-            uint8_t white[4]={255,255,255,p->primitive->color[3]};const uint8_t *color;
-            if (!cell_line_hit(c,p->primitive,&p->cylinder,p->stroke,x,y,white,&z,&normal,&color)) continue;
-        } else if (!cylinder_hit(&p->cylinder,x,y,&z,&normal)) continue;
-        if (!surface_color(c,p->primitive,&p->cylinder,x,y,z)[3]) continue;
-        double tie=32*DBL_EPSILON*fmax(1,fmax(fabs(z),fabs(front)));
-        if (z>front+tie || (fabs(z-front)<=tie && j<index)) return false;
-    }
-    return true;
+    double s=fmax(0,fmin(1,(fraction-0.45)/0.40));return s*s*(3-2*s);
 }
-
-static LabelAnchor label_anchor(const Config *c, const Scene *s, const Camera *camera, const RasterPrimitive *items, size_t count, size_t index,
-                                size_t factor, size_t height)
+static LabelAnchor label_anchor(const Scene *s, const Camera *camera, const RasterPrimitive *p, size_t factor,
+                                size_t width, size_t height, const double *depth,
+                                const uint8_t *native_tiles, size_t tile_columns)
 {
-    /* Center first, then eight points on a 55%-radius ring. These clear narrow
-     * periodic bond caps while staying away from silhouette sampling uncertainty. */
-    static const double offsets[VR_LABEL_SAMPLES][2]={{0,0},{0.55,0},{-0.55,0},{0,0.55},{0,-0.55},
-        {0.388908729652601,0.388908729652601},{-0.388908729652601,0.388908729652601},
-        {0.388908729652601,-0.388908729652601},{-0.388908729652601,-0.388908729652601}};
-    const RasterPrimitive *p=&items[index];
-    if (!p->primitive->color[3] || p->radius<=0) return (LabelAnchor){0,0,0,false};
-    for (size_t k=0;k<VR_LABEL_SAMPLES;++k) {
-        double dx=offsets[k][0],dy=offsets[k][1];
-        double x=p->a.x[0]+p->radius*dx,y=p->a.x[1]+p->radius*dy;
-        double nx=(x-p->a.x[0])/p->radius,ny=(y-p->a.x[1])/p->radius;
-        double zz=1-nx*nx-ny*ny;
-        if (zz<0) continue;
-        double z=p->a.x[2]+p->radius*sqrt(zz);
-        if (label_sample_visible(c,items,count,index,x,y,z) && !faces_occlude_label(s,camera,factor,x,y,z))
-            return (LabelAnchor){x/(double)factor,(double)height-y/(double)factor,z,true};
+    LabelAnchor none={0,0,0,0,false};
+    if (!p->primitive->color[3] || p->radius<=0) return none;
+    const double r=p->radius,inner=0.9*r,step=(double)factor;
+    long x0=(long)floor((p->a.x[0]-inner)/step),x1=(long)ceil((p->a.x[0]+inner)/step);
+    long y0=(long)floor((p->a.x[1]-inner)/step),y1=(long)ceil((p->a.x[1]+inner)/step);
+    long columns=(long)(width/factor),rows=(long)(height/factor);
+    double sum_x=0,sum_y=0,weight=0;
+    for (int pass=0;pass<2;++pass) {
+        /* Pass 0 finds the visible centroid; pass 1 measures visibility around it. */
+        double cx=weight>0 ? sum_x/weight : p->a.x[0],cy=weight>0 ? sum_y/weight : p->a.x[1];
+        double seen=0,total=0,reach=0.5*r;
+        if (pass==1 && weight<=0) return none;
+        for (long py=y0;py<=y1;++py) for (long px=x0;px<=x1;++px) {
+            bool inside=px>=0 && py>=0 && px<columns && py<rows;
+            size_t x=inside ? (size_t)px*factor : 0,y=inside ? (size_t)py*factor : 0;
+            bool native=inside && native_tiles && native_tiles[(y/2/AA_TILE)*tile_columns+x/2/AA_TILE];
+            double offset=native ? 1 : 0.5,sx=(double)px*step+offset,sy=(double)py*step+offset;
+            if (pass==1) {
+                if (hypot(sx-cx,sy-cy)>reach) continue;
+                total+=1;
+            }
+            double dx=(sx-p->a.x[0])/r,dy=(sy-p->a.x[1])/r,rho2=dx*dx+dy*dy;
+            if (!inside || rho2>0.81) continue;
+            double z=p->a.x[2]+r*sqrt(1-rho2),found=depth[(height-1-y)*width+x];
+            if (fabs(found-z)>1.5+1e-9*fmax(1,fabs(z))) continue;
+            if (pass==0) {sum_x+=sx;sum_y+=sy;weight+=1;}
+            else seen+=1;
+        }
+        if (pass==1) {
+            double opacity=total>0 ? label_fade(seen/total) : 0;
+            double dx=(cx-p->a.x[0])/r,dy=(cy-p->a.x[1])/r,z=p->a.x[2]+r*sqrt(fmax(0,1-dx*dx-dy*dy));
+            if (opacity<=0.02 || faces_occlude_label(s,camera,factor,cx,cy,z)) return none;
+            return (LabelAnchor){cx/step,(double)(height/factor)-cy/step,z,opacity,true};
+        }
     }
-    return (LabelAnchor){0,0,0,false};
+    return none;
 }
 
 void render_workspace_free(RenderWorkspace *workspace)
@@ -543,7 +548,8 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
                 double tie = 32*DBL_EPSILON*fmax(1,fmax(fabs(z),fabs(depth[index])));
                 if (z <= depth[index]+tie) continue;
                 depth[index]=z;
-                double shade=p->kind==CELL_EDGE ? 1 : 0.25+0.75*fmax(0,dot(normal,light));
+                bool flat=p->kind==CELL_EDGE || p->kind==SYMMETRY_AXIS;
+                double shade=flat ? 1 : 0.25+0.75*fmax(0,dot(normal,light));
                 double white=0;
                 double tone_level=0;
                 bool ink=false;
@@ -585,10 +591,16 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
                         else {shade=0.45;white=0.55;tone_level=0.80;}
                     }
                 }
+                /* Symmetry rods keep their flat color in every style and gain
+                 * the style's ink contour, so they never read as a bond. */
+                if (p->kind==SYMMETRY_AXIS) {
+                    shade=1;white=0;fade=0;
+                    ink=c->style!=STYLE_SHADED && c->outline_width>0 && cylinder_outline(cylinder,sx,sy,scale*c->outline_width);
+                }
                 shade*=1-fade; white=white*(1-fade)+fade;
                 if (ink) { shade=0; white=0; }
                 uint8_t tone_rgb[3];
-                bool toned=c->tone!=TONE_COLOR && p->kind!=CELL_EDGE;
+                bool toned=c->tone!=TONE_COLOR && !flat;
                 if (toned) {
                     static const uint8_t dark[3]={32,48,80}, pale[3]={244,189,105};
                     double level=ink ? 0 : tone_level*(1-fade)+fade;
@@ -639,9 +651,19 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
         p[3]=(uint8_t)((sum_alpha+per_pixel/2)/per_pixel);
         for (int d=0;d<3;++d) p[d]=(uint8_t)(sum_alpha ? (sums[d]+sum_alpha/2)/sum_alpha : 0u);
     }
-    if (c->labels) for (size_t i=0;i<s->count;++i)
-        if (s->items[i].kind==SPHERE) visible[i]=label_anchor(c,s,camera,projected,s->count,i,factor,c->height);
+    /* Label visibility reads the output pixels under each sphere twice. */
+    double label_work=0;
+    if (c->labels) for (size_t i=0;i<s->count;++i) if (s->items[i].kind==SPHERE) {
+        double side=fmin(2*projected[i].radius/scale+2,(double)(c->width>c->height ? c->width : c->height));
+        label_work+=2*side*side;
+        if (label_work>VR_MAX_CANDIDATES) break;
+        visible[i]=label_anchor(s,camera,&projected[i],factor,width,height,depth,native_tiles,tile_columns);
+    }
     free(projected);free(native_tiles);release_samples(workspace,depth,rgba);
+    if (label_work>VR_MAX_CANDIDATES) {
+        free(pixels);free(visible);
+        return fail(e,6,"label visibility exceeds the 200-million-candidate work budget");
+    }
     out->width=c->width; out->height=c->height; out->pixels=pixels;out->threads_used=used_threads;
     bool ok=overlay_render(c,s,camera,visible,out,e);
     free(visible);

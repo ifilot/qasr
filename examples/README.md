@@ -5,6 +5,7 @@
 | Molecular orbitals | [CO gallery and recipe](orbitals/README.md) | PyQInt/PyTessel inputs, ten illustrated MOs and reproducible generation |
 | Polygon faces and bonds | [Zeolite examples](zeolite/README.md) | LTA structures, face definitions and bond-style comparisons |
 | Cell edges and periodic context | [Cell-line examples](cell-lines/README.md) | Six recipes with images, reports and provenance |
+| Symmetry elements | [Point-group gallery](symmetry/README.md) | Six molecules and fourteen recipes for axes, mirror planes and inversion centres |
 | Movies | [Orbit and reaction recipes](movies/README.md) | Camera orbit and supplied XYZ trajectory examples |
 
 Keep runnable inputs, recipes, final galleries and their provenance here.

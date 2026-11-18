@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "image": {
+    "width": 800,
+    "height": 800,
+    "background": "#ffffff",
+    "style": "illustrated",
+    "outline_width": 1.5
+  },
+  "overlays": {
+    "cell": false
+  },
+  "camera": {
+    "view": [
+      5,
+      -3,
+      2
+    ]
+  },
+  "symmetry": {
+    "operation": "S4",
+    "axis": [
+      0,
+      0,
+      1
+    ]
+  }
+}

@@ -1,50 +1,12 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "overlay.h"
 #include "vec.h"
+#include <float.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* Original fixed 5x7 glyphs. Fractional cell coverage is accumulated before
- * compositing a glyph, avoiding seams between adjacent filled cells. */
-typedef struct { unsigned code; uint8_t rows[7]; } Glyph;
-static const Glyph font[]={
- {' ',{0,0,0,0,0,0,0}},{'?',{14,17,1,2,4,0,4}},
- {'0',{14,17,19,21,25,17,14}},{'1',{4,12,4,4,4,4,14}},
- {'2',{14,17,1,2,4,8,31}},{'3',{30,1,1,14,1,1,30}},
- {'4',{2,6,10,18,31,2,2}},{'5',{31,16,16,30,1,1,30}},
- {'6',{14,16,16,30,17,17,14}},{'7',{31,1,2,4,8,8,8}},
- {'8',{14,17,17,14,17,17,14}},{'9',{14,17,17,15,1,1,14}},
- {'A',{14,17,17,31,17,17,17}},{'B',{30,17,17,30,17,17,30}},
- {'C',{14,17,16,16,16,17,14}},{'D',{30,17,17,17,17,17,30}},
- {'E',{31,16,16,30,16,16,31}},{'F',{31,16,16,30,16,16,16}},
- {'G',{14,17,16,23,17,17,15}},{'H',{17,17,17,31,17,17,17}},
- {'I',{14,4,4,4,4,4,14}},{'J',{7,2,2,2,18,18,12}},
- {'K',{17,18,20,24,20,18,17}},{'L',{16,16,16,16,16,16,31}},
- {'M',{17,27,21,21,17,17,17}},{'N',{17,25,21,19,17,17,17}},
- {'O',{14,17,17,17,17,17,14}},{'P',{30,17,17,30,16,16,16}},
- {'Q',{14,17,17,17,21,18,13}},{'R',{30,17,17,30,20,18,17}},
- {'S',{15,16,16,14,1,1,30}},{'T',{31,4,4,4,4,4,4}},
- {'U',{17,17,17,17,17,17,14}},{'V',{17,17,17,17,17,10,4}},
- {'W',{17,17,17,21,21,27,17}},{'X',{17,17,10,4,10,17,17}},
- {'Y',{17,17,10,4,4,4,4}},{'Z',{31,1,2,4,8,16,31}},
- {'a',{0,0,14,1,15,17,15}},{'b',{16,16,30,17,17,17,30}},
- {'c',{0,0,14,17,16,17,14}},{'d',{1,1,15,17,17,17,15}},
- {'e',{0,0,14,17,31,16,14}},{'f',{6,9,8,28,8,8,8}},
- {'g',{0,0,15,17,15,1,14}},{'h',{16,16,30,17,17,17,17}},
- {'i',{4,0,12,4,4,4,14}},{'j',{2,0,6,2,2,18,12}},
- {'k',{16,16,18,20,24,20,18}},{'l',{12,4,4,4,4,4,14}},
- {'m',{0,0,26,21,21,21,21}},{'n',{0,0,30,17,17,17,17}},
- {'o',{0,0,14,17,17,17,14}},{'p',{0,0,30,17,30,16,16}},
- {'q',{0,0,15,17,15,1,1}},{'r',{0,0,22,25,16,16,16}},
- {'s',{0,0,15,16,14,1,30}},{'t',{8,8,28,8,8,9,6}},
- {'u',{0,0,17,17,17,19,13}},{'v',{0,0,17,17,17,10,4}},
- {'w',{0,0,17,17,21,21,10}},{'x',{0,0,17,10,4,10,17}},
- {'y',{0,0,17,17,15,1,14}},{'z',{0,0,31,2,4,8,31}},
- {'-',{0,0,0,31,0,0,0}},{'+',{0,4,4,31,4,4,0}},
- {'.',{0,0,0,0,0,4,4}},{0x80,{4,10,14,17,31,17,17}}
-};
 static const uint8_t ink[4]={24,28,32,255}, plate[4]={255,255,255,224};
 typedef struct { size_t index; double depth; } LabelOrder;
 typedef struct { double left,top,right,bottom; } LabelBox;
@@ -60,19 +22,6 @@ static int label_order(const void *left, const void *right)
     if (a->depth>b->depth) return -1;
     if (a->depth<b->depth) return 1;
     return (a->index>b->index)-(a->index<b->index);
-}
-
-static unsigned character(const char **text)
-{
-    const unsigned char *p=(const unsigned char *)*text;
-    if (p[0]==0xc3 && p[1]==0x85) { *text+=2;return 0x80; }
-    ++*text;return p[0];
-}
-
-static double text_width(const char *text, double unit)
-{
-    size_t n=0;while (*text) { (void)character(&text);++n; }
-    return n ? ((double)n*6-1)*unit : 0;
 }
 
 static uint8_t byte(double value)
@@ -123,23 +72,192 @@ static void line(Image *image, double x0, double y0, double x1, double y1, doubl
     }
 }
 
+/* All annotation text uses embedded outline glyphs: polygons in 1/1000 em
+ * generated from libre fonts at development time, so no font library or file
+ * is needed at run time. With markup, an underscore starts a subscript that
+ * lasts for the following letters and digits. */
+typedef struct { uint16_t code; int16_t advance; uint16_t first, count; } LabelGlyph;
+typedef struct { uint16_t first, count; } LabelContour;
+typedef struct {
+    const LabelGlyph *glyphs; size_t glyph_count;
+    const LabelContour *contours; const int16_t (*points)[2];
+    int16_t cap_height;
+} LabelFont;
+#include "label_font.inc"
+#define SUBSCRIPT_SCALE 0.68
+#define SUBSCRIPT_DROP 0.28 /* Fraction of the cap height below the baseline. */
+
+static unsigned codepoint(const char **text)
+{
+    const unsigned char *p=(const unsigned char *)*text;
+    if ((p[0]&0xe0)==0xc0 && (p[1]&0xc0)==0x80) { *text+=2;return ((unsigned)(p[0]&0x1f)<<6)|(p[1]&0x3f); }
+    ++*text;return p[0];
+}
+static const LabelGlyph *label_glyph(const LabelFont *f, unsigned code)
+{
+    const LabelGlyph *fallback=f->glyphs;
+    for (size_t i=0;i<f->glyph_count;++i) {
+        if (f->glyphs[i].code==code) return &f->glyphs[i];
+        if (f->glyphs[i].code=='?') fallback=&f->glyphs[i];
+    }
+    return fallback;
+}
+static bool subscript_step(bool markup, unsigned code, bool *subscript)
+{
+    if (!markup) return true;
+    if (code=='_') {*subscript=true;return false;}
+    if (*subscript && !((code>='0' && code<='9') || (code>='a' && code<='z') || (code>='A' && code<='Z'))) *subscript=false;
+    return true;
+}
+/* Width is the sum of advances; height spans the capitals plus any subscript. */
+static void label_size(const LabelFont *f, const char *value, double cap, bool markup, double *width, double *height)
+{
+    bool subscript=false,dropped=false;double w=0,scale=cap/f->cap_height;
+    while (*value) {
+        unsigned code=codepoint(&value);
+        if (!subscript_step(markup,code,&subscript)) continue;
+        w+=label_glyph(f,code)->advance*scale*(subscript ? SUBSCRIPT_SCALE : 1);dropped=dropped || subscript;
+    }
+    *width=w;*height=cap*(1+(dropped ? SUBSCRIPT_DROP : 0));
+}
+/* Nonzero winding of the glyph around a point, and the distance to its outline. */
+static int glyph_winding(const LabelFont *f, const LabelGlyph *g, double x, double y, double *distance)
+{
+    int winding=0;double nearest=DBL_MAX;
+    for (size_t c=g->first;c<(size_t)g->first+g->count;++c) {
+        const int16_t (*p)[2]=f->points+f->contours[c].first;size_t n=f->contours[c].count;
+        for (size_t k=0;k<n;++k) {
+            double ax=p[k][0],ay=p[k][1],bx=p[(k+1)%n][0],by=p[(k+1)%n][1];
+            if ((ay<=y)!=(by<=y)) {
+                double side=(bx-ax)*(y-ay)-(by-ay)*(x-ax);
+                if (by>ay ? side>0 : side<0) winding+=by>ay ? 1 : -1;
+            }
+            if (distance) {
+                double dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;
+                double u=l2>0 ? fmax(0,fmin(1,((x-ax)*dx+(y-ay)*dy)/l2)) : 0;
+                nearest=fmin(nearest,hypot(x-ax-u*dx,y-ay-u*dy));
+            }
+        }
+    }
+    if (distance) *distance=nearest;
+    return winding;
+}
+/* Draw from the top-left of the capital box. With a positive halo, paint the
+ * glyphs grown by that many pixels instead (a soft-edged surround). */
+static void label_text(Image *image, const LabelFont *f, double x, double y, const char *value, double cap, double halo, const uint8_t color[4], bool markup)
+{
+    bool subscript=false;double baseline=y+cap;
+    while (*value) {
+        unsigned code=codepoint(&value);
+        if (!subscript_step(markup,code,&subscript)) continue;
+        const LabelGlyph *g=label_glyph(f,code);
+        double scale=cap/f->cap_height*(subscript ? SUBSCRIPT_SCALE : 1),base=baseline+(subscript ? SUBSCRIPT_DROP*cap : 0);
+        double lo[2]={DBL_MAX,DBL_MAX},hi[2]={-DBL_MAX,-DBL_MAX};
+        for (size_t c=g->first;c<(size_t)g->first+g->count;++c) for (size_t k=0;k<f->contours[c].count;++k) {
+            const int16_t *p=f->points[f->contours[c].first+k];
+            for (int d=0;d<2;++d) {lo[d]=fmin(lo[d],p[d]);hi[d]=fmax(hi[d],p[d]);}
+        }
+        if (g->count) {
+            int left=(int)floor(x+lo[0]*scale-halo-1),right=(int)ceil(x+hi[0]*scale+halo+1);
+            int top=(int)floor(base-hi[1]*scale-halo-1),bottom=(int)ceil(base-lo[1]*scale+halo+1);
+            for (int py=top;py<bottom;++py) for (int px=left;px<right;++px) {
+                double coverage=0;
+                if (halo>0) {
+                    double distance,gx=((double)px+0.5-x)/scale,gy=(base-((double)py+0.5))/scale;
+                    coverage=glyph_winding(f,g,gx,gy,&distance) ? 1 : halo+0.5-distance*scale;
+                } else for (int sy=0;sy<4;++sy) for (int sx=0;sx<4;++sx) {
+                    double gx=((double)px+((double)sx+0.5)/4-x)/scale,gy=(base-((double)py+((double)sy+0.5)/4))/scale;
+                    if (glyph_winding(f,g,gx,gy,NULL)) coverage+=1.0/16;
+                }
+                blend(image,px,py,color,coverage);
+            }
+        }
+        x+=g->advance*scale;
+    }
+}
+/* Legend, axes and scale-bar text: upright sans with a capital height of
+ * seven units, drawn from the top-left of the capital box. */
+static double text_width(const char *value, double unit)
+{
+    double w,h;label_size(&label_sans,value,7*unit,false,&w,&h);return w;
+}
 static void text(Image *image, double x, double y, const char *value, double unit, const uint8_t color[4])
 {
-    while (*value) {
-        unsigned code=character(&value);const uint8_t *rows=font[1].rows;
-        for (size_t i=0;i<sizeof font/sizeof *font;++i) if (font[i].code==code) { rows=font[i].rows;break; }
-        double coverage[16][16]={{0}};
-        int bx=(int)floor(x),by=(int)floor(y);
-        for (size_t row=0;row<7;++row) for (size_t col=0;col<5;++col) if (rows[row]&(1u<<(4-col))) {
-            double x0=x+(double)col*unit,y0=y+(double)row*unit,x1=x0+unit,y1=y0+unit;
-            for (int py=(int)floor(y0);py<(int)ceil(y1);++py) for (int px=(int)floor(x0);px<(int)ceil(x1);++px)
-                if (py-by>=0 && py-by<16 && px-bx>=0 && px-bx<16)
-                    coverage[py-by][px-bx]+=overlap(x0,x1,px,px+1)*overlap(y0,y1,py,py+1);
-        }
-        for (int py=0;py<16;++py) for (int px=0;px<16;++px)
-            if (coverage[py][px]>0) blend(image,bx+px,by+py,color,coverage[py][px]);
-        x+=6*unit;
+    label_text(image,&label_sans,x,y,value,7*unit,0,color,false);
+}
+static const LabelFont *symmetry_font(const Config *c) {return c->symmetry.label_sans ? &label_sans : &label_italic;}
+
+static double symmetry_unit(const Config *c)
+{
+    double shorter=(double)(c->width<c->height ? c->width : c->height);
+    return c->symmetry.label_scale*fmax(1.6,shorter/210);
+}
+static double symmetry_marker_radius(const Config *c) {return fmax(5,3.0*symmetry_unit(c));}
+
+/* Label rectangle in image pixels (y downward): left, top, right, bottom,
+ * excluding the halo. Axis labels continue beyond the upper tip; plane labels
+ * sit outside the boundary point furthest toward the upper right. */
+bool overlay_symmetry_label_box(const Config *c, const Scene *s, const Camera *camera, bool anchored_only, double box[4])
+{
+    const SymmetryMark *m=&s->symmetry;
+    if (!m->kind || !c->symmetry.show_label || !m->label[0]) return false;
+    double unit=symmetry_unit(c),w,h,gap=1.6*unit+2,cx,cy;
+    label_size(symmetry_font(c),m->label,7*unit,true,&w,&h);
+    if (w<=0) return false;
+    const double diagonal=0.7071067811865476;
+    if (m->kind==SYMMETRY_IDENTITY) {
+        if (anchored_only) return false;
+        double inset=0.05*(double)(c->width<c->height ? c->width : c->height);
+        box[0]=(double)camera->viewport_x+inset;
+        box[1]=(double)(camera->height-camera->viewport_y-camera->viewport_height)+inset;
+        box[2]=box[0]+w;box[3]=box[1]+h;return true;
     }
+    Vec3 origin=camera_project(camera,m->origin);
+    double tx=origin.x[0],ty=origin.x[1],dx=diagonal,dy=diagonal,clear=gap;
+    if (m->kind==SYMMETRY_INVERSION) {
+        if (anchored_only) return false;
+        clear+=symmetry_marker_radius(c)+0.8*unit;
+    } else if (m->anchor_count>=2 && (m->kind==SYMMETRY_ROTATION || m->kind==SYMMETRY_IMPROPER)) {
+        Vec3 a=camera_project(camera,m->anchors[0]),b=camera_project(camera,m->anchors[1]);
+        bool first=a.x[1]>b.x[1]+1 || (a.x[1]>=b.x[1]-1 && a.x[0]>=b.x[0]);
+        Vec3 tip=first ? a : b,other=first ? b : a;
+        double span=hypot(tip.x[0]-other.x[0],tip.x[1]-other.x[1]);
+        tx=tip.x[0];ty=tip.x[1];
+        if (span>=1) {dx=(tip.x[0]-other.x[0])/span;dy=(tip.x[1]-other.x[1])/span;}
+    } else if (m->anchor_count) {
+        double best=-DBL_MAX;
+        for (size_t k=0;k<m->anchor_count;++k) {
+            Vec3 p=camera_project(camera,m->anchors[k]);double score=p.x[1]+0.35*p.x[0];
+            if (score>best) {best=score;tx=p.x[0];ty=p.x[1];}
+        }
+        double span=hypot(tx-origin.x[0],ty-origin.x[1]);
+        if (span>=1) {dx=(tx-origin.x[0])/span;dy=(ty-origin.x[1])/span;}
+    }
+    double reach=clear+fabs(dx)*w/2+fabs(dy)*h/2;
+    cx=tx+dx*reach;cy=(double)camera->height-(ty+dy*reach);
+    box[0]=cx-w/2;box[1]=cy-h/2;box[2]=cx+w/2;box[3]=cy+h/2;
+    return true;
+}
+
+static void symmetry(const Config *c, const Scene *s, const Camera *camera, Image *image)
+{
+    const SymmetryMark *m=&s->symmetry;
+    static const uint8_t halo[4]={255,255,255,235};
+    double unit=symmetry_unit(c);
+    if (m->kind==SYMMETRY_INVERSION) {
+        uint8_t color[4];decode_color(c->symmetry.axis_color,color);
+        Vec3 p=camera_project(camera,m->origin);double radius=symmetry_marker_radius(c);
+        double x=p.x[0],y=(double)camera->height-p.x[1];
+        static const uint8_t white[4]={255,255,255,255};
+        /* Ringed dot: stays legible on dark atoms, bonds and the background. */
+        circle(image,x,y,radius+fmax(1.5,0.25*radius),halo);circle(image,x,y,radius,color);
+        circle(image,x,y,0.62*radius,white);circle(image,x,y,0.34*radius,color);
+    }
+    double box[4];
+    if (!overlay_symmetry_label_box(c,s,camera,false,box)) return;
+    uint8_t ink_color[4];decode_color(c->symmetry.label_color,ink_color);
+    label_text(image,symmetry_font(c),box[0],box[1],m->label,7*unit,fmax(1.5,0.6*unit),halo,true);
+    label_text(image,symmetry_font(c),box[0],box[1],m->label,7*unit,0,ink_color,true);
 }
 
 static size_t elements(const Config *c, const Scene *s, size_t counts[119], uint8_t colors[119][4])
@@ -194,9 +312,6 @@ bool overlay_layout(const Config *c, const Scene *s, Camera *camera, Error *e)
         else digits=2;
         if ((double)camera->viewport_width<(double)digits*7.5+12)
             return fail(e,2,"atom labels do not fit the geometry viewport");
-        if (s->count>VR_MAX_CANDIDATES/VR_LABEL_SAMPLES ||
-            (s->count && s->atom_count>VR_MAX_CANDIDATES/(s->count*VR_LABEL_SAMPLES)))
-            return fail(e,6,"label visibility exceeds the 200-million-candidate work budget");
     }
     return true;
 }
@@ -246,7 +361,10 @@ static void axes(Image *image, const Camera *camera)
 bool overlay_render(const Config *c, const Scene *s, const Camera *camera,
                     const LabelAnchor *anchors, Image *image, Error *e)
 {
-    if (!(c->labels || c->axes || c->legend || c->scale_bar)) return true;
+    if (!(c->labels || c->axes || c->legend || c->scale_bar)) {
+        if (s->symmetry.kind) symmetry(c,s,camera,image);
+        return true;
+    }
     size_t labels=0,candidates=0;
     LabelOrder *order=NULL;LabelBox *placed=NULL;
     if (c->labels) {
@@ -256,13 +374,21 @@ bool overlay_render(const Config *c, const Scene *s, const Camera *camera,
             order[candidates++]=(LabelOrder){i,anchors[i].depth};
         qsort(order,candidates,sizeof *order,label_order);
     }
+    /* One lettering size per image, from the smallest labelled atom: large
+     * enough to read, small enough to sit inside that atom. Never smaller than
+     * the former fixed size. */
+    double cap=8.75,smallest=DBL_MAX,shorter=(double)(image->width<image->height ? image->width : image->height);
+    /* Every drawable atom counts, visible or not, so the size holds across frames. */
+    for (size_t i=0;i<s->count;++i) if (s->items[i].kind==SPHERE && s->items[i].color[3])
+        smallest=fmin(smallest,s->items[i].radius*camera->scale);
+    if (smallest<DBL_MAX) cap=fmax(cap,fmin(0.5*smallest,shorter/32));
     for (size_t candidate=0;candidate<candidates;++candidate) {
         size_t i=order[candidate].index;
         const Primitive *p=&s->items[i];
         char label[32];
         if (c->labels==1) snprintf(label,sizeof label,"%s",element_symbol(p->element));
         else snprintf(label,sizeof label,"%zu",i);
-        double w=text_width(label,1.25),h=8.75;
+        double w,h;label_size(&label_sans,label,cap,false,&w,&h);
         double left=fmax((double)camera->viewport_x+3,fmin((double)(camera->viewport_x+camera->viewport_width)-w-3,anchors[i].x-w/2));
         double top=fmax((double)(image->height-camera->viewport_y-camera->viewport_height)+3,
                         fmin((double)(image->height-camera->viewport_y)-h-3,anchors[i].y-h/2));
@@ -275,8 +401,25 @@ bool overlay_render(const Config *c, const Scene *s, const Camera *camera,
             }
         }
         if (collision) continue;
-        rectangle(image,left-3,top-2,left+w+3,top+h+2,plate);
-        text(image,left,top,label,1.25,ink);placed[labels++]=box;
+        /* Choose dark or light lettering from what is actually underneath, in
+         * any style or tone, and surround it thinly in the opposite shade. */
+        double luminance=0,weight=0;
+        for (int y=(int)box.top;y<(int)box.bottom;++y) for (int x=(int)box.left;x<(int)box.right;++x) {
+            if (x<0 || y<0 || (size_t)x>=image->width || (size_t)y>=image->height) continue;
+            const uint8_t *q=image->pixels+4*((size_t)y*image->width+(size_t)x);double alpha=(double)q[3]/255;
+            luminance+=alpha*(0.2126*q[0]+0.7152*q[1]+0.0722*q[2])+(1-alpha)*255;weight+=1;
+        }
+        /* Blend through a narrow band rather than flipping at one threshold. */
+        double mean=weight>0 ? luminance/weight : 255,light=fmax(0,fmin(1,(mean-112)/32));
+        double opacity=anchors[i].opacity;
+        uint8_t letter[4],surround[4];
+        for (size_t d=0;d<3;++d) {
+            letter[d]=byte(255+((double)ink[d]-255)*light);
+            surround[d]=byte((double)ink[d]+(255-(double)ink[d])*light);
+        }
+        letter[3]=byte(255*opacity);surround[3]=byte(170*opacity);
+        label_text(image,&label_sans,left,top,label,cap,fmax(1,0.11*cap),surround,false);
+        label_text(image,&label_sans,left,top,label,cap,0,letter,false);placed[labels++]=box;
     }
     free(order);free(placed);
     if (c->legend) {
@@ -305,6 +448,7 @@ bool overlay_render(const Config *c, const Scene *s, const Camera *camera,
         text(image,tx,(double)image->height-36,camera->scale_bar_label,1.25,ink);
     }
     if (c->axes) axes(image,camera);
+    if (s->symmetry.kind) symmetry(c,s,camera,image);
     if (c->benchmark && c->labels) fprintf(stderr,"overlay_labels=%zu overlay_labels_skipped=%zu\n",labels,candidates-labels);
     return true;
 }

@@ -24,7 +24,7 @@ typedef enum { FILTER_ADAPTIVE, FILTER_NONE, FILTER_SUB, FILTER_UP, FILTER_DEFAU
 typedef enum { IMAGES_AUTO, IMAGES_NORMAL, IMAGES_MUTED, IMAGES_GREYSCALE } PeriodicImageStyle;
 typedef enum { BONDS_UNIFORM, BONDS_ATOMS } BondColors;
 typedef enum { CELL_SOLID, CELL_DASHED } CellLineStyle;
-typedef enum { MOVIE_NONE, MOVIE_ORBIT, MOVIE_TRAJECTORY } MovieMode;
+typedef enum { MOVIE_NONE, MOVIE_ORBIT, MOVIE_TRAJECTORY, MOVIE_SYMMETRY } MovieMode;
 typedef enum { MOVIE_CODEC_AUTO, MOVIE_CODEC_H264, MOVIE_CODEC_MPEG4 } MovieCodec;
 typedef enum {
     MOVIE_FIELD_FPS=1u, MOVIE_FIELD_FRAMES=2u, MOVIE_FIELD_AXIS=4u,
@@ -48,6 +48,27 @@ typedef struct {
     uint8_t color[4], outline_color[4];
     double outline_width;
 } FaceDefinition;
+/* One point-group symmetry operation per image. The drawn element locates the
+ * operation: a rotation axis, a mirror plane, both for an improper rotation,
+ * or a centre marker for inversion. Identity only adds its label. */
+typedef enum { SYMMETRY_NONE, SYMMETRY_IDENTITY, SYMMETRY_ROTATION, SYMMETRY_IMPROPER,
+               SYMMETRY_MIRROR, SYMMETRY_INVERSION } SymmetryKind;
+typedef enum { SYMMETRY_PLANE_AUTO, SYMMETRY_PLANE_RECTANGLE, SYMMETRY_PLANE_DISC } SymmetryPlaneShape;
+#define VR_MAX_SYMMETRY_ORDER 99u
+#define VR_MAX_SYMMETRY_ORIGIN_ATOMS 64u
+typedef struct {
+    SymmetryKind kind; /* Canonical: S1 is a mirror, S2 an inversion, C1 identity. */
+    unsigned order;
+    char operation[16], label[32]; /* As requested; an empty label is automatic. */
+    bool show_label, verify, axis_set, origin_set, axis_dashed;
+    bool label_sans; /* Upright sans instead of the default serif italic. */
+    Vec3 axis, origin; /* Axis direction or plane normal; origin in angstroms. */
+    size_t axis_atoms[2], plane_atoms[3], origin_atoms[VR_MAX_SYMMETRY_ORIGIN_ATOMS];
+    size_t axis_atom_count, plane_atom_count, origin_atom_count;
+    double tolerance, axis_radius, padding, plane_outline_width, label_scale;
+    SymmetryPlaneShape plane_shape;
+    char axis_color[10], plane_color[10], plane_outline_color[10], label_color[10];
+} SymmetryOptions;
 /* Compression -1 and FILTER_DEFAULT request automatic settings. */
 typedef struct { PngEncoder encoder; PngFilter filter; int compression; } PngOptions;
 
@@ -101,7 +122,32 @@ typedef struct {
     size_t orbital_count, orbital_capacity;
     char orbital_hashes[32][65];
     struct cJSON *orbitals_json;
+    SymmetryOptions symmetry;
 } Config;
+
+/** @brief Replace the symmetry operation from a strict JSON object, or clear it.
+ * @param[in,out] c Non-null initialized configuration; owns no symmetry allocations.
+ * @param[in] object Borrowed object with a required operation, or JSON null to clear.
+ * @param[out] e Non-null diagnostic destination, set on failure.
+ * @return true on success; false on unknown keys or invalid values.
+ */
+bool config_symmetry(Config *c, const struct cJSON *object, Error *e);
+/** Reset the operation to none with built-in styling; owns no allocations. */
+void config_symmetry_defaults(Config *c);
+/** @brief Parse an operation name such as E, C3, S4, sigma, sigma_h or i.
+ * @param[in,out] c Non-null configuration; previous styling fields are kept.
+ * @param[in] text Borrowed operation name.
+ * @return true on a recognized name; false leaves the operation unchanged.
+ */
+bool config_symmetry_operation(Config *c, const char *text);
+/** @brief Check geometric completeness after all layers and CLI overrides.
+ * @return true when no operation is set or its axis/normal is determined.
+ */
+bool config_symmetry_validate(const Config *c, Error *e);
+/** @brief Serialize the resolved operation for dumps, reports and cache keys.
+ * @return Caller-owned object, or NULL without an operation or on allocation failure.
+ */
+struct cJSON *config_symmetry_json(const Config *c);
 
 /** @brief Replace orbital layers with bounded PLY meshes in Cartesian angstroms.
  * @param[in,out] c Non-null initialized configuration. Owns copied metadata and

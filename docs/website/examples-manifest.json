@@ -1,7 +1,7 @@
 {
-  "executable_sha256": "e3eff6ab937bc40234fceab22288d0bc6bb973b40d0660ba3e48afc68eb2b155",
+  "executable_sha256": "96077547587dff1063814bcdb0ea85c9b8b0e85ee6260667edf853ef48074418",
   "build_info": {
-    "version": "0.7.1",
+    "version": "0.8.0",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
@@ -12,6 +12,7 @@
     "polygon_faces": true,
     "orbital_ply": true,
     "atom_colored_bonds": true,
+    "symmetry_elements": true,
     "xml": true,
     "openmp": true,
     "cairo": false,
@@ -20,7 +21,7 @@
     "webp": false,
     "ffmpeg": false
   },
-  "availability": "qasr 0.7.1 release",
+  "availability": "qasr 0.8.0 release",
   "images": [
     {
       "id": "co-shaded",
@@ -67,7 +68,7 @@
       "source": "CONTCAR.co",
       "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
       "image": "assets/co-annotated.png",
-      "png_sha256": "66d486dd86ef7e348a449d917c594146553782bb1e9e9f586da90dd027e35907",
+      "png_sha256": "d907ae214ddf15c8da4e61c5d45ad8bbbbc1d3225e8877f6c66a4e17b70583bb",
       "command": [
         "build-release/qasr",
         "examples/CONTCAR.co",
@@ -269,7 +270,7 @@
       "source": "CONTCAR.co",
       "input_sha256": "0caf64178f8a8489b3021a6817333dc3f72dfe4fd7938779e8337056ce9eda48",
       "image": "assets/publication.png",
-      "png_sha256": "c5335e5b660eeadda517ecedd24daa0da8c8f6a910e01ee4b88f38bb5cc85829",
+      "png_sha256": "237623773923921feedb54c4c4b5ca3acdf6fbf2c13d38e5581dc7fe89b4d451",
       "command": [
         "build-release/qasr",
         "examples/CONTCAR.co",
@@ -422,7 +423,7 @@
     "LICENSE": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
     "OUTCAR.relax": "38b0665ad596547098e249363aaa9d8be475ad776b16804533918c42520e3c53",
     "POSCAR.skew": "840ef63c4512eab9091e46106931df2b0c284b7d8bdd618ef79757454428ee75",
-    "SKILL.md": "e93cda65c77e229b898f2748cedeea8f95d375a6b066083e77fd727eb27fee08",
+    "SKILL.md": "cdc68389e56528247c5f30fd91c3c513c358f40b3c88509e0724c4ac4928758e",
     "SLAB-MANIFEST.json": "76272de5ceaefcad8db4101fec634f4431b1248270689382a01b1207562a862c",
     "SLAB-PROVENANCE.md": "6a68008725dc34af8e090e1d6d4ef51375a78a0cfa4214df5fe8fe0c86cdc7fc",
     "balsac-dualtone.json": "9494cb8c52c89ac445d60099a3dca4c404f00544aca3fbb047bd780077ed0b21",
@@ -435,11 +436,11 @@
     "ortep-monocolor.json": "15b1b1d9bc8e37d32babf6fcb8242900903923538ae93c46a72597bfa134164e",
     "ortep.json": "c0e3bb3df182478227cdad4d9c242e9007c07836763cd86892f7913b4ddac945",
     "publication.json": "50f5e7207c0708b0683d5f4482cce801d9451f5c948a0391e5a97b38f5628165",
-    "qasr-examples.zip": "2096e009648f988f9cb5ff37bbd0af4554b88f8a02e5e1db25071c2507e670a9",
-    "qasr-source.tar.gz": "c38c7a8690f3f6ab7fda0f91ab7b29a930111020a0ddc59d1b6c970f6591b9e3",
+    "qasr-examples.zip": "9486bc48794536c3ce87a8920d827799b38b7eea204443bb33c1b73c37c9e4aa",
+    "qasr-source.tar.gz": "159655e2bd69dca5fa7f34ebdd63ad76cb9cbcb46c7d1b67581837ecfef0f74e",
     "reaction.json": "9dd1e39670a98342f067dbb62de8cadb3ef4123b84f07625f25de6b3f87b804a",
     "reaction.xyz": "661461d03037ae8e797a563e93435b28b03686f491441d3cb71a5f6d7896644c",
-    "source-manifest.json": "b47ef343dcb57eec2d6f90aee651b4ca467ad57dfc0861f3f7d57d5651adf045",
+    "source-manifest.json": "bd7ec93b8f93b4b35561212232d4d9a5039e661388fb043b1798f9c1fd80af46",
     "vasp-render-source.tar.gz": "cfa4540401c6c7e5f658fc02d12f7834fcf1c99170af8fb285a366dad78e91c1",
     "vasprun.example.xml": "07044e51565165a8bad4dd24d5bbe1ecc679d651b6f61268296fa8d61188de6f",
     "cage.xyz": "a8716236ccec1ce35b438cf2ea44422eca1a0e4cdc671f3efff00db8689b99af",
@@ -448,6 +449,9 @@
     "single-face.json": "f071164c2fe1bf67d281d0da60cba6f3c6b0c58b4553b9a1e6aaa77ecb7c5612",
     "LTA.cif": "fe090b64a2101c211d8d3868307a9c4764fbb5ecdcb5e6f91a1486a12ca4a146",
     "zeolite-provenance.md": "697ff7278c98c6444c5b67081ea2a336bd8819581a1f8108c9b5abe4e46811a1",
+    "nh3.xyz": "4f0a654103b6c7ae9e7a5fd27c21f109e32895c414b8d950a43e093bac684c36",
+    "benzene.xyz": "a86b5cb8839de29cd91fe68dd678c8c381c05b89a5c9dedcdb2ab231b7256c34",
+    "ethane.xyz": "dd9a51b62fffcb1635ec66201cfdf4b7f06781cfeb3ece38190606f307547030",
     "source-highlight.json": "3633baa106a669d188529789a09fb9acf6624bfa4b9250fcdf7ace6a3bf06764",
     "cell-highlight.json": "d455de2b095a470aca2406c0d18c2318a2c6ec5931c4ec2c55e48f1fa57190c0",
     "highlight-job.json": "322b24a99259992b109b0cdc675bfb30c16a04b558eef9533aae3306a197301c",
@@ -457,6 +461,10 @@
     "ring-bonds.json": "6cffac757759ae91acbcb505fa1a1ba7a18483ff0a4eb3ea6c4638eee4dc22fb",
     "thin-bonds.json": "15abf8aa3d601b1e672acc9ff8b72e181cb963ec1cd1a878484f4b4e3c445a4a",
     "thick-bonds.json": "8c61441f1c00253e29eb449e043d6578e8e2290b372850459a9e41b6509911e6",
-    "cell-contour.json": "f4d021cbddd81b32bf8874594226533a60738df5a071ec8cb9d4de117d817b86"
+    "cell-contour.json": "f4d021cbddd81b32bf8874594226533a60738df5a071ec8cb9d4de117d817b86",
+    "symmetry-axis.json": "808887bc058af26b7086f38af76a88767654d4793a177f247d8aa852c22fcb00",
+    "symmetry-plane.json": "ed5bbc0218a3a9e80afb1931cc09613799844c8029de716e13fbd1ab29728e11",
+    "symmetry-improper.json": "1837bb93a971dabd785e0e18dbe154328e64bca85f7b96f21022cba52a94d651",
+    "symmetry-inversion.json": "9f31d71d93d36dac213d6219602d93811b9e0a6f0242378d737a4fd6472a27db"
   }
 }
