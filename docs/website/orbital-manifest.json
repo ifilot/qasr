@@ -1,6 +1,6 @@
 {
   "build_info": {
-    "version": "0.8.0",
+    "version": "0.8.1",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
@@ -78,6 +78,6 @@
     "examples/orbitals/requirements.txt": "90c19473d8dd4556b13117a3a9031d43a73d5360beae3398b41e8dc1036a2b04"
   },
   "downloads": {
-    "co-orbitals.zip": "b1d21eae337e309510bfe785c4559ff2b93f4dc9a43ec7b0172d6d0f28d9dcdd"
+    "co-orbitals.zip": "a972bbe82be0410b1fd4b37533fe019701f193865b093cabbec73c1126062db1"
   }
 }

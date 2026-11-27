@@ -61,6 +61,11 @@
             "cairo"
           ]
         },
+        "shade_bands": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
         "depth_fade": {
           "type": "number",
           "minimum": 0,

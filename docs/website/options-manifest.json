@@ -1,6 +1,6 @@
 {
-  "version": "0.8.0",
-  "executable_sha256": "96077547587dff1063814bcdb0ea85c9b8b0e85ee6260667edf853ef48074418",
+  "version": "0.8.1",
+  "executable_sha256": "2f521ca752bd38cd5670a9509777ff99c374dc9ee779581090220b34b2c71bb3",
   "documented_flags": [
     "--",
     "--aa",
@@ -55,6 +55,7 @@
     "--report",
     "--scale-bar",
     "--schema",
+    "--shade-bands",
     "--species",
     "--sphere-scale",
     "--style",
@@ -257,6 +258,17 @@
       "values": "0\u20138 output pixels; default 1",
       "description": "Adjust illustrated, ORTEP and BALSAC contours. Zero removes the contours and ORTEP arcs.",
       "example": "qasr examples/CONTCAR.co --no-user-config --config examples/illustrated.json --outline-width 1.5 -o structure.png",
+      "note": ""
+    },
+    {
+      "group": "appearance",
+      "flags": [
+        "--shade-bands"
+      ],
+      "title": "Set the illustrated shade count",
+      "values": "1\u20138 bands; default 3",
+      "description": "Set the number of flat shades on atoms and orbital surfaces in the illustrated style. One band uses a single midtone.",
+      "example": "qasr examples/CONTCAR.co --no-user-config --style illustrated --shade-bands 5 -o structure.png",
       "note": ""
     },
     {
@@ -902,7 +914,7 @@
     }
   ],
   "files": {
-    "options.html": "2b8a7ae0b1065d75ab4e8e839da2b3fefbf47969f1967389d52531919ef0ea41",
+    "options.html": "656b78877e8830aa0edc0e75006321d67d24de956f65848edb54964a723904cf",
     "options.js": "b23888142db0896afec9bbe58fc4964bef719ba42f70186f410e4198d98033ea",
     "downloads/cage.xyz": "a8716236ccec1ce35b438cf2ea44422eca1a0e4cdc671f3efff00db8689b99af",
     "downloads/ring.xyz": "db8aef80e27ff164c4bf90257128331fbc7bc6daebfb89ad45dfb48c33907639",

@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "render.h"
+#include "illustrated.h"
 #include "surface_render.h"
 #include "overlay.h"
 #include "vec.h"
@@ -59,14 +60,16 @@ static void project(const FaceTriangle *f, const Camera *camera, size_t factor, 
     p->bottom=(size_t)fmin(height,fmax(0,floor(bottom)));p->top=(size_t)fmin(height,fmax(0,ceil(top)));
 }
 /** @brief Shade the nearest opaque mesh hit with interpolated unit normals.
- * @param[in] c Validated style and antialiasing settings.
+ * @param[in] bands Illustrated palette, borrowed for band_count entries.
+ * @param[in] band_count Zero for smooth shading.
  * @param[in] p Nondegenerate projected mesh triangle covering x/y.
  * @param[in] x Sample center in supersampled pixels.
  * @param[in] y Upward sample center in supersampled pixels.
  * @param[in] ink Whether the independently computed contour covers this sample.
  * @param[out] out Four caller-owned straight-alpha channels; alpha is 255.
  */
-static void surface_color(const Config *c, const ProjectedFace *p, double x, double y, bool ink, uint8_t out[4])
+static void surface_color(const IllustratedBand *bands, size_t band_count,
+                          const ProjectedFace *p, double x, double y, bool ink, uint8_t out[4])
 {
     double w[3];
     for (size_t k=0;k<3;++k) {size_t edge=(k+1)%3;w[k]=(p->a[edge]*x+p->b[edge]*y+p->c[edge])/p->area;}
@@ -76,10 +79,10 @@ static void surface_color(const Config *c, const ProjectedFace *p, double x, dou
     if (norm<1e-12) n=(Vec3){{0,0,1}};else n=vmul(n,1/norm);
     if (n.x[2]<0) n=vmul(n,-1);
     double diffuse=fmax(0,dot(n,unit((Vec3){{-.4,.6,1}}))),shade=.25+.75*diffuse,white=0;
-    if (c->style==STYLE_ILLUSTRATED) {
-        shade=.82;
-        if (diffuse>.5) {shade=.90;white=.10;}
-        if (diffuse>.92) {shade=.45;white=.55;}
+    if (band_count) {
+        size_t band=band_count-1;
+        while (band>0 && diffuse<=bands[band].diffuse_threshold) --band;
+        shade=bands[band].shade;white=bands[band].white;
     }
     for (size_t d=0;d<3;++d) out[d]=ink ? 0 : channel(p->face->color[d]*shade+255*white);
     out[3]=255;
@@ -128,6 +131,8 @@ bool faces_render_samples(const Config *c, const Scene *s, const Camera *camera,
     if (c->labels && s->triangle_count && s->atom_count>VR_MAX_CANDIDATES/VR_LABEL_SAMPLES/s->triangle_count)
         return fail(e,6,"polygon label visibility exceeds work budget");
     bool mesh=c->orbital_count!=0;
+    IllustratedBand bands[VR_MAX_SHADE_BANDS];
+    size_t band_count=mesh && c->style==STYLE_ILLUSTRATED ? illustrated_bands(c->shade_bands,bands) : 0;
     bool outlined=mesh && c->style!=STYLE_SHADED && c->outline_width>0;
     size_t bytes=s->triangle_count*sizeof(ProjectedFace)+(tiles+1)*sizeof(size_t)+tiles*sizeof(size_t)+
                  (mesh ? width*height*sizeof(uint32_t) : 0)+(outlined ? width*height*sizeof(float) : 0);
@@ -219,7 +224,7 @@ bool faces_render_samples(const Config *c, const Scene *s, const Camera *camera,
                 }
                 if (surface) {
                     bool ink=outlined && contours[index]<=c->outline_width*(double)factor;
-                    surface_color(c,surface,(double)x+.5,(double)y+.5,ink,surface_rgba);
+                    surface_color(bands,band_count,surface,(double)x+.5,(double)y+.5,ink,surface_rgba);
                     /* An opaque mesh replaces all deeper layers. */
                     size_t kept=0;
                     for (size_t h=0;h<count;++h) if (hits[h].z>=surface_z) hits[kept++]=hits[h];

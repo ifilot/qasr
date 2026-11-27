@@ -1,6 +1,6 @@
 [![Compilation status](https://github.com/ifilot/qasr/actions/workflows/image-libs.yml/badge.svg?branch=master)](https://github.com/ifilot/qasr/actions/workflows/image-libs.yml)
 [![Language: C11](https://img.shields.io/badge/language-C11-blue.svg)](CMakeLists.txt)
-[![Version: 0.8.0](https://img.shields.io/badge/version-0.8.0-blue.svg)](https://github.com/ifilot/qasr/tree/v0.8.0)
+[![Version: 0.8.1](https://img.shields.io/badge/version-0.8.1-blue.svg)](docs/release-v0.8.1.md)
 
 # QASR: Quick Atomic Structure Renderer
 
@@ -25,7 +25,7 @@ QASR turns atomic structures into images from the command line, without a graphi
 See the [documentation index](docs/README.md) for current guides and archived
 release/validation records. The [user handbook](https://ifilot.github.io/qasr/) covers detailed usage,
 [supported input formats](docs/input-formats.md) and [drawing styles](docs/render-styles.md).
-See the [v0.8.0 release notes](docs/release-v0.8.0.md) for changes and limitations.
+See the [v0.8.1 release notes](docs/release-v0.8.1.md) for changes and limitations.
 See the [feature performance report](docs/performance-features.md) for the
 polygon, cell-line and movie optimization measurements and reproduction steps.
 

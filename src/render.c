@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "render.h"
+#include "illustrated.h"
 #include "overlay.h"
 #include "vec.h"
 #include <float.h>
@@ -200,7 +201,8 @@ static bool circle_crosses(double x, double y, double r, double x0, double y0, d
  * center ray. Every ambiguous overlap, bond, cell edge, silhouette or illustrated
  * band edge keeps all four independent depth samples. Primitive center ordering
  * never proves visibility. Shaded interior approximation is experimental. */
-static uint8_t *adaptive_tiles(const Config *c, const Scene *s, const Camera *camera, Error *e)
+static uint8_t *adaptive_tiles(const Config *c, const Scene *s, const Camera *camera,
+                               const IllustratedBand *bands, size_t band_count, Error *e)
 {
     size_t columns=(c->width+AA_TILE-1)/AA_TILE, rows=(c->height+AA_TILE-1)/AA_TILE;
     size_t count=columns*rows;
@@ -259,10 +261,15 @@ static uint8_t *adaptive_tiles(const Config *c, const Scene *s, const Camera *ca
         double lower=a.x[2]+sqrt(r*r-dx*dx-dy*dy)/camera->scale;
         double tie=32*DBL_EPSILON*fmax(1,fmax(fabs(lower),fabs(second[k])));
         if (lower<=second[k]+tie) continue;
-        if (c->style==STYLE_ILLUSTRATED &&
-            (circle_crosses(a.x[0],a.x[1],fmax(0,r-c->outline_width),x0,y0,x1,y1) ||
-             circle_crosses(a.x[0]+0.10*r,a.x[1]+0.10*r,0.88*r,x0,y0,x1,y1) ||
-             circle_crosses(a.x[0]+0.16*r,a.x[1]+0.18*r,0.47*r,x0,y0,x1,y1))) continue;
+        if (band_count) {
+            if (circle_crosses(a.x[0],a.x[1],fmax(0,r-c->outline_width),x0,y0,x1,y1)) continue;
+            size_t band=1;
+            for (;band<band_count;++band) {
+                const IllustratedBand *b=&bands[band];
+                if (circle_crosses(a.x[0]+b->x*r,a.x[1]+b->y*r,b->radius*r,x0,y0,x1,y1)) break;
+            }
+            if (band<band_count) continue;
+        }
         native[k]=1;++selected;
     }
     if (c->benchmark) fprintf(stderr,"adaptive_native_tiles=%zu adaptive_total_tiles=%zu\n",selected,count);
@@ -446,7 +453,9 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
         release_samples(workspace,depth,rgba);free(pixels);free(projected);free(visible);
         return fail(e,6,"image allocation failed");
     }
-    uint8_t *native_tiles=adaptive ? adaptive_tiles(c,s,camera,e) : NULL;
+    IllustratedBand bands[VR_MAX_SHADE_BANDS];
+    size_t band_count=c->style==STYLE_ILLUSTRATED ? illustrated_bands(c->shade_bands,bands) : 0;
+    uint8_t *native_tiles=adaptive ? adaptive_tiles(c,s,camera,bands,band_count,e) : NULL;
     if (adaptive && !native_tiles) {release_samples(workspace,depth,rgba);free(pixels);free(projected);free(visible);return false; }
     if (c->adaptive_aa && !adaptive && c->benchmark) fprintf(stderr,"adaptive_native_tiles=0 adaptive_total_tiles=%zu\n",((c->width+AA_TILE-1)/AA_TILE)*((c->height+AA_TILE-1)/AA_TILE));
     const size_t tile_columns=(c->width+AA_TILE-1)/AA_TILE;
@@ -556,15 +565,13 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
                 if (c->style==STYLE_ILLUSTRATED) {
                     if (p->kind==SPHERE) {
                         double dx=(sx-a.x[0])/r, dy=(sy-a.x[1])/r;
-                        /* Offset solid disks form a colored rim and a pale circular
-                         * highlight. Intersection depth stays the actual sphere surface. */
-                        shade=0.82;
-                        if ((dx-0.10)*(dx-0.10)+(dy-0.10)*(dy-0.10)<0.88*0.88) {
-                            shade=0.90; white=0.10;
+                        size_t band=band_count-1;
+                        for (;band>0;--band) {
+                            const IllustratedBand *b=&bands[band];
+                            double bx=dx-b->x, by=dy-b->y;
+                            if (bx*bx+by*by<b->radius*b->radius) break;
                         }
-                        if ((dx-0.16)*(dx-0.16)+(dy-0.18)*(dy-0.18)<0.47*0.47) {
-                            shade=0.45; white=0.55;
-                        }
+                        shade=bands[band].shade;white=bands[band].white;
                         ink=c->outline_width>0 && dx*dx+dy*dy>=inner*inner;
                     } else if (p->kind==CYLINDER) {
                         shade=0.64;

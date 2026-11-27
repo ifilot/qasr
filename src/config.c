@@ -319,6 +319,7 @@ static bool settings_group(const cJSON *group, const char *name, Config *c, Erro
         bool valid = false;
         if (!strcmp(name, "image")) {
             if (!strcmp(k,"style")) valid=cJSON_IsString(j) && style(j->valuestring,&c->style);
+            else if (!strcmp(k,"shade_bands")) valid=size_json(j,VR_MAX_SHADE_BANDS,&c->shade_bands);
             else if (!strcmp(k,"tone")) valid=cJSON_IsString(j) && tone(j->valuestring,&c->tone);
             else if (!strcmp(k,"aa")) valid=cJSON_IsString(j) && antialias(j->valuestring,c);
             else if (!strcmp(k,"backend")) valid=cJSON_IsString(j) && backend(j->valuestring,&c->backend);
@@ -622,7 +623,7 @@ static const char *cli_path(const char *k)
     static const char *pairs[][2]={
         {"--width","image.width"},{"--height","image.height"},{"--background","image.background"},
         {"--style","image.style"},{"--aa","image.aa"},{"--backend","image.backend"},
-        {"--tone","image.tone"},
+        {"--tone","image.tone"},{"--shade-bands","image.shade_bands"},
         {"--png-encoder","image.png_encoder"},{"--png-filter","image.png_filter"},{"--png-compression","image.png_compression"},
         {"--outline-width","image.outline_width"},{"--view","camera.view"},{"--up","camera.up"},
         {"--repeat","geometry.repeat"},{"--expand-xy","geometry.expand_xy"},{"--image-colors","geometry.image_colors"},
@@ -788,6 +789,7 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
     c->view = (Vec3){{1, 1, 1}}; c->up = (Vec3){{0, 0, 1}};
     c->margin = 0.06; c->sphere_scale = 1; c->bond_radius = 0.12;
     c->outline_width=1;
+    c->shade_bands=VR_DEFAULT_SHADE_BANDS;
     c->cell_width=2;
     c->cell_dash_length=8;c->cell_dash_gap=5;
     strcpy(c->cell_color,"#464646");
@@ -872,6 +874,7 @@ static bool parse_config(int argc, char **argv, const cJSON *request, Config *c,
         else if (!strcmp(k, "--expand-xy")) ok = expand_text(v, c->expand_xy);
         else if (!strcmp(k, "--image-colors")) ok = image_style(v, &c->image_colors);
         else if (!strcmp(k,"--style")) ok=style(v,&c->style);
+        else if (!strcmp(k,"--shade-bands")) ok=integer(v,VR_MAX_SHADE_BANDS,&c->shade_bands) && c->shade_bands;
         else if (!strcmp(k,"--tone")) ok=tone(v,&c->tone);
         else if (!strcmp(k,"--aa")) ok=antialias(v,c);
         else if (!strcmp(k,"--backend")) ok=backend(v,&c->backend);

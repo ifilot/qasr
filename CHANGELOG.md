@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## [0.8.1] - 2026-11-27
+
+- Set the illustrated shade count for atom spheres and orbital surfaces with
+  `--shade-bands N` or `image.shade_bands`. The range is 1–8 and the default is 3.
+
 ## [0.8.0] - 2026-11-18
 
 - Draw the element of one point-group symmetry operation per image: a rod for

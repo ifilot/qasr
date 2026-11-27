@@ -61,6 +61,7 @@
       "tone": "color",
       "aa": "2x",
       "backend": "zbuffer",
+      "shade_bands": 3,
       "depth_fade": 0,
       "outline_width": 1,
       "png_encoder": "libdeflate",

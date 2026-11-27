@@ -6,6 +6,8 @@
 struct cJSON;
 
 #define VR_MAX_ATOM_RULES 4096u
+#define VR_MAX_SHADE_BANDS 8u
+#define VR_DEFAULT_SHADE_BANDS 3u
 #define VR_CONFIG_MEMORY_LIMIT ((size_t)67108864)
 typedef struct {
     unsigned element;
@@ -90,6 +92,7 @@ typedef struct {
     char cell_color[10];
     char background[10];
     RenderStyle style;
+    size_t shade_bands;
     RenderTone tone;
     RenderBackend backend;
     PngOptions png;

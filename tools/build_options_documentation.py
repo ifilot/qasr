@@ -81,6 +81,9 @@ add('appearance', '--aa', 'Smooth image edges', 'native, 2x (default), 4x, adapt
 add('appearance', '--outline-width', 'Set atom and bond ink width', '0–8 output pixels; default 1',
     'Adjust illustrated, ORTEP and BALSAC contours. Zero removes the contours and ORTEP arcs.',
     render('--config examples/illustrated.json --outline-width 1.5'))
+add('appearance', '--shade-bands', 'Set the illustrated shade count', '1–8 bands; default 3',
+    'Set the number of flat shades on atoms and orbital surfaces in the illustrated style. One band uses a single midtone.',
+    render('--style illustrated --shade-bands 5'))
 add('appearance', '--backend', 'Choose the rendering backend', 'zbuffer (default), cairo',
     'The Z-buffer resolves intersecting surfaces and supports the full drawing interface. Cairo is an optional experimental painter with depth and feature limitations.',
     render('--backend zbuffer'), 'Cairo requires a special build and does not support every style, polygon faces, annotations or multiple render threads.')
@@ -256,7 +259,7 @@ EXTRA_FIELDS = {
     'atom_overrides[].color': ('Replace the matched atom color; later rules take precedence.', '"#ee6633"'),
     'atom_overrides[].radius_A': ('Replace the matched atom display radius in Å.', '0.95'),
 }
-CLI_FIELDS = {'image.'+x: '--'+x.replace('_','-') for x in ['width','height','background','style','tone','aa','backend','outline_width','png_encoder','png_filter','png_compression']}
+CLI_FIELDS = {'image.'+x: '--'+x.replace('_','-') for x in ['width','height','background','style','shade_bands','tone','aa','backend','outline_width','png_encoder','png_filter','png_compression']}
 CLI_FIELDS.update({'camera.view':'--view','camera.up':'--up','geometry.repeat':'--repeat','geometry.expand_xy':'--expand-xy','geometry.image_colors':'--image-colors','geometry.sphere_scale':'--sphere-scale','geometry.bond_radius_A':'--bond-radius','geometry.bond_colors':'--bond-colors'})
 CLI_FIELDS.update({'overlays.'+x:'--'+x.replace('_','-') for x in ['cell','cell_width','cell_style','cell_color','cell_outline_width','cell_dash_length','cell_dash_gap','labels','axes','legend','scale_bar']})
 FACE_HELP = {

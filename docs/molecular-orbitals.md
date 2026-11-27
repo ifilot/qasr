@@ -42,6 +42,11 @@ Degenerate zero-area triangles are skipped.
 
 `illustrated` uses flat color bands, pale highlights and dark silhouettes in the
 same visual family as the atoms, without outlining internal triangle edges.
+Use `--shade-bands 5` or set `image.shade_bands` to 5 in your recipe to change
+the number of shades for orbital surfaces and atoms. The range is 1–8 and the
+default is 3. A setting of 1 uses a single midtone. Outlines are controlled
+separately by `outline_width`.
+
 Silhouette and phase contours use a screen-space coverage distance transform,
 so noisy imported normals affect lighting rather than outline width. Same-phase
 self-occlusion contours compare neighboring geometric depth planes, with depth

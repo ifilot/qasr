@@ -74,6 +74,19 @@ class Orbitals(unittest.TestCase):
         self.assertEqual(self.scene()['orbital_triangles'],2)
         self.assertEqual(self.render(1),self.render(4))
 
+    def test_illustrated_shade_count(self):
+        shadow=(.4,-.6,.05)
+        light=(-.4,.6,1)
+        ply(self.mesh,normal_values=[shadow,light,light,shadow])
+        self.config['elements']['H']['color']='#ff000000'
+        self.config['image'].update(aa='native',outline_width=0)
+        for count in (1,2,3,5,8):
+            with self.subTest(count=count):
+                self.config['image']['shade_bands']=count
+                pixels=self.render()[2]
+                colors={pixels[i:i+4] for i in range(0,len(pixels),4)}-{b'\xff'*4}
+                self.assertEqual(len(colors),count)
+
     def test_contours_ignore_normal_noise_and_preserve_internal_diagonal(self):
         # A flat patch has the same silhouette even if its supplied lighting
         # normals vary strongly. Normal derivatives must never create ink inside.

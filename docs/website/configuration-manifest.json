@@ -1,8 +1,8 @@
 {
-  "availability": "qasr 0.8.0 release",
-  "executable_sha256": "96077547587dff1063814bcdb0ea85c9b8b0e85ee6260667edf853ef48074418",
+  "availability": "qasr 0.8.1 release",
+  "executable_sha256": "2f521ca752bd38cd5670a9509777ff99c374dc9ee779581090220b34b2c71bb3",
   "build_info": {
-    "version": "0.8.0",
+    "version": "0.8.1",
     "config_schema_version": 1,
     "user_config": true,
     "atom_overrides": true,
@@ -23,18 +23,18 @@
     "ffmpeg": false
   },
   "files": {
-    "batch.html": "f5504fc3475119b829c4b60afe837581250ac018e68b794383ac36b2a3e7d792",
+    "batch.html": "b2d539a36dd5a4b2d7aee608286888420be8d45fd17ed029f58ca02a1d8d8129",
     "downloads/worker-requests.jsonl": "5fcc29a169efde676dab7af98b234ddcdc1a7b07339e33756510442006e18266",
-    "schemas/config.schema.json": "fb210ef8230a7ea553b65993c0f496850a3ca07bfa3879462379829e8ab97a05",
+    "schemas/config.schema.json": "f96fa8cbc81d4939e656814f4ffb64442d07e2f45f3ea5667ec418f37306bff5",
     "schemas/faces.schema.json": "31d2fab25cfbdacd9b5fd65d2b60fd560941148c1ac32992896f7e486824d360",
-    "schemas/job.schema.json": "88a2b45ebc270fd72806f566a1665f720c2dd0fc0a2c77d87e7c677eb0fb186b",
-    "schemas/user.schema.json": "1d15b879ec1c80693c2423dd7e4719787e1d08baf60ab2e067788828bd30193a",
-    "schemas/worker.schema.json": "adcf9939f0d7b800390ae5636286170899c4146c866083145c655ebff48f65a1",
+    "schemas/job.schema.json": "336172594a7d9203c2d485e8e946830ec20aec62a97e2061b211b0ac330eeade",
+    "schemas/user.schema.json": "53b4e7c7dfa9f1645f643698e1383c46dc69be980de40da2d54c3675e683c3a4",
+    "schemas/worker.schema.json": "ef811ae23d1641b06b43a8162facbc1ca57953906fd4487dc95f7a29aea79fd1",
     "downloads/source-highlight.json": "3633baa106a669d188529789a09fb9acf6624bfa4b9250fcdf7ace6a3bf06764",
     "downloads/cell-highlight.json": "d455de2b095a470aca2406c0d18c2318a2c6ec5931c4ec2c55e48f1fa57190c0",
     "downloads/highlight-job.json": "322b24a99259992b109b0cdc675bfb30c16a04b558eef9533aae3306a197301c",
-    "downloads/qasr-source.tar.gz": "159655e2bd69dca5fa7f34ebdd63ad76cb9cbcb46c7d1b67581837ecfef0f74e",
-    "downloads/source-manifest.json": "bd7ec93b8f93b4b35561212232d4d9a5039e661388fb043b1798f9c1fd80af46",
+    "downloads/qasr-source.tar.gz": "6c41f15008e1e09d36abb150c6a24989a7888d41134d67d9f785b2790d53855b",
+    "downloads/source-manifest.json": "7a1c932b496df113bee579cb011df60a6dbd9e78577fa8224d73f30db5f0c240",
     "assets/source-highlight.png": "90785b1765cf0a7a0f759450c4e44dcd1c867e1db27bc8306a162d2ad34a7398",
     "assets/cell-highlight.png": "449a56f6443abc7665baed5224bcf64d7ae53e5e16fc42085e6e6fa5988698aa"
   },

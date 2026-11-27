@@ -351,6 +351,21 @@ class SceneTests(unittest.TestCase):
             self.assertIn(bytes(color),colors)
         self.assertLess(len(colors),40)
         self.assertEqual(pixels,self.render(text,cfg)[2])
+        cfg["image"].update(aa="native",outline_width=0)
+        for count in (1,2,3,5,8):
+            with self.subTest(count=count):
+                cfg["image"]["shade_bands"]=count
+                pixels=self.render(text,cfg)[2]
+                colors={pixels[i:i+4] for i in range(0,len(pixels),4)}-{b'\xff'*4}
+                self.assertEqual(len(colors),count)
+        dump=json.loads(self.invoke(text,"--dump-config","--shade-bands","4",config=cfg).stdout)
+        self.assertEqual(dump["config"]["image"]["shade_bands"],4)
+        self.assertEqual(dump["provenance"]["image.shade_bands"]["layer"],"cli")
+        for invalid in ("0","9","2.5"):
+            self.invoke(text,"--dump-config","--shade-bands",invalid,code=2)
+        cfg["image"]["shade_bands"]=2.5
+        self.invoke(text,"--dump-config",config=cfg,code=2)
+        del cfg["image"]["shade_bands"]
         self.invoke(text,"--inspect","--style","unknown",code=2)
         settings=json.loads(self.invoke(text,"--inspect","--style","shaded",config=cfg).stdout)["settings"]
         self.assertEqual(settings["image"]["style"],"shaded")

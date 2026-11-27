@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 #include "render.h"
+#include "illustrated.h"
 #include "vec.h"
 #include <cairo.h>
 #include <float.h>
@@ -50,16 +51,18 @@ static void circle(cairo_t *cr, double x, double y, double radius)
     cairo_arc(cr,x,y,radius,0,6.2831853071795864769);
 }
 
-static void paint_sphere(cairo_t *cr, const Config *c, const PaintPrimitive *p)
+static void paint_sphere(cairo_t *cr, const Config *c, const PaintPrimitive *p,
+                         const IllustratedBand *bands, size_t band_count)
 {
     double x=p->a.x[0], y=p->a.x[1], r=p->radius;
     cairo_save(cr);circle(cr,x,y,r);cairo_clip(cr);
-    if (c->style==STYLE_ILLUSTRATED) {
-        paint_color(cr,p,0.82,0);cairo_paint(cr);
-        paint_color(cr,p,0.90,0.10);
-        circle(cr,x+0.10*r,y-0.10*r,0.88*r);cairo_fill(cr);
-        paint_color(cr,p,0.45,0.55);
-        circle(cr,x+0.16*r,y-0.18*r,0.47*r);cairo_fill(cr);
+    if (band_count) {
+        paint_color(cr,p,bands[0].shade,bands[0].white);cairo_paint(cr);
+        for (size_t i=1;i<band_count;++i) {
+            const IllustratedBand *b=&bands[i];
+            paint_color(cr,p,b->shade,b->white);
+            circle(cr,x+b->x*r,y-b->y*r,b->radius*r);cairo_fill(cr);
+        }
         if (c->outline_width>0) {
             cairo_set_source_rgba(cr,0,0,0,(double)p->primitive->color[3]/255);
             cairo_set_line_width(cr,2*c->outline_width);
@@ -166,9 +169,11 @@ bool render_cairo(const Config *c, const Scene *s, const Camera *camera, size_t 
     uint8_t background[4];decode_color(c->background,background);
     cairo_set_source_rgba(cr,(double)background[0]/255,(double)background[1]/255,(double)background[2]/255,(double)background[3]/255);
     cairo_set_operator(cr,CAIRO_OPERATOR_SOURCE);cairo_paint(cr);cairo_set_operator(cr,CAIRO_OPERATOR_OVER);
+    IllustratedBand bands[VR_MAX_SHADE_BANDS];
+    size_t band_count=c->style==STYLE_ILLUSTRATED ? illustrated_bands(c->shade_bands,bands) : 0;
     for (size_t i=0;i<s->count;++i) {
         if (!items[i].primitive->color[3]) continue;
-        if (items[i].primitive->kind==SPHERE) paint_sphere(cr,c,&items[i]);
+        if (items[i].primitive->kind==SPHERE) paint_sphere(cr,c,&items[i],bands,band_count);
         else paint_cylinder(cr,c,&items[i]);
     }
     cairo_status_t status=cairo_status(cr);

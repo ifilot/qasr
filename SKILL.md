@@ -45,7 +45,9 @@ must not be parallel to the view. `--cell off` removes cell/vacuum extents from
 camera fitting. Default output is 512×512 with 2× supersampling. Use
 `--aa native` for previews or `--aa 4x` for more sampling.
 
-Styles are `shaded`, `illustrated`, `ortep` and `balsac`. ORTEP draws spherical
+Styles are `shaded`, `illustrated`, `ortep` and `balsac`. In `illustrated`,
+`--shade-bands N` or `image.shade_bands` sets 1–8 shades for atoms and orbital
+surfaces, with a default of 3. ORTEP draws spherical
 arcs, not thermal ellipsoids. ORTEP/BALSAC accept `--tone monocolor|dualtone`;
 `color` uses the ordinary palette. The Z-buffer backend supports the full feature
 set. The experimental Cairo painter has style, annotation and depth limitations.

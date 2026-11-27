@@ -46,9 +46,9 @@ class InputTests(unittest.TestCase):
         return path
 
     def test_help_and_version(self):
-        self.assertIn("qasr 0.8.0", self.run_cli("--help").stdout)
+        self.assertIn("qasr 0.8.1", self.run_cli("--help").stdout)
         self.assertIn("QASR: Quick Atomic Structure Renderer", self.run_cli("--help").stdout)
-        self.assertEqual("qasr 0.8.0\n", self.run_cli("--version").stdout)
+        self.assertEqual("qasr 0.8.1\n", self.run_cli("--version").stdout)
 
     def test_skewed_direct_and_species_order(self):
         result = self.data(self.poscar)
@@ -247,7 +247,7 @@ class InputTests(unittest.TestCase):
         for options in [("--width", "128", "--config", cfg), ("--config", cfg, "--width", "128")]:
             settings = self.data(self.poscar, *options)["settings"]
             capabilities=json.loads(subprocess.check_output([str(EXE),"--build-info"],text=True))
-            self.assertEqual(settings["image"], {"width": 128, "height": 512, "background": "#abcdef80", "style":"shaded", "tone":"color", "aa":"2x", "backend":"zbuffer", "depth_fade":0, "outline_width":1,
+            self.assertEqual(settings["image"], {"width": 128, "height": 512, "background": "#abcdef80", "style":"shaded", "tone":"color", "aa":"2x", "backend":"zbuffer", "shade_bands":3, "depth_fade":0, "outline_width":1,
                                                 "png_encoder":"libdeflate" if capabilities["libdeflate"] else "libpng",
                                                 "png_filter":"none" if capabilities["libdeflate"] else "adaptive",
                                                 "png_compression":"auto" if capabilities["libdeflate"] else 1})
