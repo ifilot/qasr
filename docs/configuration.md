@@ -163,6 +163,22 @@ times. The configuration hash covers the unformatted resolved config JSON
 produced by cJSON, excluding runtime paths. Full rules, element tables and cutoff
 maps are available in `--dump-config`, not repeated in each report.
 
+For a fixed camera (`camera.extent_A` greater than zero), `clipping` has
+`fixed_window`, `any`, `atoms`, `bonds`, `orbital_triangles` and `faces`
+booleans. The geometry flags test whether a nontransparent projected primitive
+extends beyond the image, including geometry entirely outside it or hidden
+behind other geometry. Fully transparent framing faces are ignored. With
+automatic fitting, all clipping flags are false. `ink_bbox_px` is
+`[left, top, right, bottom]` in output pixels, with an upper-left origin and
+exclusive right and bottom coordinates. It covers every pixel with alpha
+greater than zero after antialiasing and overlays. It is null for a fully
+transparent image and spans the full image with an opaque background.
+
+Set `"camera": {"extent_A": 3.224, "center_A": [0, 0, 0], "margin": 0,
+"clip": "error"}` to reject clipped fixed-window frames. The default
+`"allow"` writes clipped frames as usual. An error exits with code 5
+(`camera_clipped` in JSON) before replacing the image or its report.
+
 Stage times exclude startup, JSON report encoding, output hashing and report
 writing. Input hashing is included in `parse` when a report is requested. PNG
 compression is resolved for its destination. Report paths must differ from

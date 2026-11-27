@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """PLY interoperability, dimensional conversion, visibility and cache checks."""
 import copy
+import hashlib
 import json
 from pathlib import Path
 import struct
@@ -73,6 +74,57 @@ class Orbitals(unittest.TestCase):
         self.assertNotEqual(center[:3],b'\x00\x00\x00')
         self.assertEqual(self.scene()['orbital_triangles'],2)
         self.assertEqual(self.render(1),self.render(4))
+
+    def test_fixed_window_coverage_and_clip_error(self):
+        self.config['image']['background']='#00000000'
+        self.config['camera'].update(extent_A=1,center_A=[0,0,0],margin=0)
+        self.source.write_text('2\nclipped bond\nH 0 0 0\nH 0.8 0 0\n')
+        self.config['bond_cutoffs_A']={'H-H':1}
+        self.config['faces']=[{'vertices':[[0,0,0],[0,0.9,0],[0.3,0,0]],'color':'#05f8ff'}]
+        result=json.loads(self.run_cli('-o',self.output,'--report','-').stdout)
+        self.assertEqual(result['clipping'],dict(fixed_window=True,any=True,atoms=True,bonds=True,
+                                                 orbital_triangles=True,faces=True))
+        width,height,pixels=decode_png(self.output)
+        ink=[(i%width,i//width) for i in range(width*height) if pixels[4*i+3]]
+        x,y=zip(*ink)
+        self.assertEqual(result['ink_bbox_px'],[min(x),min(y),max(x)+1,max(y)+1])
+        self.config['camera']['clip']='error'
+        original=self.output.read_bytes()
+        report=self.dir/'report.json'
+        error=self.run_cli('-o',self.output,'--report',report,'--json-errors',code=5)
+        self.assertEqual(json.loads(error.stderr)['error']['code'],'camera_clipped')
+        self.assertEqual(self.output.read_bytes(),original)
+        self.assertFalse(report.exists())
+        self.config['camera']['extent_A']=4
+        result=json.loads(self.run_cli('-o',self.output,'--report','-').stdout)
+        self.assertFalse(result['clipping']['any'])
+        self.config['camera']['center_A']=[10,10,0]
+        self.config['camera']['clip']='allow'
+        result=json.loads(self.run_cli('-o',self.output,'--report','-').stdout)
+        self.assertTrue(result['clipping']['any'])
+        self.assertIsNone(result['ink_bbox_px'])
+
+    def test_png_identical_across_mesh_thread_counts(self):
+        caps=json.loads(subprocess.check_output([EXE,'--build-info'],text=True))
+        if not caps['openmp']:
+            self.skipTest('OpenMP build required')
+        self.config['image'].update(width=521,height=513,background='#ffffff00')
+        self.config['image']['outline_width']=3.3
+        self.config['camera'].update(extent_A=2,margin=0)
+        for aa in ['4x','adaptive']:
+            self.config['image']['aa']=aa
+            hashes=[]
+            for threads in [1,8,'auto']:
+                self.run_cli('-o',self.output,'--threads',threads)
+                hashes.append(hashlib.sha256(self.output.read_bytes()).hexdigest())
+            self.assertEqual(hashes,[hashes[0]]*3)
+
+    def test_validate_large_4x_orbital_image(self):
+        self.config['image'].update(width=2133,height=2133,aa='4x')
+        error=self.run_cli('--validate-config',code=6)
+        self.assertIn('4x orbital image buffers alone exceed 1 GiB',error.stderr)
+        self.config['image']['aa']='2x'
+        self.run_cli('--validate-config')
 
     def test_illustrated_shade_count(self):
         shadow=(.4,-.6,.05)

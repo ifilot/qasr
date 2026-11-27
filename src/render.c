@@ -22,6 +22,58 @@ static bool primitive_visible(const Config *c, const Primitive *p)
 {
     return p->color[3] || (p->kind==CYLINDER && c->bond_colors==BONDS_ATOMS && p->color_b[3]);
 }
+
+bool render_clipping(const Config *c, const Scene *s, const Camera *camera, unsigned *clipped, Error *e)
+{
+    *clipped=0;
+    if (c->extent<=0) return true;
+    const double limits[]={(double)camera->width,(double)camera->height};
+    for (size_t i=0;i<s->count;++i) {
+        if ((i%1024)==0 && !check_cancel(e)) return false;
+        const Primitive *p=&s->items[i];
+        if (p->kind!=SPHERE && p->kind!=CYLINDER) continue;
+        unsigned kind=p->kind==SPHERE ? CLIPPED_ATOM : CLIPPED_BOND;
+        if ((*clipped&kind) || !primitive_visible(c,p)) continue;
+        Vec3 a=camera_project(camera,p->a),b=camera_project(camera,p->b);
+        Vec3 axis={{0,0,0}};
+        if (p->kind==CYLINDER) {
+            axis=vsub(p->b,p->a);
+            double len=length(axis);
+            if (len<=1e-14) continue;
+            axis=vmul(axis,1/len);
+        }
+        double radius=p->radius*camera->scale;
+        if (p->kind==CYLINDER && c->bond_colors==BONDS_ATOMS && (!p->color[3] || !p->color_b[3])) {
+            Vec3 split=vadd(a,vmul(vsub(b,a),p->color_split));
+            if (!p->color[3]) a=split;
+            else b=split;
+        }
+        for (size_t d=0;d<2;++d) {
+            Vec3 direction=d ? camera->up : camera->right;
+            double along=dot(axis,direction);
+            double padding=p->kind==SPHERE ? radius : radius*sqrt(fmax(0,1-along*along));
+            if (fmin(a.x[d],b.x[d])-padding<0 || fmax(a.x[d],b.x[d])+padding>limits[d]) *clipped|=kind;
+        }
+    }
+    for (size_t i=0;i<s->triangle_count;++i) {
+        if ((i%1024)==0 && !check_cancel(e)) return false;
+        const FaceTriangle *face=&s->faces[i];
+        unsigned kind=face->smooth ? CLIPPED_ORBITAL : CLIPPED_FACE;
+        if ((*clipped&kind) || (!face->color[3] && (!face->edges || !face->outline_width || !face->outline_color[3]))) continue;
+        for (size_t k=0;k<3;++k) {
+            Vec3 p=camera_project(camera,face->vertices[k]);
+            if (p.x[0]<0 || p.x[0]>limits[0] || p.x[1]<0 || p.x[1]>limits[1]) {
+                *clipped|=kind;
+                break;
+            }
+        }
+    }
+    if (c->clip_error && *clipped)
+        return fail_at(e,5,"camera_clipped","camera.clip","fixed camera window clipped%s%s%s%s. Adjust camera.extent_A or camera.center_A",
+                       *clipped&CLIPPED_ATOM ? " atoms" : "", *clipped&CLIPPED_BOND ? " bonds" : "",
+                       *clipped&CLIPPED_ORBITAL ? " orbital triangles" : "", *clipped&CLIPPED_FACE ? " faces" : "");
+    return true;
+}
 static const uint8_t *surface_color(const Config *c, const Primitive *p, const Cylinder *cylinder,
                                   double x, double y, double z)
 {
@@ -409,6 +461,8 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
 bool render_image_workspace(const Config *c, const Scene *s, const Camera *camera, size_t source_bytes,
                             RenderWorkspace *workspace, Image *out, Error *e)
 {
+    unsigned clipped;
+    if (c->clip_error && !render_clipping(c,s,camera,&clipped,e)) return false;
 #ifndef _OPENMP
     if (c->threads>1) return fail(e,3,"multiple threads require ENABLE_OPENMP");
 #endif
@@ -433,7 +487,11 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
     const bool adaptive=c->adaptive_aa && !s->triangle_count && !styled_cell;
     const double scale=(double)factor;
     size_t count=c->width*c->height, samples=count*per_pixel, retained=scene_memory_bytes(s)+source_bytes;
+    const size_t raster_columns=(c->width+VR_RASTER_TILE-1)/VR_RASTER_TILE;
+    const size_t raster_rows=(c->height+VR_RASTER_TILE-1)/VR_RASTER_TILE;
+    const bool track_depth=s->triangle_count && !c->labels;
     size_t reserve=8u*1024u*1024u; /* PNG/zlib working-space allowance. */
+    if (track_depth) reserve+=raster_columns*raster_rows;
     if (c->labels) reserve+=s->count*sizeof(LabelAnchor)+overlay_label_scratch_bytes(s);
     if (adaptive)
         reserve+=((c->width+AA_TILE-1)/AA_TILE)*((c->height+AA_TILE-1)/AA_TILE)*(sizeof(size_t)+2*sizeof(double)+1);
@@ -447,16 +505,17 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
     uint8_t *rgba=workspace && workspace->rgba ? workspace->rgba : malloc(samples*4);
     if (workspace) {workspace->depth=depth;workspace->rgba=rgba;workspace->samples=samples;}
     uint8_t *pixels=malloc(count*4);
+    uint8_t *depth_tiles=track_depth ? calloc(raster_columns*raster_rows,1) : NULL;
     RasterPrimitive *projected=calloc(s->count,sizeof *projected);
     LabelAnchor *visible=c->labels ? calloc(s->count,sizeof *visible) : NULL;
-    if (!depth || !rgba || !pixels || !projected || (c->labels && !visible)) {
-        release_samples(workspace,depth,rgba);free(pixels);free(projected);free(visible);
+    if (!depth || !rgba || !pixels || !projected || (c->labels && !visible) || (track_depth && !depth_tiles)) {
+        release_samples(workspace,depth,rgba);free(pixels);free(projected);free(visible);free(depth_tiles);
         return fail(e,6,"image allocation failed");
     }
     IllustratedBand bands[VR_MAX_SHADE_BANDS];
     size_t band_count=c->style==STYLE_ILLUSTRATED ? illustrated_bands(c->shade_bands,bands) : 0;
     uint8_t *native_tiles=adaptive ? adaptive_tiles(c,s,camera,bands,band_count,e) : NULL;
-    if (adaptive && !native_tiles) {release_samples(workspace,depth,rgba);free(pixels);free(projected);free(visible);return false; }
+    if (adaptive && !native_tiles) {release_samples(workspace,depth,rgba);free(pixels);free(projected);free(visible);free(depth_tiles);return false; }
     if (c->adaptive_aa && !adaptive && c->benchmark) fprintf(stderr,"adaptive_native_tiles=0 adaptive_total_tiles=%zu\n",((c->width+AA_TILE-1)/AA_TILE)*((c->height+AA_TILE-1)/AA_TILE));
     const size_t tile_columns=(c->width+AA_TILE-1)/AA_TILE;
     uint8_t background[4]; decode_color(c->background,background);
@@ -467,9 +526,7 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
     if (automatic>8) automatic=8;
     if (count<512u*512u) automatic=1;
     workers=c->threads ? (int)c->threads : automatic;
-#pragma omp parallel for schedule(static) num_threads(workers) if(workers>1 && samples>=1048576)
 #endif
-    for (size_t i=0;i<samples;++i) { depth[i]=-DBL_MAX; memcpy(rgba+4*i,background,4); }
     const size_t width=c->width*factor, height=c->height*factor;
     Vec3 light=unit((Vec3){{-1,-1,2}});
     Vec3 balsac_light=unit((Vec3){{1,1,2}});
@@ -497,17 +554,16 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
         b.x[0]*=scale; b.x[1]*=scale; b.x[2]*=scale*camera->scale;
         double r=p->kind==CELL_EDGE ? (c->cell_width/2+c->cell_outline_width)*scale : p->radius*scale*camera->scale;
         double padding=p->kind==CELL_EDGE ? r+c->cell_outline_width*scale : r;
-        double left=fmax(0,floor(fmin(a.x[0],b.x[0])-padding));
-        double right=fmin((double)width,ceil(fmax(a.x[0],b.x[0])+padding));
-        double bottom=fmax(0,floor(fmin(a.x[1],b.x[1])-padding));
-        double top=fmin((double)height,ceil(fmax(a.x[1],b.x[1])+padding));
+        double left=fmin((double)width,fmax(0,floor(fmin(a.x[0],b.x[0])-padding)));
+        double right=fmax(0,fmin((double)width,ceil(fmax(a.x[0],b.x[0])+padding)));
+        double bottom=fmin((double)height,fmax(0,floor(fmin(a.x[1],b.x[1])-padding)));
+        double top=fmax(0,fmin((double)height,ceil(fmax(a.x[1],b.x[1])+padding)));
         rp->a=a;rp->radius=r;rp->fade=fade;
         rp->left=(size_t)left;rp->right=(size_t)right;rp->bottom=(size_t)bottom;rp->top=(size_t)top;
         if (p->kind!=SPHERE) rp->cylinder=cylinder_prepare(a,b,r);
     }
     /* Each task owns a disjoint 32x32 output-pixel tile. Primitive order within
      * a tile is unchanged, so depth ties and RGBA rounding are deterministic. */
-    const size_t raster_columns=(c->width+31)/32, raster_rows=(c->height+31)/32;
     CellCache cell_cache={0};
     if (styled_cell) cell_cache=cell_cache_prepare(c,projected,s->count,VR_MEMORY_BUDGET-retained-reserve-samples*12-count*4);
     size_t used_threads=1;
@@ -519,15 +575,26 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
 #ifdef _OPENMP
         if (tile==0) used_threads=(size_t)omp_get_num_threads();
 #endif
-        size_t x0=(tile%raster_columns)*32*factor, y0=(tile/raster_columns)*32*factor;
-        size_t x1=x0+32*factor<width ? x0+32*factor : width;
-        size_t y1=y0+32*factor<height ? y0+32*factor : height;
+        size_t tile_size=VR_RASTER_TILE*factor;
+        size_t x0=(tile%raster_columns)*tile_size, y0=(tile/raster_columns)*tile_size;
+        size_t x1=x0+tile_size<width ? x0+tile_size : width;
+        size_t y1=y0+tile_size<height ? y0+tile_size : height;
+        for (size_t y=y0;y<y1;++y) for (size_t x=x0;x<x1;++x)
+            memcpy(rgba+4*((height-1-y)*width+x),background,4);
+        bool depth_ready=c->labels!=0;
+        if (depth_ready) for (size_t y=y0;y<y1;++y) for (size_t x=x0;x<x1;++x)
+            depth[(height-1-y)*width+x]=-DBL_MAX;
         for (size_t i=0;i<s->count;++i) {
             const RasterPrimitive *rp=&projected[i];
             const Primitive *p=rp->primitive;
             size_t left=rp->left>x0 ? rp->left : x0, right=rp->right<x1 ? rp->right : x1;
             size_t bottom=rp->bottom>y0 ? rp->bottom : y0, top=rp->top<y1 ? rp->top : y1;
             if (left>=right || bottom>=top) continue;
+            if (!depth_ready) {
+                for (size_t y=y0;y<y1;++y) for (size_t x=x0;x<x1;++x)
+                    depth[(height-1-y)*width+x]=-DBL_MAX;
+                depth_ready=true;
+            }
             Vec3 a=rp->a;double r=rp->radius,fade=rp->fade;
             const Cylinder *cylinder=&rp->cylinder;
             double inner=fmax(0,1-scale*c->outline_width/r);
@@ -628,6 +695,7 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
                 }
             }
         }
+        if (depth_tiles) depth_tiles[tile]=(uint8_t)depth_ready;
     }
     if (c->benchmark) fprintf(stderr,"render_threads=%zu raster_tiles=%zu\n",used_threads,raster_columns*raster_rows);
     /* Release optional cache before polygon scratch allocation; label visibility
@@ -636,7 +704,10 @@ bool render_image_workspace(const Config *c, const Scene *s, const Camera *camer
         for (size_t i=0;i<s->count;++i) projected[i].stroke=NULL;
         free(cell_cache.segments);free(cell_cache.strokes);
     }
-    if (s->triangle_count && !faces_render_samples(c,s,camera,workers,retained+reserve+samples*12+count*4,depth,rgba,e)) {
+    bool sampled=check_cancel(e) &&
+        (!s->triangle_count || faces_render_samples(c,s,camera,workers,retained+reserve+samples*12+count*4,depth,depth_tiles,rgba,e));
+    free(depth_tiles);
+    if (!sampled) {
         free(projected);free(native_tiles);release_samples(workspace,depth,rgba);free(pixels);free(visible);return false;
     }
     /* Average premultiplied colors to avoid white/dark halos on alpha edges. */

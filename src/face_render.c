@@ -13,6 +13,8 @@
 
 #define FACE_LAYERS 64u
 #define FACE_WORK 200000000u
+#define MESH_TILE 8u
+#define MESH_MAX_TILE_SAMPLES (MESH_TILE*4u)
 typedef struct {double z;size_t instance;const uint8_t *color;} FaceHit;
 static uint8_t channel(double v) {return (uint8_t)fmin(255,fmax(0,floor(v+0.5)));}
 
@@ -123,9 +125,10 @@ bool faces_occlude_label(const Scene *s, const Camera *camera, size_t factor, do
 
 
 bool faces_render_samples(const Config *c, const Scene *s, const Camera *camera, int workers,
-                          size_t retained, double *depth, uint8_t *rgba, Error *e)
+                          size_t retained, const double *depth, const uint8_t *depth_tiles,
+                          uint8_t *rgba, Error *e)
 {
-    size_t tile_pixels=c->orbital_count ? 8 : 32;
+    size_t tile_pixels=c->orbital_count ? MESH_TILE : VR_RASTER_TILE;
     size_t factor=c->aa_scale,width=c->width*factor,height=c->height*factor,tile_size=tile_pixels*factor;
     size_t columns=(c->width+tile_pixels-1)/tile_pixels,rows=(c->height+tile_pixels-1)/tile_pixels,tiles=columns*rows;
     if (c->labels && s->triangle_count && s->atom_count>VR_MAX_CANDIDATES/VR_LABEL_SAMPLES/s->triangle_count)
@@ -135,17 +138,29 @@ bool faces_render_samples(const Config *c, const Scene *s, const Camera *camera,
     size_t band_count=mesh && c->style==STYLE_ILLUSTRATED ? illustrated_bands(c->shade_bands,bands) : 0;
     bool outlined=mesh && c->style!=STYLE_SHADED && c->outline_width>0;
     size_t bytes=s->triangle_count*sizeof(ProjectedFace)+(tiles+1)*sizeof(size_t)+tiles*sizeof(size_t)+
-                 (mesh ? width*height*sizeof(uint32_t) : 0)+(outlined ? width*height*sizeof(float) : 0);
+                 (mesh ? width*height*sizeof(uint32_t) : 0)+(outlined ? width*height : 0);
     if (retained>VR_MEMORY_BUDGET || bytes>VR_MEMORY_BUDGET-retained) return fail(e,6,"projected polygons exceed 1 GiB allocation budget");
     ProjectedFace *projected=calloc(s->triangle_count,sizeof *projected);
     size_t *offsets=calloc(tiles+1,sizeof *offsets),*cursor=malloc(tiles*sizeof *cursor);
     uint32_t *indices=NULL;bool ok=false;size_t references=0,work=0;
-    uint32_t *surface_ids=NULL;float *contours=NULL;
+    uint32_t *surface_ids=NULL;uint8_t *contours=NULL;
+    size_t mesh_bounds[]={width,0,height,0};
+    bool flat_faces=false;
     if (!projected || !offsets || !cursor) {fail(e,6,"cannot allocate polygon raster bins");goto done;}
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static) num_threads(workers) if(workers>1 && s->triangle_count>=1024)
+#endif
+    for (size_t i=0;i<s->triangle_count;++i) project(&s->faces[i],camera,factor,&projected[i]);
     for (size_t i=0;i<s->triangle_count;++i) {
         if (!check_cancel(e)) goto done;
-        ProjectedFace *p=&projected[i];project(&s->faces[i],camera,factor,p);
+        const ProjectedFace *p=&projected[i];
         if (p->area<1e-20 || p->left>=p->right || p->bottom>=p->top || (!p->face->color[3] && (!p->face->outline_width || !p->face->outline_color[3]))) continue;
+        if (p->face->smooth) {
+            if (p->left<mesh_bounds[0]) mesh_bounds[0]=p->left;
+            if (p->right>mesh_bounds[1]) mesh_bounds[1]=p->right;
+            if (height-p->top<mesh_bounds[2]) mesh_bounds[2]=height-p->top;
+            if (height-p->bottom>mesh_bounds[3]) mesh_bounds[3]=height-p->bottom;
+        } else flat_faces=true;
         size_t x0=p->left/tile_size,x1=(p->right-1)/tile_size,y0=p->bottom/tile_size,y1=(p->top-1)/tile_size;
         size_t n=(x1-x0+1)*(y1-y0+1),cost=n*tile_size*tile_size*(mesh ? 2u : 1u);
         if (cost>FACE_WORK-work) {fail(e,6,"polygon raster work exceeds 200 million sample candidates");goto done;}
@@ -163,7 +178,7 @@ bool faces_render_samples(const Config *c, const Scene *s, const Camera *camera,
         for (size_t y=p->bottom/tile_size;y<=(p->top-1)/tile_size;++y) for (size_t x=p->left/tile_size;x<=(p->right-1)/tile_size;++x)
             indices[cursor[y*columns+x]++]=(uint32_t)i;
     }
-    if (mesh) {
+    if (mesh_bounds[0]<mesh_bounds[1]) {
         surface_ids=malloc(width*height*sizeof *surface_ids);
         if (outlined) contours=malloc(width*height*sizeof *contours);
         if (!surface_ids || (outlined && !contours)) {fail(e,6,"cannot allocate mesh coverage and contours");goto done;}
@@ -171,26 +186,45 @@ bool faces_render_samples(const Config *c, const Scene *s, const Camera *camera,
 #pragma omp parallel for schedule(dynamic,1) num_threads(workers) if(workers>1)
 #endif
         for (size_t tile=0;tile<tiles;++tile) {
+            if (atomic_load_explicit(&vr_cancel_requested,memory_order_relaxed)) continue;
             size_t x0=tile%columns*tile_size,y0=tile/columns*tile_size;
             size_t x1=x0+tile_size<width ? x0+tile_size : width,y1=y0+tile_size<height ? y0+tile_size : height;
-            for (size_t y=y0;y<y1;++y) {
-                if (atomic_load_explicit(&vr_cancel_requested,memory_order_relaxed)) break;
-                for (size_t x=x0;x<x1;++x) {
-                    uint32_t nearest=UINT32_MAX;double front=-DBL_MAX;
-                    for (size_t k=offsets[tile];k<offsets[tile+1];++k) {
-                        uint32_t id=indices[k];const ProjectedFace *p=&projected[id];
-                        if (!p->face->smooth || x<p->left || x>=p->right || y<p->bottom || y>=p->top) continue;
-                        double z;const uint8_t *color;
-                        if (hit(p,(double)x+.5,(double)y+.5,&z,&color) && z>front) {front=z;nearest=id;}
+            for (size_t y=y0;y<y1;++y)
+                memset(surface_ids+(height-1-y)*width+x0,0xff,(x1-x0)*sizeof *surface_ids);
+            if (offsets[tile]==offsets[tile+1]) continue;
+            double front[MESH_MAX_TILE_SAMPLES*MESH_MAX_TILE_SAMPLES];
+            for (size_t i=0;i<tile_size*(y1-y0);++i) front[i]=-DBL_MAX;
+            /* Bin order preserves depth ties. Visit only the portion of each
+             * triangle's sample bounds that intersects this tile. */
+            for (size_t k=offsets[tile];k<offsets[tile+1];++k) {
+                if ((k%64)==0 && atomic_load_explicit(&vr_cancel_requested,memory_order_relaxed)) break;
+                uint32_t id=indices[k];const ProjectedFace *p=&projected[id];
+                if (!p->face->smooth) continue;
+                size_t left=p->left>x0 ? p->left : x0,right=p->right<x1 ? p->right : x1;
+                size_t bottom=p->bottom>y0 ? p->bottom : y0,top=p->top<y1 ? p->top : y1;
+                for (size_t y=bottom;y<top;++y) for (size_t x=left;x<right;++x) {
+                    size_t at=(y-y0)*tile_size+x-x0;
+                    double z;const uint8_t *color;
+                    if (hit(p,(double)x+.5,(double)y+.5,&z,&color) && z>front[at]) {
+                        front[at]=z;
+                        surface_ids[(height-1-y)*width+x]=id;
                     }
-                    surface_ids[(height-1-y)*width+x]=nearest;
                 }
             }
         }
         if (!check_cancel(e)) goto done;
-        if (outlined && !mesh_contours(projected,width,height,factor,c->outline_width,surface_ids,contours,e)) goto done;
+        size_t available=VR_MEMORY_BUDGET-retained-bytes-references*sizeof *indices;
+        if (outlined && !mesh_contours(projected,width,height,factor,c->outline_width,surface_ids,mesh_bounds,workers,available,contours,e)) goto done;
     }
     uint8_t background[4];decode_color(c->background,background);
+    size_t raster_columns=(c->width+VR_RASTER_TILE-1)/VR_RASTER_TILE;
+    size_t raster_size=VR_RASTER_TILE*factor;
+    bool opaque_primitives=true;
+    for (size_t i=0;i<s->count && opaque_primitives;++i) {
+        const Primitive *p=&s->items[i];
+        opaque_primitives=(p->color[3]==0 || p->color[3]==255) &&
+            (p->kind!=CYLINDER || c->bond_colors!=BONDS_ATOMS || p->color_b[3]==0 || p->color_b[3]==255);
+    }
     _Atomic int overflow=0;
 #ifndef _OPENMP
     (void)workers;
@@ -198,20 +232,27 @@ bool faces_render_samples(const Config *c, const Scene *s, const Camera *camera,
 #pragma omp parallel for schedule(dynamic,1) num_threads(workers) if(workers>1)
 #endif
     for (size_t tile=0;tile<tiles;++tile) {
+        if (opaque_primitives && offsets[tile]==offsets[tile+1]) continue;
         size_t x0=tile%columns*tile_size,y0=tile/columns*tile_size,x1=x0+tile_size<width ? x0+tile_size : width,y1=y0+tile_size<height ? y0+tile_size : height;
+        bool depth_ready=!depth_tiles || depth_tiles[(y0/raster_size)*raster_columns+x0/raster_size];
         for (size_t y=y0;y<y1;++y) {
             if (atomic_load_explicit(&vr_cancel_requested,memory_order_relaxed)) break;
             for (size_t x=x0;x<x1;++x) {
                 size_t index=(height-1-y)*width+x;FaceHit hits[FACE_LAYERS+1];size_t count=0,face_hits=0;
                 const ProjectedFace *surface=NULL;double surface_z=-DBL_MAX;uint8_t surface_rgba[4];
-                if (mesh && surface_ids[index]!=UINT32_MAX) {
-                    surface=&projected[surface_ids[index]];const uint8_t *color;
+                if (surface_ids && surface_ids[index]!=UINT32_MAX) {
+                    surface=&projected[surface_ids[index]];
+                    if (!flat_faces && (!depth_ready || depth[index]==-DBL_MAX)) {
+                        surface_color(bands,band_count,surface,(double)x+.5,(double)y+.5,contours && contours[index],rgba+index*4);
+                        continue;
+                    }
+                    const uint8_t *color;
                     hit(surface,(double)x+.5,(double)y+.5,&surface_z,&color);
                 }
                 /* Atom samples are uncomposited in a scene with faces, allowing
                  * transparent faces on either side of the nearest atom surface. */
-                if (depth[index]!=-DBL_MAX) hits[count++]=(FaceHit){depth[index],SIZE_MAX,rgba+index*4};
-                for (size_t k=offsets[tile];k<offsets[tile+1];++k) {
+                if (depth_ready && depth[index]!=-DBL_MAX) hits[count++]=(FaceHit){depth[index],SIZE_MAX,rgba+index*4};
+                for (size_t k=offsets[tile];flat_faces && k<offsets[tile+1];++k) {
                     const ProjectedFace *p=&projected[indices[k]];
                     if (p->face->smooth || x<p->left || x>=p->right || y<p->bottom || y>=p->top) continue;
                     double z;const uint8_t *color;
@@ -223,7 +264,7 @@ bool faces_render_samples(const Config *c, const Scene *s, const Camera *camera,
                     hits[count++]=(FaceHit){z,p->face->instance,color};
                 }
                 if (surface) {
-                    bool ink=outlined && contours[index]<=c->outline_width*(double)factor;
+                    bool ink=contours && contours[index];
                     surface_color(bands,band_count,surface,(double)x+.5,(double)y+.5,ink,surface_rgba);
                     /* An opaque mesh replaces all deeper layers. */
                     size_t kept=0;

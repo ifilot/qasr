@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## [0.8.2] - 2026-11-27
+
+- Report which projected geometry crosses a fixed camera window, plus the
+  final alpha bounding box. Set `camera.clip` to `"error"` to reject clipped
+  frames before they are written.
+- Parallelize orbital contour generation and triangle projection. Skip
+  empty raster work and reduce contour memory for supersampled frames.
+- Read and hash each PLY layer in one pass, reducing configuration time on
+  mounted storage and preserving content-based worker cache invalidation.
+
 ## [0.8.1] - 2026-11-27
 
 - Set the illustrated shade count for atom spheres and orbital surfaces with

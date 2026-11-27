@@ -70,6 +70,36 @@ static bool scene_key(const Config *c, const char *source, char key[65], Error *
     return hash_json(j,key,e);
 }
 
+static bool report_coverage(cJSON *result, const Image *image, bool fixed, unsigned clipped)
+{
+    cJSON *window=cJSON_AddObjectToObject(result,"clipping");
+    if (!window || !cJSON_AddBoolToObject(window,"fixed_window",fixed) ||
+        !cJSON_AddBoolToObject(window,"any",clipped!=0) ||
+        !cJSON_AddBoolToObject(window,"atoms",(clipped&CLIPPED_ATOM)!=0) ||
+        !cJSON_AddBoolToObject(window,"bonds",(clipped&CLIPPED_BOND)!=0) ||
+        !cJSON_AddBoolToObject(window,"orbital_triangles",(clipped&CLIPPED_ORBITAL)!=0) ||
+        !cJSON_AddBoolToObject(window,"faces",(clipped&CLIPPED_FACE)!=0)) return false;
+    size_t left=image->width,top=image->height,right=0,bottom=0;
+    for (size_t y=0;y<image->height;++y) {
+        const uint8_t *row=image->pixels+4*y*image->width;
+        size_t x=0;
+        while (x<image->width && !row[4*x+3]) ++x;
+        if (x==image->width) continue;
+        if (x<left) left=x;
+        if (y<top) top=y;
+        bottom=y+1;
+        x=image->width;
+        while (!row[4*(x-1)+3]) --x;
+        if (x>right) right=x;
+    }
+    if (!bottom) return cJSON_AddNullToObject(result,"ink_bbox_px")!=NULL;
+    double bounds[]={(double)left,(double)top,(double)right,(double)bottom};
+    cJSON *box=cJSON_CreateDoubleArray(bounds,4);
+    if (box && cJSON_AddItemToObject(result,"ink_bbox_px",box)) return true;
+    cJSON_Delete(box);
+    return false;
+}
+
 cJSON *job_render(const Config *c, JobCache *cache, bool report, const char *version, double config_ms, Error *e)
 {
     if (c->movie.mode) {
@@ -110,6 +140,8 @@ cJSON *job_render(const Config *c, JobCache *cache, bool report, const char *ver
     if (!check_cancel(e) || !camera_fit(c,scene,&camera,e)) goto done;
     clock_gettime(CLOCK_MONOTONIC,&built);
     if (!render_image(c,scene,&camera,s->count*sizeof(Atom)+config_memory_bytes(c),&image,e) || !check_cancel(e)) goto done;
+    unsigned clipped=0;
+    if (report && !c->clip_error && !render_clipping(c,scene,&camera,&clipped,e)) goto done;
     clock_gettime(CLOCK_MONOTONIC,&rendered);
     PngOptions png=png_resolve_options(c->output,c->png);
     if (c->benchmark && !strcmp(image_format_name(c->output),"png")) {
@@ -123,7 +155,10 @@ cJSON *job_render(const Config *c, JobCache *cache, bool report, const char *ver
     if (report) result=render_report(c,s,scene,&camera,&png,version,input_hash,stages,e);
     else result=cJSON_CreateObject();
     if (!result) {if (!e->code) fail(e,6,"cannot allocate job result");goto done;}
-    if (report && !cJSON_AddNumberToObject(result,"render_threads",(double)(image.threads_used ? image.threads_used : 1))) {cJSON_Delete(result);result=NULL;fail(e,6,"cannot allocate thread report");goto done;}
+    if (report && (!report_coverage(result,&image,c->extent>0,clipped) ||
+                   !cJSON_AddNumberToObject(result,"render_threads",(double)(image.threads_used ? image.threads_used : 1)))) {
+        cJSON_Delete(result);result=NULL;fail(e,6,"cannot allocate coverage or thread report");goto done;
+    }
     if (cache) {
         cJSON *info=job_cache_info(cache);
         if (!info) {cJSON_Delete(result);result=NULL;fail(e,6,"cannot allocate cache report");goto done;}

@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define MESH_LIMIT 200000u
@@ -36,18 +37,38 @@ static bool bad(Error *e, const char *message)
  * @return true on success; false on invalid/truncated data, I/O, allocation,
  * budget or cancellation failure. PLY has no units; normals are never scaled.
  */
+static int ply_line(Reader *reader, Sha256 *hash, Error *e)
+{
+    unsigned long long before=reader->bytes;
+    int result=read_line(reader,e);
+    if (result==1) {
+        size_t n=(size_t)(reader->bytes-before);
+        sha256_update(hash,reader->text,n-(reader->unterminated ? 0u : 1u));
+        if (!reader->unterminated) sha256_update(hash,"\n",1);
+    }
+    return result;
+}
+
 static bool load_ply(Config *c, const char *path, double scale, Vec3 origin,
                      const uint8_t color[4], size_t layer, size_t *remaining, Error *e)
 {
     FILE *f=fopen(path,"rb");
-    if (!f) return fail_at(e,4,"orbital_open","orbitals","cannot open PLY mesh: %s",path);
+    if (!f) return fail_at(e,7,"hash_read_error",path,"cannot open %s for provenance hashing",path);
+    char input_buffer[65536];
+    setvbuf(f,input_buffer,_IOFBF,sizeof input_buffer);
+    struct stat before,after;
+    if (fstat(fileno(f),&before)) {
+        fclose(f);
+        return fail_at(e,7,"orbital_stat","orbitals","cannot inspect PLY mesh: %s",path);
+    }
+    Sha256 hash;sha256_init(&hash);
     Reader r={.file=f,.path=path};bool ok=false,binary=false,ended=false;
     size_t nv=0,nf=0,properties=0;int section=0;bool wide[6]={false};
     Vec3 *vertices=NULL,*normals=NULL;
-    if (read_line(&r,e)!=1 || strcmp(r.text,"ply") || read_line(&r,e)!=1) goto invalid;
+    if (ply_line(&r,&hash,e)!=1 || strcmp(r.text,"ply") || ply_line(&r,&hash,e)!=1) goto invalid;
     if (!strcmp(r.text,"format binary_little_endian 1.0")) binary=true;
     else if (strcmp(r.text,"format ascii 1.0")) goto invalid;
-    for (size_t lines=0;lines<128 && read_line(&r,e)==1;++lines) {
+    for (size_t lines=0;lines<128 && ply_line(&r,&hash,e)==1;++lines) {
         char *w[5];size_t n=split_words(r.text,w,5);
         if (!n || !strcmp(w[0],"comment") || !strcmp(w[0],"obj_info")) continue;
         if (n==1 && !strcmp(w[0],"end_header")) {ended=true;break;}
@@ -81,8 +102,9 @@ static bool load_ply(Config *c, const char *path, double scale, Vec3 origin,
         if (!check_cancel(e)) goto done;
         unsigned char packed[48];size_t offset=0;
         if (binary && fread(packed,1,stride,f)!=stride) goto invalid;
+        if (binary) sha256_update(&hash,packed,stride);
         char *words[7];
-        if (!binary && (read_line(&r,e)!=1 || split_words(r.text,words,7)!=properties)) goto invalid;
+        if (!binary && (ply_line(&r,&hash,e)!=1 || split_words(r.text,words,7)!=properties)) goto invalid;
         for (size_t d=0;d<properties;++d) {
             double value;
             if (binary) {
@@ -107,12 +129,13 @@ static bool load_ply(Config *c, const char *path, double scale, Vec3 origin,
         if (binary) {
             unsigned char packed[13];
             if (fread(packed,1,sizeof packed,f)!=sizeof packed || packed[0]!=3) goto invalid;
+            sha256_update(&hash,packed,sizeof packed);
             for (size_t d=0;d<3;++d) {
                 const unsigned char *b=packed+1+d*4;
                 index[d]=(size_t)b[0]|((size_t)b[1]<<8)|((size_t)b[2]<<16)|((size_t)b[3]<<24);
             }
         } else {
-            char *w[5];if (read_line(&r,e)!=1 || split_words(r.text,w,5)!=4 || strcmp(w[0],"3")) goto invalid;
+            char *w[5];if (ply_line(&r,&hash,e)!=1 || split_words(r.text,w,5)!=4 || strcmp(w[0],"3")) goto invalid;
             for (size_t d=0;d<3;++d) if (!integer(w[d+1],nv-1,&index[d])) goto invalid;
         }
         FaceTriangle t;memset(&t,0,sizeof t);t.smooth=true;memcpy(t.color,color,4);
@@ -127,13 +150,29 @@ static bool load_ply(Config *c, const char *path, double scale, Vec3 origin,
         c->orbital_triangles[c->orbital_count++]=t;
     }
     if (binary) {if (fgetc(f)!=EOF) goto invalid;}
-    else {int ch;while ((ch=fgetc(f))!=EOF) if (!isspace((unsigned char)ch)) goto invalid;}
+    else {
+        unsigned char tail[4096];size_t n;
+        while ((n=fread(tail,1,sizeof tail,f))!=0) {
+            if (!check_cancel(e)) goto done;
+            if (hash.bytes>VR_MAX_INPUT_BYTES-n) {fail(e,6,"orbital file exceeds the input byte limit");goto done;}
+            for (size_t i=0;i<n;++i) if (!isspace(tail[i])) goto invalid;
+            sha256_update(&hash,tail,n);
+        }
+    }
     if (ferror(f)) goto invalid;
+    if (fstat(fileno(f),&after)) {fail(e,7,"cannot recheck PLY mesh: %s",path);goto done;}
+    if (before.st_size!=after.st_size || before.st_mtim.tv_sec!=after.st_mtim.tv_sec || before.st_mtim.tv_nsec!=after.st_mtim.tv_nsec ||
+        before.st_ctim.tv_sec!=after.st_ctim.tv_sec || before.st_ctim.tv_nsec!=after.st_ctim.tv_nsec) {
+        bad(e,"orbital file changed while loading");goto done;
+    }
+    sha256_finish(&hash,c->orbital_hashes[layer]);
     ok=true;goto done;
 invalid:
     if (!e->code) bad(e,"invalid PLY: expected ASCII or binary little-endian vertices x/y/z [nx/ny/nz] and triangular uchar/uint faces");
 done:
-    free(vertices);free(normals);fclose(f);return ok;
+    free(vertices);free(normals);
+    if (fclose(f) && ok) return fail(e,7,"cannot close PLY mesh: %s",path);
+    return ok;
 }
 void config_orbitals_free(Config *c)
 {
@@ -177,9 +216,7 @@ bool config_orbitals(Config *c, const cJSON *array, const char *file, Error *e)
         if (n<0 || (size_t)n>=sizeof relative || !getcwd(cwd,sizeof cwd)) return bad(e,"orbital path too long");
         n=*relative=='/' ? snprintf(resolved,sizeof resolved,"%s",relative) : snprintf(resolved,sizeof resolved,"%s/%s",cwd,relative);
         if (n<0 || (size_t)n>=sizeof resolved) return bad(e,"orbital path too long");
-        char after[65];
-        if (!sha256_file(resolved,c->orbital_hashes[layer],e) || !load_ply(c,resolved,scale,origin,color,layer,&remaining,e) || !sha256_file(resolved,after,e)) return false;
-        if (strcmp(after,c->orbital_hashes[layer])) return bad(e,"orbital file changed while loading");
+        if (!load_ply(c,resolved,scale,origin,color,layer,&remaining,e)) return false;
         cJSON *value=cJSON_CreateString(resolved);
         if (!value || !cJSON_ReplaceItemInObjectCaseSensitive(j,"file",value)) {cJSON_Delete(value);return fail(e,6,"cannot retain orbital path");}
     }

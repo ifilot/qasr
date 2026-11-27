@@ -3,6 +3,11 @@
 #define VR_RENDER_H
 #include "scene.h"
 #include "image.h"
+#define VR_RASTER_TILE 32u
+typedef enum {
+    CLIPPED_ATOM=1, CLIPPED_BOND=2, CLIPPED_ORBITAL=4, CLIPPED_FACE=8
+} ClippedGeometry;
+bool render_clipping(const Config *c, const Scene *s, const Camera *camera, unsigned *clipped, Error *e);
 /** Optional sampling buffers with exclusive caller ownership. Zero-initialize,
  * use sequentially, and release with render_workspace_free even after failure.
  * Image pixels remain separately owned. samples is the allocated sample count,
@@ -45,12 +50,15 @@ bool render_image(const Config *c, const Scene *s, const Camera *camera, size_t 
  * @param[in] workers Positive worker count; each worker owns its layer scratch.
  * @param[in] retained Bytes already charged to the aggregate allocation budget.
  * @param[in] depth Surface depths, borrowed for width*height*aa_scale^2 samples.
+ * @param[in] depth_tiles One byte per raster tile, set when its depths have
+ * been initialized. NULL means all depths are initialized.
  * @param[in,out] rgba RGBA samples of the same count, composited in place.
  * @param[out] e Non-null diagnostic destination, set on failure.
  * @return true on success; false on budget, allocation or cancellation failure.
  */
 bool faces_render_samples(const Config *c, const Scene *s, const Camera *camera, int workers,
-                          size_t retained, double *depth, uint8_t *rgba, Error *e);
+                          size_t retained, const double *depth, const uint8_t *depth_tiles,
+                          uint8_t *rgba, Error *e);
 /** @brief Test whether a polygon hides a label sample in camera space.
  * @param[in] s Non-null complete scene.
  * @param[in] camera Non-null fitted camera.

@@ -18,22 +18,9 @@ typedef struct {
     const FaceTriangle *face;
 } ProjectedFace;
 
-/** @brief Compute silhouette, phase and same-phase occlusion stroke distances.
- * @param[in] projected Projected scene triangles; indices in surface_ids must be
- * valid and refer to nondegenerate smooth triangles with finite depth planes.
- * @param[in] width Positive supersampled image width.
- * @param[in] height Positive supersampled image height.
- * @param[in] factor Positive samples per output pixel along each axis.
- * @param[in] outline_width Positive requested outline width in output pixels.
- * @param[in] surface_ids Nearest mesh triangle IDs, width*height entries in
- * top-to-bottom row order; UINT32_MAX denotes uncovered samples. Borrowed.
- * @param[out] distance Non-null caller-owned width*height floats, disjoint from
- * surface_ids; distances are in supersample pixels. Partial on cancellation.
- * @param[out] e Non-null error destination, set on cancellation.
- * @return true on success; false on cancellation. Allocates no storage and uses
- * only immutable scene data; independent caller buffers permit concurrent calls.
- */
+/* Compute the contour ink mask within bounds (left, right, top, bottom;
+ * half-open image coordinates). Only covered samples can consume the mask. */
 bool mesh_contours(const ProjectedFace *projected, size_t width, size_t height,
                    size_t factor, double outline_width, const uint32_t *surface_ids,
-                   float *distance, Error *e);
+                   const size_t bounds[4], int workers, size_t available, uint8_t *ink, Error *e);
 #endif

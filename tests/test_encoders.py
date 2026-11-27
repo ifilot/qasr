@@ -28,10 +28,10 @@ class EncoderTests(unittest.TestCase):
         filesystem=subprocess.check_output(["stat","-f","-c","%t",str(self.path)],text=True).strip()
         expected=1 if filesystem=="1021997" else 0
         self.assertIn(f"png_compression_resolved={expected}",p.stderr)
-        automatic=decode_png(self.png)
+        automatic=self.png.read_bytes()
         p=subprocess.run([*cmd[:-1],str(expected)],capture_output=True,text=True,timeout=30)
         self.assertEqual(p.returncode,0,p.stderr)
-        self.assertEqual(decode_png(self.png),automatic)
+        self.assertEqual(self.png.read_bytes(),automatic)
 
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(prefix="qasr-png-")

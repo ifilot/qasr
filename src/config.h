@@ -86,7 +86,7 @@ typedef struct {
      * the world point center at the middle of the image. */
     Vec3 center;
     double extent;
-    bool center_set;
+    bool center_set, clip_error;
     double margin, sphere_scale, bond_radius, depth_fade, outline_width, cell_width;
     double cell_outline_width, cell_dash_length, cell_dash_gap;
     char cell_color[10];

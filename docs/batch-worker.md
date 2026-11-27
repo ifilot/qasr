@@ -143,3 +143,45 @@ use, launch/schema/default isolation and active cancellation/recovery.
 The [release checks](release-v0.6.0.md), [current performance guide](performance.md)
 and [original worker/threading record](archive/m10-m11-validation.md) describe
 the broader validation and measurements.
+
+## Orbital turntable
+
+Run this from the directory containing `geometry.xyz` and
+`direct-640-window.json`. The example reads that recipe, keeps its PLY layers
+and rotates the view through 180 frames around the Y axis. PLY paths in embedded
+configs resolve from the worker's working directory. The worker gets the same
+geometry for every job and can reuse the scene when only the camera changes.
+
+```sh
+mkdir -p frames
+python3 - <<'PY' > turntable.jsonl
+import json
+import math
+from pathlib import Path
+
+config = json.loads(Path("direct-640-window.json").read_text())
+config["image"]["aa"] = "adaptive"
+config["camera"].update(
+    extent_A=3.224, center_A=[0, 0, 0], margin=0, clip="allow", up=[0, 1, 0]
+)
+for i in range(180):
+    angle = 2 * math.pi * i / 180
+    config["camera"]["view"] = [0.6 * math.sin(angle), 0.18, 0.6 * math.cos(angle)]
+    frame = f"{i:03d}"
+    print(json.dumps({
+        "id": frame, "op": "render",
+        "job": {
+            "input": "geometry.xyz",
+            "output": f"frames/{frame}.png",
+            "threads": "auto",
+            "config": config,
+        },
+    }))
+PY
+qasr --batch --cache-mib 64 < turntable.jsonl > turntable.responses.jsonl
+```
+
+Read each response's `ok` and, on success, `result.clipping.any`,
+`result.ink_bbox_px` and `result.cache.scene_hit`. Requests still read and
+hash the PLY files to identify changes. All frames and reports use deterministic
+sampling. See the [measured batch and process throughput](performance-v0.8.2.md).

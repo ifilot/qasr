@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "image": {
+    "width": 1280,
+    "height": 1280,
+    "style": "illustrated",
+    "aa": "2x",
+    "background": "#00000000"
+  },
+  "camera": {
+    "view": [
+      0,
+      0,
+      1
+    ],
+    "up": [
+      0,
+      1,
+      0
+    ],
+    "center_A": [
+      0,
+      0,
+      0
+    ],
+    "margin": 0,
+    "extent_A": 3.224
+  },
+  "overlays": {
+    "cell": false
+  },
+  "orbitals": [
+    {
+      "file": "../../../examples/orbitals/meshes/co-02-positive.ply",
+      "units": "bohr",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "color": "#4c9cdb"
+    },
+    {
+      "file": "../../../examples/orbitals/meshes/co-01-negative.ply",
+      "units": "bohr",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "color": "#ed9163"
+    }
+  ]
+}

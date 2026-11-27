@@ -2,6 +2,12 @@
 #ifndef VR_SHA256_H
 #define VR_SHA256_H
 #include "common.h"
+#include <stdint.h>
+
+typedef struct { uint32_t h[8];uint64_t bytes;size_t used;uint8_t block[64]; } Sha256;
+void sha256_init(Sha256 *hash);
+void sha256_update(Sha256 *hash, const void *data, size_t bytes);
+void sha256_finish(Sha256 *hash, char hex[65]);
 
 /** @brief Hash a file for provenance, subject to input-byte and cancellation limits.
  * @param[in] path Non-null input path, borrowed until return.

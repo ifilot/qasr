@@ -65,6 +65,7 @@ cJSON *config_settings_json(const Config *c)
     if (c->up_explicit) ok &= put(camera,"up",vector(c->up.x,3));
     ok &= put(camera,"margin",cJSON_CreateNumber(c->margin));
     if (c->extent>0) ok &= put(camera,"extent_A",cJSON_CreateNumber(c->extent));
+    if (c->clip_error) ok &= put(camera,"clip",cJSON_CreateString("error"));
     if (c->center_set) ok &= put(camera,"center_A",vector(c->center.x,3));
     ok &= put(geometry,"repeat",sizes(c->requested_repeat[0] ? c->requested_repeat : c->repeat,3));
     ok &= put(geometry,"expand_xy",sizes(c->expand_xy,2));

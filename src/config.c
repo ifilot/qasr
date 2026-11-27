@@ -361,6 +361,10 @@ static bool settings_group(const cJSON *group, const char *name, Config *c, Erro
                 valid = cJSON_IsNumber(j) && isfinite(j->valuedouble) && j->valuedouble >= 0 && j->valuedouble <= 1e6;
                 if (valid) c->extent = j->valuedouble;
             }
+            else if (!strcmp(k, "clip")) {
+                valid = cJSON_IsString(j) && (!strcmp(j->valuestring,"allow") || !strcmp(j->valuestring,"error"));
+                if (valid) c->clip_error = !strcmp(j->valuestring,"error");
+            }
             else if (!strcmp(k, "center_A")) {
                 if (cJSON_IsNull(j)) { c->center_set = false; valid = true; }
                 else {
@@ -736,6 +740,8 @@ static bool job_runtime(Config *c, const char *path, Error *e)
 static bool validate(Config *c, Error *e)
 {
     if (!config_validate_movie(c,e) || !config_symmetry_validate(c,e)) return false;
+    if (c->clip_error && c->extent<=0)
+        return fail_at(e,2,"invalid_configuration","camera.clip","camera.clip=error requires a positive camera.extent_A");
     if (c->backend==BACKEND_CAIRO && (c->face_count || c->orbital_count || c->bond_colors==BONDS_ATOMS))
         return fail_at(e,3,"unsupported_backend","image.backend","polygon faces and atom-colored bonds require the Z-buffer backend");
     if (c->tone!=TONE_COLOR && c->style!=STYLE_ORTEP && c->style!=STYLE_BALSAC)
@@ -757,6 +763,13 @@ static bool validate(Config *c, Error *e)
     if (c->png.encoder==ENCODER_CAIRO && (c->png.compression!=1 || c->png.filter!=FILTER_ADAPTIVE))
         return fail(e,2,"Cairo PNG uses internal compression/filter settings; omit PNG tuning overrides");
     if (c->width > 67108864u / c->height) return fail(e, 2, "image exceeds 67108864 pixels");
+    if (c->validate_config && c->orbital_count && c->aa_scale==4) {
+        bool outlined=c->style!=STYLE_SHADED && c->outline_width>0;
+        size_t bytes_per_pixel=4+16*(12+sizeof(uint32_t)+(outlined ? 1u : 0u));
+        if (c->width*c->height>VR_MEMORY_BUDGET/bytes_per_pixel)
+            return fail_at(e,6,"resource_limit","image.aa",
+                           "4x orbital image buffers alone exceed 1 GiB; use 2x or smaller dimensions");
+    }
     size_t product = 1;
     for (int i = 0; i < 3; ++i) {
         if (product > VR_MAX_INSTANCES / c->repeat[i]) return fail(e, 2, "repeat exceeds instance limit");

@@ -147,6 +147,9 @@
           "minimum": 0,
           "maximum": 1000000
         },
+        "clip": {
+          "enum": ["allow", "error"]
+        },
         "center_A": {
           "oneOf": [
             {
