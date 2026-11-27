@@ -1,6 +1,7 @@
 [![Compilation status](https://github.com/ifilot/qasr/actions/workflows/image-libs.yml/badge.svg?branch=master)](https://github.com/ifilot/qasr/actions/workflows/image-libs.yml)
 [![Language: C11](https://img.shields.io/badge/language-C11-blue.svg)](CMakeLists.txt)
 [![Version: 0.8.1](https://img.shields.io/badge/version-0.8.1-blue.svg)](docs/release-v0.8.1.md)
+[![Colophon AI disclosure, rubric v1. Design 3, Implementation 4, Tests & checks 4, Comments & docs 4. Human review Full.](https://ifilot.github.io/ai-disclosure/badges/v1/full/D3-I4-T4-C4.svg)](https://ifilot.github.io/ai-disclosure/v1/?scores=D3-I4-T4-C4&review=full)
 
 # QASR: Quick Atomic Structure Renderer
 
@@ -115,6 +116,12 @@ From the repository directory, render the included sample structure:
 This creates `structure.png` in the current directory. Replace the sample path
 with your own structure file to render it. Run `./build/qasr --help` for options,
 or follow the [user handbook](https://ifilot.github.io/qasr/) for more examples.
+
+## AI disclosure
+
+This disclosure covers QASR through v0.8.1. The maintainer shaped the design through
+discussion with AI. AI wrote the implementation, tests, comments, and documentation.
+The maintainer reviewed the full result, including the tests and documentation.
 
 ## License
 
